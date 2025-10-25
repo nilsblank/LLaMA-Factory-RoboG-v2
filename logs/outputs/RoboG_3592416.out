@@ -1,0 +1,22 @@
+Using config: examples/train_full/eval_qwen2_5vl_roboG_poc_two_frames.yaml
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3592416
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: CANCELLED (exit code 0)
+Partition: accelerated
+Nodes: 1
+Cores per node: 64
+Nodelist: hkn0536
+CPU Utilized: 00:00:03
+CPU Efficiency: 0.08% of 01:00:48 core-walltime
+Job Wall-clock time: 00:00:57
+Starttime: Thu Oct 23 13:27:31 2025
+Endtime: Thu Oct 23 13:28:28 2025
+Memory Utilized: 419.70 MB
+Memory Efficiency: 0.08% of 485.84 GB (485.84 GB/node)
+Energy Consumed: 21864 Joule / 6.07333333333333 Watthours
+Average node power draw: 383.578947368421 Watt

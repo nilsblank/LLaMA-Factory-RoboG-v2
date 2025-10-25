@@ -1,0 +1,28 @@
+Using config: examples/train_full/eval_qwen2_5vl_roboG_poc_two_frames.yaml
+[INFO|2025-10-24 12:46:51] llamafactory.launcher:143 >> Initializing 4 distributed tasks at: 127.0.0.1:49415
+[WARNING|2025-10-24 12:47:07] llamafactory.extras.misc:154 >> Version checking has been disabled, may lead to unexpected behaviors.
+[2025-10-24 12:47:15,981] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-24 12:47:15,981] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-24 12:47:15,981] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-24 12:47:15,981] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3595313
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: CANCELLED (exit code 0)
+Partition: accelerated
+Nodes: 1
+Cores per node: 64
+Nodelist: hkn0731
+CPU Utilized: 00:01:07
+CPU Efficiency: 0.57% of 03:16:16 core-walltime
+Job Wall-clock time: 00:03:04
+Starttime: Fri Oct 24 12:44:47 2025
+Endtime: Fri Oct 24 12:47:51 2025
+Memory Utilized: 5.50 GB
+Memory Efficiency: 1.13% of 485.84 GB (485.84 GB/node)
+Energy Consumed: 86782 Joule / 24.1061111111111 Watthours
+Average node power draw: 471.641304347826 Watt

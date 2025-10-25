@@ -1,0 +1,879 @@
+GpuFreq=control_disabled
+[W1022 11:23:23.441161977 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1022 11:23:23.441166005 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1022 11:23:23.441164211 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1022 11:23:23.441167298 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file vocab.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/vocab.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file merges.txt from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/merges.txt
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file tokenizer.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file tokenizer_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:24,464 >> loading file chat_template.jinja from cache at None
+[INFO|tokenization_utils_base.py:2364] 2025-10-22 11:23:24,708 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|image_processing_base.py:383] 2025-10-22 11:23:25,204 >> loading configuration file preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json
+[INFO|image_processing_base.py:383] 2025-10-22 11:23:25,557 >> loading configuration file preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json
+[INFO|image_processing_base.py:428] 2025-10-22 11:23:25,562 >> Image processor Qwen2VLImageProcessorFast {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "disable_grouping": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_pad": null,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_processor_type": "Qwen2VLImageProcessorFast",
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "input_data_format": null,
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_pixels": 3136,
+  "pad_size": null,
+  "patch_size": 14,
+  "processor_class": "Qwen2_5_VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_tensors": null,
+  "size": {
+    "longest_edge": 12845056,
+    "shortest_edge": 3136
+  },
+  "temporal_patch_size": 2
+}
+
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file vocab.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/vocab.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file merges.txt from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/merges.txt
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file tokenizer.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file tokenizer_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-22 11:23:25,815 >> loading file chat_template.jinja from cache at None
+[INFO|tokenization_utils_base.py:2364] 2025-10-22 11:23:26,019 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|video_processing_utils.py:726] 2025-10-22 11:23:26,389 >> loading configuration file video_preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json
+[INFO|video_processing_utils.py:770] 2025-10-22 11:23:26,393 >> Video processor Qwen2VLVideoProcessor {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "do_sample_frames": false,
+  "fps": null,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "input_data_format": null,
+  "max_frames": 768,
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_frames": 4,
+  "min_pixels": 3136,
+  "num_frames": null,
+  "pad_size": null,
+  "patch_size": 14,
+  "processor_class": "Qwen2_5_VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_metadata": false,
+  "size": {
+    "longest_edge": 12845056,
+    "shortest_edge": 3136
+  },
+  "temporal_patch_size": 2,
+  "video_metadata": null,
+  "video_processor_type": "Qwen2VLVideoProcessor"
+}
+
+[INFO|processing_utils.py:1116] 2025-10-22 11:23:27,016 >> loading configuration file processor_config.json from cache at None
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank1]:[W1022 11:23:27.498687201 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[rank3]:[W1022 11:23:27.498686547 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+[INFO|processing_utils.py:1199] 2025-10-22 11:23:27,409 >> Processor Qwen2_5_VLProcessor:
+- image_processor: Qwen2VLImageProcessorFast {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "disable_grouping": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_pad": null,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_processor_type": "Qwen2VLImageProcessorFast",
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "input_data_format": null,
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_pixels": 3136,
+  "pad_size": null,
+  "patch_size": 14,
+  "processor_class": "Qwen2_5_VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_tensors": null,
+  "size": {
+    "longest_edge": 12845056,
+    "shortest_edge": 3136
+  },
+  "temporal_patch_size": 2
+}
+
+- tokenizer: Qwen2TokenizerFast(name_or_path='Qwen/Qwen2.5-VL-3B-Instruct', vocab_size=151643, model_max_length=131072, is_fast=True, padding_side='right', truncation_side='right', special_tokens={'eos_token': '<|im_end|>', 'pad_token': '<|endoftext|>', 'additional_special_tokens': ['<|im_start|>', '<|im_end|>', '<|object_ref_start|>', '<|object_ref_end|>', '<|box_start|>', '<|box_end|>', '<|quad_start|>', '<|quad_end|>', '<|vision_start|>', '<|vision_end|>', '<|vision_pad|>', '<|image_pad|>', '<|video_pad|>']}, clean_up_tokenization_spaces=False, added_tokens_decoder={
+	151643: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151644: AddedToken("<|im_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151645: AddedToken("<|im_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151646: AddedToken("<|object_ref_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151647: AddedToken("<|object_ref_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151648: AddedToken("<|box_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151649: AddedToken("<|box_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151650: AddedToken("<|quad_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151651: AddedToken("<|quad_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151652: AddedToken("<|vision_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151653: AddedToken("<|vision_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151654: AddedToken("<|vision_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151655: AddedToken("<|image_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151656: AddedToken("<|video_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151657: AddedToken("<tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151658: AddedToken("</tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151659: AddedToken("<|fim_prefix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151660: AddedToken("<|fim_middle|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151661: AddedToken("<|fim_suffix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151662: AddedToken("<|fim_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151663: AddedToken("<|repo_name|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151664: AddedToken("<|file_sep|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+}
+)
+- video_processor: Qwen2VLVideoProcessor {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "do_sample_frames": false,
+  "fps": null,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "input_data_format": null,
+  "max_frames": 768,
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_frames": 4,
+  "min_pixels": 3136,
+  "num_frames": null,
+  "pad_size": null,
+  "patch_size": 14,
+  "processor_class": "Qwen2_5_VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_metadata": false,
+  "size": {
+    "longest_edge": 12845056,
+    "shortest_edge": 3136
+  },
+  "temporal_patch_size": 2,
+  "video_metadata": null,
+  "video_processor_type": "Qwen2VLVideoProcessor"
+}
+
+
+{
+  "processor_class": "Qwen2_5_VLProcessor"
+}
+
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank2]:[W1022 11:23:27.510856537 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+Converting format of dataset (num_proc=128):   0%|          | 0/95244 [00:00<?, ? examples/s]Converting format of dataset (num_proc=128):   0%|          | 1/95244 [00:00<4:42:20,  5.62 examples/s]Converting format of dataset (num_proc=128):   0%|          | 125/95244 [00:00<02:51, 554.75 examples/s]Converting format of dataset (num_proc=128):   1%|          | 543/95244 [00:00<00:48, 1961.99 examples/s]Converting format of dataset (num_proc=128):   1%|          | 774/95244 [00:00<00:52, 1783.14 examples/s]Converting format of dataset (num_proc=128):   1%|          | 976/95244 [00:00<00:51, 1840.81 examples/s]Converting format of dataset (num_proc=128):   1%|▏         | 1244/95244 [00:00<00:44, 2092.01 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 1467/95244 [00:00<00:45, 2073.44 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 1685/95244 [00:00<00:49, 1900.48 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 1920/95244 [00:01<00:46, 2018.94 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 2137/95244 [00:01<00:47, 1975.96 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 2356/95244 [00:01<00:46, 2018.94 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 2563/95244 [00:01<00:45, 2031.70 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 2774/95244 [00:01<00:45, 2052.77 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 2994/95244 [00:01<00:44, 2094.45 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 3206/95244 [00:01<00:48, 1895.14 examples/s]Converting format of dataset (num_proc=128):   4%|▎         | 3424/95244 [00:01<00:46, 1960.63 examples/s]Converting format of dataset (num_proc=128):   4%|▍         | 3646/95244 [00:01<00:45, 2026.01 examples/s]Converting format of dataset (num_proc=128):   4%|▍         | 3856/95244 [00:02<00:44, 2045.50 examples/s]Converting format of dataset (num_proc=128):   4%|▍         | 4102/95244 [00:02<00:42, 2159.51 examples/s]Converting format of dataset (num_proc=128):   5%|▍         | 4321/95244 [00:02<00:46, 1946.20 examples/s]Converting format of dataset (num_proc=128):   5%|▍         | 4521/95244 [00:02<00:55, 1635.41 examples/s]Converting format of dataset (num_proc=128):   5%|▍         | 4696/95244 [00:02<01:00, 1503.81 examples/s]Converting format of dataset (num_proc=128):   5%|▌         | 4919/95244 [00:02<00:53, 1677.60 examples/s]Converting format of dataset (num_proc=128):   5%|▌         | 5164/95244 [00:02<00:48, 1870.58 examples/s]Converting format of dataset (num_proc=128):   6%|▌         | 5403/95244 [00:02<00:44, 2004.29 examples/s]Converting format of dataset (num_proc=128):   6%|▌         | 5616/95244 [00:02<00:44, 2014.21 examples/s]Converting format of dataset (num_proc=128):   6%|▌         | 5832/95244 [00:03<00:43, 2051.58 examples/s]Converting format of dataset (num_proc=128):   6%|▋         | 6104/95244 [00:03<00:40, 2216.00 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 6338/95244 [00:03<00:39, 2250.60 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 6569/95244 [00:03<00:39, 2265.59 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 6800/95244 [00:03<00:38, 2278.55 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 7033/95244 [00:03<00:40, 2204.73 examples/s]Converting format of dataset (num_proc=128):   8%|▊         | 7281/95244 [00:03<00:38, 2279.97 examples/s]Converting format of dataset (num_proc=128):   8%|▊         | 7535/95244 [00:03<00:37, 2354.38 examples/s]Converting format of dataset (num_proc=128):   8%|▊         | 7776/95244 [00:03<00:37, 2359.17 examples/s]Converting format of dataset (num_proc=128):   8%|▊         | 8013/95244 [00:04<00:38, 2237.80 examples/s]Converting format of dataset (num_proc=128):   9%|▊         | 8242/95244 [00:04<00:38, 2250.00 examples/s]Converting format of dataset (num_proc=128):   9%|▉         | 8511/95244 [00:04<00:36, 2374.72 examples/s]Converting format of dataset (num_proc=128):   9%|▉         | 8825/95244 [00:04<00:33, 2568.24 examples/s]Converting format of dataset (num_proc=128):  10%|▉         | 9085/95244 [00:04<00:34, 2503.89 examples/s]Converting format of dataset (num_proc=128):  10%|▉         | 9338/95244 [00:04<00:40, 2120.47 examples/s]Converting format of dataset (num_proc=128):  10%|█         | 9609/95244 [00:04<00:37, 2272.58 examples/s]Converting format of dataset (num_proc=128):  10%|█         | 9846/95244 [00:04<00:38, 2213.86 examples/s]Converting format of dataset (num_proc=128):  11%|█         | 10093/95244 [00:04<00:37, 2275.99 examples/s]Converting format of dataset (num_proc=128):  11%|█         | 10352/95244 [00:05<00:35, 2358.14 examples/s]Converting format of dataset (num_proc=128):  11%|█         | 10661/95244 [00:05<00:33, 2525.20 examples/s]Converting format of dataset (num_proc=128):  11%|█▏        | 10949/95244 [00:05<00:32, 2621.82 examples/s]Converting format of dataset (num_proc=128):  12%|█▏        | 11214/95244 [00:05<00:36, 2308.01 examples/s]Converting format of dataset (num_proc=128):  12%|█▏        | 11520/95244 [00:05<00:33, 2489.77 examples/s]Converting format of dataset (num_proc=128):  12%|█▏        | 11871/95244 [00:05<00:30, 2767.09 examples/s]Converting format of dataset (num_proc=128):  13%|█▎        | 12187/95244 [00:05<00:28, 2876.04 examples/s]Converting format of dataset (num_proc=128):  13%|█▎        | 12496/95244 [00:05<00:28, 2935.84 examples/s]Converting format of dataset (num_proc=128):  13%|█▎        | 12796/95244 [00:05<00:29, 2796.41 examples/s]Converting format of dataset (num_proc=128):  14%|█▎        | 13082/95244 [00:06<00:30, 2714.84 examples/s]Converting format of dataset (num_proc=128):  14%|█▍        | 13366/95244 [00:06<00:29, 2743.55 examples/s]Converting format of dataset (num_proc=128):  14%|█▍        | 13644/95244 [00:06<00:29, 2750.93 examples/s]Converting format of dataset (num_proc=128):  15%|█▍        | 13921/95244 [00:06<00:31, 2618.07 examples/s]Converting format of dataset (num_proc=128):  15%|█▍        | 14251/95244 [00:06<00:28, 2809.43 examples/s]Converting format of dataset (num_proc=128):  15%|█▌        | 14539/95244 [00:06<00:28, 2829.59 examples/s]Converting format of dataset (num_proc=128):  16%|█▌        | 14825/95244 [00:06<00:28, 2796.57 examples/s]Converting format of dataset (num_proc=128):  16%|█▌        | 15109/95244 [00:06<00:31, 2519.60 examples/s]Converting format of dataset (num_proc=128):  16%|█▌        | 15369/95244 [00:06<00:38, 2064.84 examples/s]Converting format of dataset (num_proc=128):  16%|█▋        | 15596/95244 [00:07<00:37, 2111.63 examples/s]Converting format of dataset (num_proc=128):  17%|█▋        | 15822/95244 [00:07<00:40, 1962.55 examples/s]Converting format of dataset (num_proc=128):  17%|█▋        | 16043/95244 [00:07<00:39, 2021.78 examples/s]Converting format of dataset (num_proc=128):  17%|█▋        | 16315/95244 [00:07<00:35, 2197.27 examples/s]Converting format of dataset (num_proc=128):  17%|█▋        | 16626/95244 [00:07<00:32, 2442.29 examples/s]Converting format of dataset (num_proc=128):  18%|█▊        | 16909/95244 [00:07<00:30, 2548.49 examples/s]Converting format of dataset (num_proc=128):  18%|█▊        | 17171/95244 [00:07<00:30, 2563.87 examples/s]Converting format of dataset (num_proc=128):  18%|█▊        | 17440/95244 [00:07<00:29, 2600.09 examples/s]Converting format of dataset (num_proc=128):  19%|█▊        | 17736/95244 [00:07<00:28, 2702.45 examples/s]Converting format of dataset (num_proc=128):  19%|█▉        | 18073/95244 [00:08<00:27, 2855.71 examples/s]Converting format of dataset (num_proc=128):  19%|█▉        | 18401/95244 [00:08<00:25, 2978.97 examples/s]Converting format of dataset (num_proc=128):  20%|█▉        | 18796/95244 [00:08<00:23, 3252.06 examples/s]Converting format of dataset (num_proc=128):  20%|██        | 19162/95244 [00:08<00:22, 3371.67 examples/s]Converting format of dataset (num_proc=128):  20%|██        | 19501/95244 [00:08<00:23, 3278.07 examples/s]Converting format of dataset (num_proc=128):  21%|██        | 19831/95244 [00:08<00:24, 3098.98 examples/s]Converting format of dataset (num_proc=128):  21%|██        | 20150/95244 [00:08<00:24, 3119.51 examples/s]Converting format of dataset (num_proc=128):  21%|██▏       | 20464/95244 [00:08<00:26, 2864.28 examples/s]Converting format of dataset (num_proc=128):  22%|██▏       | 20778/95244 [00:08<00:25, 2935.06 examples/s]Converting format of dataset (num_proc=128):  22%|██▏       | 21146/95244 [00:08<00:23, 3128.61 examples/s]Converting format of dataset (num_proc=128):  23%|██▎       | 21475/95244 [00:09<00:23, 3167.62 examples/s]Converting format of dataset (num_proc=128):  23%|██▎       | 21798/95244 [00:09<00:23, 3148.25 examples/s]Converting format of dataset (num_proc=128):  23%|██▎       | 22153/95244 [00:09<00:22, 3218.52 examples/s]Converting format of dataset (num_proc=128):  24%|██▎       | 22485/95244 [00:09<00:22, 3241.88 examples/s]Converting format of dataset (num_proc=128):  24%|██▍       | 22831/95244 [00:09<00:21, 3304.62 examples/s]Converting format of dataset (num_proc=128):  24%|██▍       | 23164/95244 [00:09<00:24, 2993.57 examples/s]Converting format of dataset (num_proc=128):  25%|██▍       | 23542/95244 [00:09<00:22, 3205.27 examples/s]Converting format of dataset (num_proc=128):  25%|██▌       | 23869/95244 [00:09<00:25, 2829.01 examples/s]Converting format of dataset (num_proc=128):  25%|██▌       | 24166/95244 [00:09<00:25, 2830.62 examples/s]Converting format of dataset (num_proc=128):  26%|██▌       | 24501/95244 [00:10<00:23, 2964.31 examples/s]Converting format of dataset (num_proc=128):  26%|██▌       | 24805/95244 [00:10<00:23, 2976.57 examples/s]Converting format of dataset (num_proc=128):  26%|██▋       | 25108/95244 [00:10<00:24, 2900.78 examples/s]Converting format of dataset (num_proc=128):  27%|██▋       | 25402/95244 [00:10<00:25, 2768.60 examples/s]Converting format of dataset (num_proc=128):  27%|██▋       | 25684/95244 [00:10<00:25, 2770.16 examples/s]Converting format of dataset (num_proc=128):  27%|██▋       | 25964/95244 [00:10<00:25, 2668.51 examples/s]Converting format of dataset (num_proc=128):  28%|██▊       | 26256/95244 [00:10<00:25, 2727.40 examples/s]Converting format of dataset (num_proc=128):  28%|██▊       | 26550/95244 [00:10<00:24, 2785.98 examples/s]Converting format of dataset (num_proc=128):  28%|██▊       | 26843/95244 [00:10<00:24, 2802.90 examples/s]Converting format of dataset (num_proc=128):  28%|██▊       | 27129/95244 [00:11<00:24, 2819.02 examples/s]Converting format of dataset (num_proc=128):  29%|██▉       | 27491/95244 [00:11<00:22, 3052.26 examples/s]Converting format of dataset (num_proc=128):  29%|██▉       | 27812/95244 [00:11<00:21, 3097.44 examples/s]Converting format of dataset (num_proc=128):  30%|██▉       | 28274/95244 [00:11<00:18, 3547.15 examples/s]Converting format of dataset (num_proc=128):  30%|███       | 28653/95244 [00:11<00:18, 3613.94 examples/s]Converting format of dataset (num_proc=128):  30%|███       | 29017/95244 [00:11<00:19, 3418.58 examples/s]Converting format of dataset (num_proc=128):  31%|███       | 29412/95244 [00:11<00:18, 3563.70 examples/s]Converting format of dataset (num_proc=128):  31%|███▏      | 29983/95244 [00:11<00:15, 4181.58 examples/s]Converting format of dataset (num_proc=128):  32%|███▏      | 30407/95244 [00:11<00:16, 3907.55 examples/s]Converting format of dataset (num_proc=128):  32%|███▏      | 30827/95244 [00:11<00:16, 3953.35 examples/s]Converting format of dataset (num_proc=128):  33%|███▎      | 31227/95244 [00:12<00:17, 3688.99 examples/s]Converting format of dataset (num_proc=128):  33%|███▎      | 31604/95244 [00:12<00:18, 3368.02 examples/s]Converting format of dataset (num_proc=128):  34%|███▎      | 31949/95244 [00:12<00:19, 3186.08 examples/s]Converting format of dataset (num_proc=128):  34%|███▍      | 32277/95244 [00:12<00:20, 3107.02 examples/s]Converting format of dataset (num_proc=128):  34%|███▍      | 32593/95244 [00:12<00:21, 2942.29 examples/s]Converting format of dataset (num_proc=128):  35%|███▍      | 33056/95244 [00:12<00:18, 3385.62 examples/s]Converting format of dataset (num_proc=128):  35%|███▌      | 33406/95244 [00:12<00:18, 3316.36 examples/s]Converting format of dataset (num_proc=128):  36%|███▌      | 33939/95244 [00:12<00:15, 3868.87 examples/s]Converting format of dataset (num_proc=128):  36%|███▌      | 34339/95244 [00:13<00:16, 3611.71 examples/s]Converting format of dataset (num_proc=128):  37%|███▋      | 34835/95244 [00:13<00:15, 3958.56 examples/s]Converting format of dataset (num_proc=128):  37%|███▋      | 35256/95244 [00:13<00:15, 3759.25 examples/s]Converting format of dataset (num_proc=128):  37%|███▋      | 35641/95244 [00:13<00:15, 3771.08 examples/s]Converting format of dataset (num_proc=128):  38%|███▊      | 36026/95244 [00:13<00:17, 3472.38 examples/s]Converting format of dataset (num_proc=128):  38%|███▊      | 36388/95244 [00:13<00:16, 3500.52 examples/s]Converting format of dataset (num_proc=128):  39%|███▊      | 36747/95244 [00:13<00:17, 3394.63 examples/s]Converting format of dataset (num_proc=128):  39%|███▉      | 37132/95244 [00:13<00:16, 3507.80 examples/s]Converting format of dataset (num_proc=128):  40%|███▉      | 37638/95244 [00:13<00:14, 3932.58 examples/s]Converting format of dataset (num_proc=128):  40%|████      | 38158/95244 [00:14<00:13, 4284.90 examples/s]Converting format of dataset (num_proc=128):  41%|████      | 38595/95244 [00:14<00:14, 4029.57 examples/s]Converting format of dataset (num_proc=128):  41%|████      | 39072/95244 [00:14<00:13, 4230.17 examples/s]Converting format of dataset (num_proc=128):  41%|████▏     | 39503/95244 [00:14<00:14, 3970.10 examples/s]Converting format of dataset (num_proc=128):  42%|████▏     | 39947/95244 [00:14<00:13, 4055.48 examples/s]Converting format of dataset (num_proc=128):  42%|████▏     | 40360/95244 [00:14<00:14, 3788.24 examples/s]Converting format of dataset (num_proc=128):  43%|████▎     | 40749/95244 [00:14<00:14, 3778.45 examples/s]Converting format of dataset (num_proc=128):  43%|████▎     | 41135/95244 [00:14<00:14, 3741.61 examples/s]Converting format of dataset (num_proc=128):  44%|████▎     | 41512/95244 [00:14<00:14, 3697.22 examples/s]Converting format of dataset (num_proc=128):  44%|████▍     | 41990/95244 [00:15<00:13, 4000.64 examples/s]Converting format of dataset (num_proc=128):  45%|████▍     | 42423/95244 [00:15<00:12, 4093.40 examples/s]Converting format of dataset (num_proc=128):  45%|████▍     | 42840/95244 [00:15<00:13, 3948.72 examples/s]Converting format of dataset (num_proc=128):  46%|████▌     | 43373/95244 [00:15<00:11, 4336.13 examples/s]Converting format of dataset (num_proc=128):  46%|████▌     | 43811/95244 [00:15<00:12, 4036.28 examples/s]Converting format of dataset (num_proc=128):  46%|████▋     | 44221/95244 [00:15<00:13, 3736.99 examples/s]Converting format of dataset (num_proc=128):  47%|████▋     | 44604/95244 [00:15<00:13, 3701.06 examples/s]Converting format of dataset (num_proc=128):  47%|████▋     | 44980/95244 [00:15<00:13, 3641.23 examples/s]Converting format of dataset (num_proc=128):  48%|████▊     | 45480/95244 [00:15<00:12, 3972.12 examples/s]Converting format of dataset (num_proc=128):  48%|████▊     | 46033/95244 [00:16<00:11, 4296.97 examples/s]Converting format of dataset (num_proc=128):  49%|████▉     | 46467/95244 [00:16<00:12, 3850.50 examples/s]Converting format of dataset (num_proc=128):  49%|████▉     | 46920/95244 [00:16<00:12, 4024.41 examples/s]Converting format of dataset (num_proc=128):  50%|████▉     | 47483/95244 [00:16<00:10, 4462.73 examples/s]Converting format of dataset (num_proc=128):  50%|█████     | 47940/95244 [00:16<00:11, 4264.47 examples/s]Converting format of dataset (num_proc=128):  51%|█████     | 48421/95244 [00:16<00:10, 4406.31 examples/s]Converting format of dataset (num_proc=128):  51%|█████▏    | 48982/95244 [00:16<00:09, 4742.36 examples/s]Converting format of dataset (num_proc=128):  52%|█████▏    | 49464/95244 [00:16<00:10, 4367.51 examples/s]Converting format of dataset (num_proc=128):  52%|█████▏    | 49912/95244 [00:16<00:10, 4206.26 examples/s]Converting format of dataset (num_proc=128):  53%|█████▎    | 50340/95244 [00:17<00:11, 3857.23 examples/s]Converting format of dataset (num_proc=128):  53%|█████▎    | 50792/95244 [00:17<00:11, 4030.63 examples/s]Converting format of dataset (num_proc=128):  54%|█████▍    | 51271/95244 [00:17<00:10, 4216.38 examples/s]Converting format of dataset (num_proc=128):  54%|█████▍    | 51753/95244 [00:17<00:09, 4379.29 examples/s]Converting format of dataset (num_proc=128):  55%|█████▍    | 52198/95244 [00:17<00:10, 4201.21 examples/s]Converting format of dataset (num_proc=128):  55%|█████▌    | 52651/95244 [00:17<00:09, 4288.18 examples/s]Converting format of dataset (num_proc=128):  56%|█████▌    | 53085/95244 [00:17<00:09, 4268.54 examples/s]Converting format of dataset (num_proc=128):  56%|█████▋    | 53581/95244 [00:17<00:09, 4464.00 examples/s]Converting format of dataset (num_proc=128):  57%|█████▋    | 54032/95244 [00:17<00:09, 4466.51 examples/s]Converting format of dataset (num_proc=128):  57%|█████▋    | 54481/95244 [00:18<00:09, 4118.10 examples/s]Converting format of dataset (num_proc=128):  58%|█████▊    | 54960/95244 [00:18<00:09, 4276.22 examples/s]Converting format of dataset (num_proc=128):  58%|█████▊    | 55471/95244 [00:18<00:08, 4508.30 examples/s]Converting format of dataset (num_proc=128):  59%|█████▊    | 55930/95244 [00:18<00:08, 4374.82 examples/s]Converting format of dataset (num_proc=128):  59%|█████▉    | 56497/95244 [00:18<00:08, 4739.43 examples/s]Converting format of dataset (num_proc=128):  60%|█████▉    | 57078/95244 [00:18<00:07, 5043.58 examples/s]Converting format of dataset (num_proc=128):  60%|██████    | 57597/95244 [00:18<00:07, 4992.06 examples/s]Converting format of dataset (num_proc=128):  61%|██████    | 58208/95244 [00:18<00:06, 5311.47 examples/s]Converting format of dataset (num_proc=128):  62%|██████▏   | 58743/95244 [00:18<00:07, 4907.43 examples/s]Converting format of dataset (num_proc=128):  62%|██████▏   | 59336/95244 [00:18<00:06, 5183.90 examples/s]Converting format of dataset (num_proc=128):  63%|██████▎   | 59883/95244 [00:19<00:06, 5260.23 examples/s]Converting format of dataset (num_proc=128):  64%|██████▎   | 60611/95244 [00:19<00:05, 5815.27 examples/s]Converting format of dataset (num_proc=128):  64%|██████▍   | 61406/95244 [00:19<00:05, 6434.33 examples/s]Converting format of dataset (num_proc=128):  65%|██████▌   | 62065/95244 [00:19<00:05, 6460.80 examples/s]Converting format of dataset (num_proc=128):  66%|██████▌   | 62720/95244 [00:19<00:05, 6452.04 examples/s]Converting format of dataset (num_proc=128):  67%|██████▋   | 63369/95244 [00:19<00:05, 5461.71 examples/s]Converting format of dataset (num_proc=128):  67%|██████▋   | 63956/95244 [00:19<00:05, 5272.40 examples/s]Converting format of dataset (num_proc=128):  68%|██████▊   | 64504/95244 [00:19<00:05, 5217.43 examples/s]Converting format of dataset (num_proc=128):  68%|██████▊   | 65039/95244 [00:19<00:05, 5156.62 examples/s]Converting format of dataset (num_proc=128):  69%|██████▉   | 65567/95244 [00:20<00:05, 5069.89 examples/s]Converting format of dataset (num_proc=128):  69%|██████▉   | 66084/95244 [00:20<00:06, 4672.22 examples/s]Converting format of dataset (num_proc=128):  70%|███████   | 66874/95244 [00:20<00:05, 5528.71 examples/s]Converting format of dataset (num_proc=128):  71%|███████   | 67548/95244 [00:20<00:04, 5855.51 examples/s]Converting format of dataset (num_proc=128):  72%|███████▏  | 68150/95244 [00:20<00:05, 5306.96 examples/s]Converting format of dataset (num_proc=128):  72%|███████▏  | 68700/95244 [00:20<00:05, 5170.28 examples/s]Converting format of dataset (num_proc=128):  73%|███████▎  | 69423/95244 [00:20<00:04, 5719.32 examples/s]Converting format of dataset (num_proc=128):  74%|███████▎  | 70103/95244 [00:20<00:04, 6000.61 examples/s]Converting format of dataset (num_proc=128):  74%|███████▍  | 70720/95244 [00:21<00:04, 5727.86 examples/s]Converting format of dataset (num_proc=128):  75%|███████▍  | 71305/95244 [00:21<00:04, 5682.98 examples/s]Converting format of dataset (num_proc=128):  75%|███████▌  | 71884/95244 [00:21<00:04, 5448.38 examples/s]Converting format of dataset (num_proc=128):  76%|███████▌  | 72442/95244 [00:21<00:04, 5477.70 examples/s]Converting format of dataset (num_proc=128):  77%|███████▋  | 72999/95244 [00:21<00:04, 5284.60 examples/s]Converting format of dataset (num_proc=128):  77%|███████▋  | 73534/95244 [00:21<00:04, 4866.23 examples/s]Converting format of dataset (num_proc=128):  78%|███████▊  | 74072/95244 [00:21<00:04, 5000.96 examples/s]Converting format of dataset (num_proc=128):  78%|███████▊  | 74580/95244 [00:21<00:04, 4810.76 examples/s]Converting format of dataset (num_proc=128):  79%|███████▉  | 75183/95244 [00:21<00:03, 5134.74 examples/s]Converting format of dataset (num_proc=128):  79%|███████▉  | 75703/95244 [00:21<00:03, 5063.46 examples/s]Converting format of dataset (num_proc=128):  80%|████████  | 76215/95244 [00:22<00:03, 5077.25 examples/s]Converting format of dataset (num_proc=128):  81%|████████  | 76771/95244 [00:22<00:03, 5215.04 examples/s]Converting format of dataset (num_proc=128):  81%|████████  | 77296/95244 [00:22<00:03, 5145.01 examples/s]Converting format of dataset (num_proc=128):  82%|████████▏ | 77843/95244 [00:22<00:03, 5227.75 examples/s]Converting format of dataset (num_proc=128):  82%|████████▏ | 78375/95244 [00:22<00:03, 5213.98 examples/s]Converting format of dataset (num_proc=128):  83%|████████▎ | 78900/95244 [00:22<00:03, 4981.20 examples/s]Converting format of dataset (num_proc=128):  83%|████████▎ | 79447/95244 [00:22<00:03, 5116.45 examples/s]Converting format of dataset (num_proc=128):  84%|████████▍ | 79976/95244 [00:22<00:02, 5153.68 examples/s]Converting format of dataset (num_proc=128):  85%|████████▍ | 80524/95244 [00:22<00:02, 5221.93 examples/s]Converting format of dataset (num_proc=128):  85%|████████▌ | 81060/95244 [00:23<00:02, 5227.89 examples/s]Converting format of dataset (num_proc=128):  86%|████████▌ | 81587/95244 [00:23<00:02, 5143.05 examples/s]Converting format of dataset (num_proc=128):  86%|████████▋ | 82184/95244 [00:23<00:02, 5381.83 examples/s]Converting format of dataset (num_proc=128):  87%|████████▋ | 82927/95244 [00:23<00:02, 5979.55 examples/s]Converting format of dataset (num_proc=128):  88%|████████▊ | 83580/95244 [00:23<00:01, 6090.79 examples/s]Converting format of dataset (num_proc=128):  88%|████████▊ | 84191/95244 [00:23<00:02, 5357.26 examples/s]Converting format of dataset (num_proc=128):  89%|████████▉ | 85210/95244 [00:23<00:01, 6659.86 examples/s]Converting format of dataset (num_proc=128):  90%|█████████ | 85903/95244 [00:23<00:01, 6215.48 examples/s]Converting format of dataset (num_proc=128):  91%|█████████ | 86548/95244 [00:23<00:01, 5330.90 examples/s]Converting format of dataset (num_proc=128):  91%|█████████▏| 87118/95244 [00:24<00:01, 5110.51 examples/s]Converting format of dataset (num_proc=128):  92%|█████████▏| 87658/95244 [00:24<00:01, 4937.75 examples/s]Converting format of dataset (num_proc=128):  93%|█████████▎| 88168/95244 [00:24<00:01, 4603.93 examples/s]Converting format of dataset (num_proc=128):  93%|█████████▎| 88641/95244 [00:24<00:01, 4442.70 examples/s]Converting format of dataset (num_proc=128):  94%|█████████▎| 89144/95244 [00:24<00:01, 4567.22 examples/s]Converting format of dataset (num_proc=128):  94%|█████████▍| 89806/95244 [00:24<00:01, 5085.88 examples/s]Converting format of dataset (num_proc=128):  95%|█████████▍| 90334/95244 [00:24<00:00, 5135.90 examples/s]Converting format of dataset (num_proc=128):  95%|█████████▌| 90867/95244 [00:24<00:00, 5144.91 examples/s]Converting format of dataset (num_proc=128):  96%|█████████▌| 91388/95244 [00:24<00:00, 4984.78 examples/s]Converting format of dataset (num_proc=128):  96%|█████████▋| 91891/95244 [00:25<00:00, 4709.07 examples/s]Converting format of dataset (num_proc=128):  97%|█████████▋| 92376/95244 [00:25<00:00, 4120.70 examples/s]Converting format of dataset (num_proc=128):  97%|█████████▋| 92803/95244 [00:25<00:00, 3754.35 examples/s]Converting format of dataset (num_proc=128):  98%|█████████▊| 93193/95244 [00:25<00:00, 3311.97 examples/s]Converting format of dataset (num_proc=128):  98%|█████████▊| 93540/95244 [00:25<00:00, 2998.68 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▊| 93853/95244 [00:25<00:00, 2804.16 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▉| 94142/95244 [00:25<00:00, 2573.55 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▉| 94412/95244 [00:26<00:00, 2307.07 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▉| 94656/95244 [00:26<00:00, 2127.08 examples/s]Converting format of dataset (num_proc=128): 100%|█████████▉| 94874/95244 [00:26<00:00, 1969.61 examples/s]Converting format of dataset (num_proc=128): 100%|█████████▉| 95076/95244 [00:26<00:00, 1853.36 examples/s]Converting format of dataset (num_proc=128): 100%|██████████| 95244/95244 [00:26<00:00, 3532.73 examples/s]
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+Converting format of dataset (num_proc=83):   0%|          | 0/83 [00:00<?, ? examples/s]Converting format of dataset (num_proc=83):   1%|          | 1/83 [00:00<00:08,  9.51 examples/s]Converting format of dataset (num_proc=83):  24%|██▍       | 20/83 [00:00<00:00, 112.84 examples/s]Converting format of dataset (num_proc=83):  46%|████▌     | 38/83 [00:00<00:00, 141.48 examples/s]Converting format of dataset (num_proc=83):  71%|███████   | 59/83 [00:00<00:00, 168.11 examples/s]Converting format of dataset (num_proc=83): 100%|██████████| 83/83 [00:00<00:00, 89.05 examples/s] 
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W1022 11:23:59.961462376 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+Running tokenizer on dataset (num_proc=128):   0%|          | 0/95244 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=128):   1%|          | 744/95244 [01:32<3:16:10,  8.03 examples/s]Running tokenizer on dataset (num_proc=128):   2%|▏         | 2232/95244 [01:33<50:49, 30.50 examples/s] Running tokenizer on dataset (num_proc=128):   3%|▎         | 2976/95244 [01:33<33:03, 46.51 examples/s]Running tokenizer on dataset (num_proc=128):   4%|▍         | 3720/95244 [01:34<22:13, 68.64 examples/s]Running tokenizer on dataset (num_proc=128):   5%|▍         | 4464/95244 [01:34<15:04, 100.32 examples/s]Running tokenizer on dataset (num_proc=128):   5%|▌         | 5208/95244 [01:34<10:27, 143.45 examples/s]Running tokenizer on dataset (num_proc=128):   6%|▌         | 5952/95244 [01:34<07:14, 205.36 examples/s]Running tokenizer on dataset (num_proc=128):   7%|▋         | 6696/95244 [01:35<05:30, 267.95 examples/s]Running tokenizer on dataset (num_proc=128):   8%|▊         | 7440/95244 [01:36<03:58, 367.42 examples/s]Running tokenizer on dataset (num_proc=128):   9%|▉         | 8928/95244 [01:36<02:15, 637.49 examples/s]Running tokenizer on dataset (num_proc=128):  10%|█         | 9672/95244 [01:38<02:30, 569.60 examples/s]Running tokenizer on dataset (num_proc=128):  11%|█         | 10416/95244 [01:39<02:20, 602.32 examples/s]Running tokenizer on dataset (num_proc=128):  12%|█▏        | 11160/95244 [01:39<01:56, 723.62 examples/s]Running tokenizer on dataset (num_proc=128):  14%|█▍        | 13392/95244 [01:41<01:32, 888.97 examples/s]Running tokenizer on dataset (num_proc=128):  15%|█▍        | 14136/95244 [01:41<01:17, 1051.78 examples/s]Running tokenizer on dataset (num_proc=128):  16%|█▌        | 14880/95244 [01:42<01:03, 1259.08 examples/s]Running tokenizer on dataset (num_proc=128):  16%|█▋        | 15624/95244 [01:42<00:58, 1356.38 examples/s]Running tokenizer on dataset (num_proc=128):  17%|█▋        | 16368/95244 [01:42<00:47, 1677.46 examples/s]Running tokenizer on dataset (num_proc=128):  18%|█▊        | 17112/95244 [01:43<01:13, 1060.39 examples/s]Running tokenizer on dataset (num_proc=128):  19%|█▊        | 17856/95244 [01:44<01:02, 1245.44 examples/s]Running tokenizer on dataset (num_proc=128):  20%|██        | 19344/95244 [01:44<00:38, 1951.39 examples/s]Running tokenizer on dataset (num_proc=128):  22%|██▏       | 20832/95244 [01:44<00:25, 2928.95 examples/s]Running tokenizer on dataset (num_proc=128):  23%|██▎       | 21576/95244 [01:45<00:29, 2517.00 examples/s]Running tokenizer on dataset (num_proc=128):  23%|██▎       | 22320/95244 [01:45<00:25, 2905.20 examples/s]Running tokenizer on dataset (num_proc=128):  24%|██▍       | 23064/95244 [01:46<00:42, 1709.58 examples/s]Running tokenizer on dataset (num_proc=128):  25%|██▍       | 23808/95244 [01:46<00:36, 1963.88 examples/s]Running tokenizer on dataset (num_proc=128):  26%|██▌       | 24552/95244 [01:46<00:37, 1896.26 examples/s]Running tokenizer on dataset (num_proc=128):  27%|██▋       | 25296/95244 [01:47<00:40, 1729.93 examples/s]Running tokenizer on dataset (num_proc=128):  27%|██▋       | 26040/95244 [01:47<00:31, 2196.96 examples/s]Running tokenizer on dataset (num_proc=128):  29%|██▉       | 27528/95244 [01:48<00:29, 2282.26 examples/s]Running tokenizer on dataset (num_proc=128):  30%|██▉       | 28272/95244 [01:48<00:29, 2306.41 examples/s]Running tokenizer on dataset (num_proc=128):  31%|███       | 29760/95244 [01:48<00:20, 3199.09 examples/s]Running tokenizer on dataset (num_proc=128):  32%|███▏      | 30504/95244 [01:50<00:45, 1412.06 examples/s]Running tokenizer on dataset (num_proc=128):  33%|███▎      | 31248/95244 [01:50<00:49, 1303.09 examples/s]Running tokenizer on dataset (num_proc=128):  34%|███▎      | 31992/95244 [01:51<00:46, 1346.97 examples/s]Running tokenizer on dataset (num_proc=128):  34%|███▍      | 32736/95244 [01:51<00:41, 1493.26 examples/s]Running tokenizer on dataset (num_proc=128):  36%|███▌      | 34224/95244 [01:51<00:26, 2269.83 examples/s]Running tokenizer on dataset (num_proc=128):  37%|███▋      | 34968/95244 [01:52<00:24, 2486.22 examples/s]Running tokenizer on dataset (num_proc=128):  37%|███▋      | 35713/95244 [01:52<00:30, 1971.42 examples/s]Running tokenizer on dataset (num_proc=128):  38%|███▊      | 36457/95244 [01:53<00:37, 1569.53 examples/s]Running tokenizer on dataset (num_proc=128):  39%|███▉      | 37201/95244 [01:53<00:34, 1671.73 examples/s]Running tokenizer on dataset (num_proc=128):  40%|███▉      | 37945/95244 [01:53<00:26, 2135.51 examples/s]Running tokenizer on dataset (num_proc=128):  41%|████      | 38689/95244 [01:54<00:21, 2575.45 examples/s]Running tokenizer on dataset (num_proc=128):  42%|████▏     | 40177/95244 [01:54<00:13, 4064.99 examples/s]Running tokenizer on dataset (num_proc=128):  44%|████▎     | 41667/95244 [01:54<00:17, 3101.65 examples/s]Running tokenizer on dataset (num_proc=128):  45%|████▌     | 43157/95244 [01:55<00:14, 3552.27 examples/s]Running tokenizer on dataset (num_proc=128):  46%|████▌     | 43901/95244 [01:55<00:15, 3209.32 examples/s]Running tokenizer on dataset (num_proc=128):  47%|████▋     | 44646/95244 [01:55<00:14, 3530.68 examples/s]Running tokenizer on dataset (num_proc=128):  48%|████▊     | 46136/95244 [01:55<00:11, 4370.69 examples/s]Running tokenizer on dataset (num_proc=128):  49%|████▉     | 46880/95244 [01:56<00:12, 4027.25 examples/s]Running tokenizer on dataset (num_proc=128):  50%|█████     | 47625/95244 [01:56<00:12, 3859.03 examples/s]Running tokenizer on dataset (num_proc=128):  51%|█████     | 48370/95244 [01:56<00:11, 3931.26 examples/s]Running tokenizer on dataset (num_proc=128):  52%|█████▏    | 49114/95244 [01:56<00:10, 4276.15 examples/s]Running tokenizer on dataset (num_proc=128):  52%|█████▏    | 49859/95244 [01:56<00:10, 4428.83 examples/s]Running tokenizer on dataset (num_proc=128):  53%|█████▎    | 50603/95244 [01:56<00:09, 4518.03 examples/s]Running tokenizer on dataset (num_proc=128):  55%|█████▌    | 52836/95244 [01:57<00:13, 3148.67 examples/s]Running tokenizer on dataset (num_proc=128):  56%|█████▋    | 53580/95244 [01:58<00:19, 2180.38 examples/s]Running tokenizer on dataset (num_proc=128):  57%|█████▋    | 54324/95244 [01:58<00:16, 2451.32 examples/s]Running tokenizer on dataset (num_proc=128):  59%|█████▉    | 56556/95244 [01:59<00:14, 2634.93 examples/s]Running tokenizer on dataset (num_proc=128):  60%|██████    | 57300/95244 [01:59<00:13, 2849.11 examples/s]Running tokenizer on dataset (num_proc=128):  61%|██████    | 58044/95244 [01:59<00:11, 3126.68 examples/s]Running tokenizer on dataset (num_proc=128):  62%|██████▏   | 58788/95244 [01:59<00:10, 3563.25 examples/s]Running tokenizer on dataset (num_proc=128):  63%|██████▎   | 59532/95244 [02:00<00:12, 2893.10 examples/s]Running tokenizer on dataset (num_proc=128):  63%|██████▎   | 60276/95244 [02:00<00:14, 2451.34 examples/s]Running tokenizer on dataset (num_proc=128):  64%|██████▍   | 61020/95244 [02:01<00:14, 2376.59 examples/s]Running tokenizer on dataset (num_proc=128):  65%|██████▍   | 61764/95244 [02:01<00:18, 1856.52 examples/s]Running tokenizer on dataset (num_proc=128):  66%|██████▌   | 62508/95244 [02:02<00:16, 1948.07 examples/s]Running tokenizer on dataset (num_proc=128):  66%|██████▋   | 63252/95244 [02:02<00:17, 1848.01 examples/s]Running tokenizer on dataset (num_proc=128):  67%|██████▋   | 63996/95244 [02:03<00:23, 1303.96 examples/s]Running tokenizer on dataset (num_proc=128):  69%|██████▉   | 65484/95244 [02:03<00:15, 1956.41 examples/s]Running tokenizer on dataset (num_proc=128):  71%|███████   | 67716/95244 [02:04<00:08, 3078.98 examples/s]Running tokenizer on dataset (num_proc=128):  73%|███████▎  | 69948/95244 [02:04<00:05, 4733.36 examples/s]Running tokenizer on dataset (num_proc=128):  75%|███████▌  | 71436/95244 [02:04<00:05, 4310.69 examples/s]Running tokenizer on dataset (num_proc=128):  77%|███████▋  | 72924/95244 [02:04<00:04, 4617.31 examples/s]Running tokenizer on dataset (num_proc=128):  78%|███████▊  | 74412/95244 [02:05<00:04, 4177.79 examples/s]Running tokenizer on dataset (num_proc=128):  80%|████████  | 76644/95244 [02:05<00:03, 5604.75 examples/s]Running tokenizer on dataset (num_proc=128):  83%|████████▎ | 78876/95244 [02:05<00:02, 7222.04 examples/s]Running tokenizer on dataset (num_proc=128):  84%|████████▍ | 80364/95244 [02:05<00:02, 6756.19 examples/s]Running tokenizer on dataset (num_proc=128):  86%|████████▌ | 81852/95244 [02:06<00:01, 7675.66 examples/s]Running tokenizer on dataset (num_proc=128):  88%|████████▊ | 83340/95244 [02:06<00:01, 8013.96 examples/s]Running tokenizer on dataset (num_proc=128):  89%|████████▉ | 84828/95244 [02:06<00:01, 8005.63 examples/s]Running tokenizer on dataset (num_proc=128):  91%|█████████ | 86316/95244 [02:06<00:01, 6940.80 examples/s]Running tokenizer on dataset (num_proc=128):  93%|█████████▎| 88548/95244 [02:06<00:00, 8613.57 examples/s]Running tokenizer on dataset (num_proc=128):  95%|█████████▍| 90036/95244 [02:07<00:00, 5486.49 examples/s]Running tokenizer on dataset (num_proc=128):  96%|█████████▌| 91524/95244 [02:07<00:00, 6423.19 examples/s]Running tokenizer on dataset (num_proc=128):  98%|█████████▊| 93012/95244 [02:08<00:00, 4422.97 examples/s]Running tokenizer on dataset (num_proc=128): 100%|██████████| 95244/95244 [02:08<00:00, 5821.91 examples/s]Running tokenizer on dataset (num_proc=128): 100%|██████████| 95244/95244 [02:08<00:00, 741.73 examples/s] 
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+Running tokenizer on dataset (num_proc=83):   0%|          | 0/83 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=83):   1%|          | 1/83 [00:00<00:45,  1.79 examples/s]Running tokenizer on dataset (num_proc=83):   4%|▎         | 3/83 [00:00<00:16,  4.88 examples/s]Running tokenizer on dataset (num_proc=83):   6%|▌         | 5/83 [00:00<00:10,  7.77 examples/s]Running tokenizer on dataset (num_proc=83):   8%|▊         | 7/83 [00:01<00:08,  9.04 examples/s]Running tokenizer on dataset (num_proc=83):  11%|█         | 9/83 [00:01<00:08,  8.95 examples/s]Running tokenizer on dataset (num_proc=83):  13%|█▎        | 11/83 [00:01<00:07,  9.84 examples/s]Running tokenizer on dataset (num_proc=83):  16%|█▌        | 13/83 [00:01<00:06, 10.20 examples/s]Running tokenizer on dataset (num_proc=83):  19%|█▉        | 16/83 [00:01<00:05, 12.02 examples/s]Running tokenizer on dataset (num_proc=83):  22%|██▏       | 18/83 [00:01<00:05, 11.69 examples/s]Running tokenizer on dataset (num_proc=83):  24%|██▍       | 20/83 [00:02<00:06,  9.99 examples/s]Running tokenizer on dataset (num_proc=83):  28%|██▊       | 23/83 [00:02<00:05, 11.59 examples/s]Running tokenizer on dataset (num_proc=83):  30%|███       | 25/83 [00:02<00:05, 11.44 examples/s]Running tokenizer on dataset (num_proc=83):  33%|███▎      | 27/83 [00:02<00:05, 10.15 examples/s]Running tokenizer on dataset (num_proc=83):  35%|███▍      | 29/83 [00:03<00:05, 10.29 examples/s]Running tokenizer on dataset (num_proc=83):  37%|███▋      | 31/83 [00:03<00:05,  9.47 examples/s]Running tokenizer on dataset (num_proc=83):  41%|████      | 34/83 [00:03<00:04, 10.88 examples/s]Running tokenizer on dataset (num_proc=83):  43%|████▎     | 36/83 [00:03<00:04, 11.34 examples/s]Running tokenizer on dataset (num_proc=83):  47%|████▋     | 39/83 [00:03<00:03, 11.49 examples/s]Running tokenizer on dataset (num_proc=83):  49%|████▉     | 41/83 [00:04<00:03, 12.88 examples/s]Running tokenizer on dataset (num_proc=83):  52%|█████▏    | 43/83 [00:04<00:03, 10.98 examples/s]Running tokenizer on dataset (num_proc=83):  54%|█████▍    | 45/83 [00:04<00:03, 12.53 examples/s]Running tokenizer on dataset (num_proc=83):  57%|█████▋    | 47/83 [00:04<00:02, 12.65 examples/s]Running tokenizer on dataset (num_proc=83):  59%|█████▉    | 49/83 [00:04<00:02, 11.89 examples/s]Running tokenizer on dataset (num_proc=83):  61%|██████▏   | 51/83 [00:04<00:02, 12.11 examples/s]Running tokenizer on dataset (num_proc=83):  64%|██████▍   | 53/83 [00:05<00:02, 11.83 examples/s]Running tokenizer on dataset (num_proc=83):  66%|██████▋   | 55/83 [00:05<00:02, 11.56 examples/s]Running tokenizer on dataset (num_proc=83):  69%|██████▊   | 57/83 [00:05<00:02, 10.45 examples/s]Running tokenizer on dataset (num_proc=83):  71%|███████   | 59/83 [00:05<00:01, 12.00 examples/s]Running tokenizer on dataset (num_proc=83):  73%|███████▎  | 61/83 [00:05<00:01, 11.73 examples/s]Running tokenizer on dataset (num_proc=83):  76%|███████▌  | 63/83 [00:05<00:01, 10.42 examples/s]Running tokenizer on dataset (num_proc=83):  78%|███████▊  | 65/83 [00:06<00:01, 10.94 examples/s]Running tokenizer on dataset (num_proc=83):  81%|████████  | 67/83 [00:06<00:01, 11.11 examples/s]Running tokenizer on dataset (num_proc=83):  83%|████████▎ | 69/83 [00:06<00:01, 11.16 examples/s]Running tokenizer on dataset (num_proc=83):  87%|████████▋ | 72/83 [00:06<00:00, 12.57 examples/s]Running tokenizer on dataset (num_proc=83):  89%|████████▉ | 74/83 [00:06<00:00, 11.99 examples/s]Running tokenizer on dataset (num_proc=83):  92%|█████████▏| 76/83 [00:07<00:00, 11.36 examples/s]Running tokenizer on dataset (num_proc=83):  94%|█████████▍| 78/83 [00:07<00:00, 11.05 examples/s]Running tokenizer on dataset (num_proc=83):  96%|█████████▋| 80/83 [00:07<00:00, 11.34 examples/s]Running tokenizer on dataset (num_proc=83):  99%|█████████▉| 82/83 [00:07<00:00, 12.61 examples/s]Running tokenizer on dataset (num_proc=83): 100%|██████████| 83/83 [00:07<00:00, 10.74 examples/s]
+[INFO|configuration_utils.py:765] 2025-10-22 11:26:21,088 >> loading configuration file config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json
+[INFO|configuration_utils.py:839] 2025-10-22 11:26:21,113 >> Model config Qwen2_5_VLConfig {
+  "architectures": [
+    "Qwen2_5_VLForConditionalGeneration"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 2048,
+  "image_token_id": 151655,
+  "initializer_range": 0.02,
+  "intermediate_size": 11008,
+  "max_position_embeddings": 128000,
+  "max_window_layers": 70,
+  "model_type": "qwen2_5_vl",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 36,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": {
+    "mrope_section": [
+      16,
+      24,
+      24
+    ],
+    "rope_type": "default",
+    "type": "default"
+  },
+  "rope_theta": 1000000.0,
+  "sliding_window": 32768,
+  "text_config": {
+    "_name_or_path": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "hidden_act": "silu",
+    "hidden_size": 2048,
+    "initializer_range": 0.02,
+    "intermediate_size": 11008,
+    "layer_types": [
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention"
+    ],
+    "max_position_embeddings": 128000,
+    "max_window_layers": 70,
+    "model_type": "qwen2_5_vl_text",
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 2,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000.0,
+    "sliding_window": null,
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vision_token_id": 151654,
+    "vocab_size": 151936
+  },
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "video_token_id": 151656,
+  "vision_config": {
+    "depth": 32,
+    "fullatt_block_indexes": [
+      7,
+      15,
+      23,
+      31
+    ],
+    "hidden_act": "silu",
+    "hidden_size": 1280,
+    "in_channels": 3,
+    "in_chans": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 3420,
+    "model_type": "qwen2_5_vl",
+    "num_heads": 16,
+    "out_hidden_size": 2048,
+    "patch_size": 14,
+    "spatial_merge_size": 2,
+    "spatial_patch_size": 14,
+    "temporal_patch_size": 2,
+    "tokens_per_second": 2,
+    "window_size": 112
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652,
+  "vision_token_id": 151654,
+  "vocab_size": 151936
+}
+
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+num_proc must be <= 83. Reducing num_proc to 83 for dataset of size 83.
+[WARNING|logging.py:328] 2025-10-22 11:26:22,821 >> `torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+[INFO|modeling_utils.py:1172] 2025-10-22 11:26:22,827 >> loading weights file model.safetensors from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/model.safetensors.index.json
+[INFO|modeling_utils.py:2341] 2025-10-22 11:26:22,845 >> Instantiating Qwen2_5_VLForConditionalGeneration model under default dtype torch.bfloat16.
+[INFO|configuration_utils.py:986] 2025-10-22 11:26:22,863 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "eos_token_id": 151645
+}
+
+[INFO|modeling_utils.py:2341] 2025-10-22 11:26:22,869 >> Instantiating Qwen2_5_VisionTransformerPretrainedModel model under default dtype torch.bfloat16.
+[INFO|modeling_utils.py:2341] 2025-10-22 11:26:22,903 >> Instantiating Qwen2_5_VLTextModel model under default dtype torch.bfloat16.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:06<00:06,  6.32s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:06<00:06,  6.32s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:06<00:06,  6.32s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:06<00:06,  6.32s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.84s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.84s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.84s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.84s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.91s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.91s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.91s/it]
+
+
+Loading checkpoint shards: 100%|██████████| 2/2 [00:11<00:00,  5.91s/it]
+[INFO|configuration_utils.py:941] 2025-10-22 11:26:35,013 >> loading configuration file generation_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/generation_config.json
+[INFO|configuration_utils.py:986] 2025-10-22 11:26:35,013 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "repetition_penalty": 1.05,
+  "temperature": 1e-06
+}
+
+[INFO|dynamic_module_utils.py:423] 2025-10-22 11:26:35,179 >> Could not locate the custom_generate/generate.py inside Qwen/Qwen2.5-VL-3B-Instruct.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+[WARNING|trainer.py:906] 2025-10-22 11:26:46,365 >> The model is already on multiple devices. Skipping the move to device specified in `args`.
+[INFO|trainer.py:749] 2025-10-22 11:26:46,376 >> Using auto half precision backend
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+[WARNING|trainer.py:982] 2025-10-22 11:26:46,769 >> The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+[INFO|trainer.py:2934] 2025-10-22 11:26:46,856 >> Loading model from /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4000.
+[INFO|trainer.py:1335] 2025-10-22 11:26:47,699 >> skipped Embedding(151936, 2048): 296.75M params
+[INFO|trainer.py:1338] 2025-10-22 11:26:47,701 >> skipped: 296.75M params
+[INFO|trainer.py:2519] 2025-10-22 11:26:48,741 >> ***** Running training *****
+[INFO|trainer.py:2520] 2025-10-22 11:26:48,741 >>   Num examples = 95,244
+[INFO|trainer.py:2521] 2025-10-22 11:26:48,742 >>   Num Epochs = 3
+[INFO|trainer.py:2522] 2025-10-22 11:26:48,742 >>   Instantaneous batch size per device = 16
+[INFO|trainer.py:2525] 2025-10-22 11:26:48,742 >>   Total train batch size (w. parallel, distributed & accumulation) = 64
+[INFO|trainer.py:2526] 2025-10-22 11:26:48,742 >>   Gradient Accumulation steps = 1
+[INFO|trainer.py:2527] 2025-10-22 11:26:48,742 >>   Total optimization steps = 4,467
+[INFO|trainer.py:2528] 2025-10-22 11:26:48,747 >>   Number of trainable parameters = 59,867,136
+[INFO|trainer.py:2549] 2025-10-22 11:26:48,748 >>   Continuing training from checkpoint, will skip to saved global_step
+[INFO|trainer.py:2550] 2025-10-22 11:26:48,748 >>   Continuing training from epoch 2
+[INFO|trainer.py:2551] 2025-10-22 11:26:48,748 >>   Continuing training from global step 4000
+[INFO|trainer.py:2553] 2025-10-22 11:26:48,748 >>   Will skip the first 2 epochs then the first 1022 batches in the first epoch.
+[INFO|integration_utils.py:867] 2025-10-22 11:26:48,752 >> Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"
+wandb: Currently logged in as: niblank to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: creating run
+wandb: Tracking run with wandb version 0.22.0
+wandb: Run data is saved locally in /hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/wandb/run-20251022_112649-kbus5yoh
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run Qwen/Qwen2.5-VL-3B-Instruct_roboG_stagepoc_two_frames_detection_cotrain_train_sft
+wandb: ⭐️ View project at https://wandb.ai/niblank/llamafactory
+wandb: 🚀 View run at https://wandb.ai/niblank/llamafactory/runs/kbus5yoh
+  0%|          | 0/4467 [00:00<?, ?it/s] 90%|████████▉ | 4001/4467 [00:07<00:00, 547.26it/s] 90%|████████▉ | 4004/4467 [00:17<00:00, 547.26it/s] 90%|████████▉ | 4005/4467 [00:19<00:02, 160.65it/s] 90%|████████▉ | 4006/4467 [00:22<00:03, 128.19it/s]                                                     90%|████████▉ | 4010/4467 [00:35<00:03, 128.19it/s] 90%|████████▉ | 4010/4467 [00:37<00:03, 128.19it/s] 90%|████████▉ | 4011/4467 [00:38<00:08, 52.41it/s]  90%|████████▉ | 4012/4467 [00:41<00:10, 44.96it/s] 90%|████████▉ | 4015/4467 [00:51<00:10, 44.96it/s] 90%|████████▉ | 4016/4467 [00:53<00:18, 24.75it/s] 90%|████████▉ | 4017/4467 [00:56<00:21, 21.37it/s]                                                    90%|████████▉ | 4020/4467 [01:06<00:20, 21.37it/s] 90%|████████▉ | 4020/4467 [01:07<00:20, 21.37it/s] 90%|█████████ | 4021/4467 [01:09<00:37, 12.05it/s] 90%|█████████ | 4022/4467 [01:12<00:42, 10.44it/s] 90%|█████████ | 4026/4467 [01:27<00:42, 10.44it/s] 90%|█████████ | 4027/4467 [01:28<01:20,  5.44it/s] 90%|█████████ | 4028/4467 [01:31<01:31,  4.81it/s]                                                    90%|█████████ | 4030/4467 [01:37<01:30,  4.81it/s] 90%|█████████ | 4031/4467 [01:41<01:30,  4.81it/s] 90%|█████████ | 4032/4467 [01:43<02:27,  2.94it/s] 90%|█████████ | 4033/4467 [01:46<02:46,  2.60it/s] 90%|█████████ | 4036/4467 [01:56<04:00,  1.79it/s] 90%|█████████ | 4038/4467 [02:02<05:02,  1.42it/s] 90%|█████████ | 4040/4467 [02:08<06:20,  1.12it/s]                                                    90%|█████████ | 4040/4467 [02:08<06:20,  1.12it/s] 90%|█████████ | 4041/4467 [02:12<07:10,  1.01s/it] 90%|█████████ | 4042/4467 [02:15<08:12,  1.16s/it] 91%|█████████ | 4043/4467 [02:18<09:27,  1.34s/it] 91%|█████████ | 4044/4467 [02:21<10:47,  1.53s/it] 91%|█████████ | 4045/4467 [02:24<12:18,  1.75s/it] 91%|█████████ | 4046/4467 [02:27<13:53,  1.98s/it] 91%|█████████ | 4047/4467 [02:30<15:25,  2.20s/it] 91%|█████████ | 4048/4467 [02:34<16:45,  2.40s/it] 91%|█████████ | 4049/4467 [02:37<17:57,  2.58s/it] 91%|█████████ | 4050/4467 [02:40<18:54,  2.72s/it]                                                    91%|█████████ | 4050/4467 [02:40<18:54,  2.72s/it] 91%|█████████ | 4051/4467 [02:43<19:36,  2.83s/it] 91%|█████████ | 4052/4467 [02:46<20:06,  2.91s/it] 91%|█████████ | 4053/4467 [02:49<20:29,  2.97s/it] 91%|█████████ | 4054/4467 [02:52<20:50,  3.03s/it] 91%|█████████ | 4055/4467 [02:55<20:55,  3.05s/it] 91%|█████████ | 4056/4467 [02:59<21:02,  3.07s/it] 91%|█████████ | 4057/4467 [03:02<21:03,  3.08s/it] 91%|█████████ | 4058/4467 [03:05<21:10,  3.11s/it] 91%|█████████ | 4059/4467 [03:08<21:15,  3.13s/it] 91%|█████████ | 4060/4467 [03:11<21:10,  3.12s/it]                                                    91%|█████████ | 4060/4467 [03:11<21:10,  3.12s/it] 91%|█████████ | 4061/4467 [03:14<21:05,  3.12s/it] 91%|█████████ | 4062/4467 [03:17<21:08,  3.13s/it] 91%|█████████ | 4063/4467 [03:21<21:04,  3.13s/it] 91%|█████████ | 4064/4467 [03:24<20:59,  3.13s/it] 91%|█████████ | 4065/4467 [03:27<21:00,  3.13s/it] 91%|█████████ | 4066/4467 [03:30<20:59,  3.14s/it] 91%|█████████ | 4067/4467 [03:33<20:53,  3.13s/it] 91%|█████████ | 4068/4467 [03:36<20:45,  3.12s/it] 91%|█████████ | 4069/4467 [03:39<20:51,  3.14s/it] 91%|█████████ | 4070/4467 [03:43<20:42,  3.13s/it]                                                    91%|█████████ | 4070/4467 [03:43<20:42,  3.13s/it] 91%|█████████ | 4071/4467 [03:46<20:42,  3.14s/it] 91%|█████████ | 4072/4467 [03:49<20:37,  3.13s/it] 91%|█████████ | 4073/4467 [03:52<20:30,  3.12s/it] 91%|█████████ | 4074/4467 [03:55<20:18,  3.10s/it] 91%|█████████ | 4075/4467 [03:58<20:11,  3.09s/it] 91%|█████████ | 4076/4467 [04:01<20:12,  3.10s/it] 91%|█████████▏| 4077/4467 [04:04<20:11,  3.11s/it] 91%|█████████▏| 4078/4467 [04:07<20:05,  3.10s/it] 91%|█████████▏| 4079/4467 [04:10<20:06,  3.11s/it] 91%|█████████▏| 4080/4467 [04:14<20:03,  3.11s/it]                                                    91%|█████████▏| 4080/4467 [04:14<20:03,  3.11s/it] 91%|█████████▏| 4081/4467 [04:17<20:08,  3.13s/it] 91%|█████████▏| 4082/4467 [04:20<20:04,  3.13s/it] 91%|█████████▏| 4083/4467 [04:23<20:01,  3.13s/it] 91%|█████████▏| 4084/4467 [04:26<19:58,  3.13s/it] 91%|█████████▏| 4085/4467 [04:29<19:51,  3.12s/it] 91%|█████████▏| 4086/4467 [04:32<19:51,  3.13s/it] 91%|█████████▏| 4087/4467 [04:35<19:38,  3.10s/it] 92%|█████████▏| 4088/4467 [04:39<19:34,  3.10s/it] 92%|█████████▏| 4089/4467 [04:42<19:38,  3.12s/it] 92%|█████████▏| 4090/4467 [04:45<19:44,  3.14s/it]                                                    92%|█████████▏| 4090/4467 [04:45<19:44,  3.14s/it] 92%|█████████▏| 4091/4467 [04:48<19:44,  3.15s/it] 92%|█████████▏| 4092/4467 [04:51<19:41,  3.15s/it] 92%|█████████▏| 4093/4467 [04:54<19:33,  3.14s/it] 92%|█████████▏| 4094/4467 [04:57<19:32,  3.14s/it] 92%|█████████▏| 4095/4467 [05:01<19:30,  3.15s/it] 92%|█████████▏| 4096/4467 [05:04<19:21,  3.13s/it] 92%|█████████▏| 4097/4467 [05:07<19:07,  3.10s/it] 92%|█████████▏| 4098/4467 [05:10<19:06,  3.11s/it] 92%|█████████▏| 4099/4467 [05:13<19:00,  3.10s/it] 92%|█████████▏| 4100/4467 [05:16<19:10,  3.14s/it]                                                    92%|█████████▏| 4100/4467 [05:16<19:10,  3.14s/it][INFO|trainer.py:4643] 2025-10-22 11:32:07,822 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2025-10-22 11:32:07,822 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:32:07,822 >>   Batch size = 8
+[WARNING|utils.py:2443] 2025-10-22 11:32:08,510 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+  0%|          | 0/3 [00:00<?, ?it/s][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:32:13,605 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+ 67%|██████▋   | 2/3 [00:04<00:02,  2.20s/it][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:32:18,047 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+100%|██████████| 3/3 [00:08<00:00,  3.12s/it][ABuilding prefix dict from the default dictionary ...
+Building prefix dict from the default dictionary ...
+Building prefix dict from the default dictionary ...
+Building prefix dict from the default dictionary ...
+Dumping model to file cache /scratch/slurm_tmpdir/job_3590484/jieba.cache
+Dumping model to file cache /scratch/slurm_tmpdir/job_3590484/jieba.cache
+Dumping model to file cache /scratch/slurm_tmpdir/job_3590484/jieba.cache
+Dumping model to file cache /scratch/slurm_tmpdir/job_3590484/jieba.cache
+Loading model cost 0.489 seconds.
+Prefix dict has been built successfully.
+Loading model cost 0.490 seconds.
+Prefix dict has been built successfully.
+Loading model cost 0.491 seconds.
+Prefix dict has been built successfully.
+Loading model cost 0.494 seconds.
+Prefix dict has been built successfully.
+                                                   
+                                             [A 92%|█████████▏| 4100/4467 [05:31<19:10,  3.14s/it]
+100%|██████████| 3/3 [00:09<00:00,  3.12s/it][A
+                                             [A 92%|█████████▏| 4101/4467 [05:35<47:31,  7.79s/it] 92%|█████████▏| 4102/4467 [05:38<38:58,  6.41s/it]wandb: WARNING Tried to log to step 4100 that is less than the current step 4101. Steps must be monotonically increasing, so this data will be ignored. See https://wandb.me/define-metric to log data out of order.
+ 92%|█████████▏| 4103/4467 [05:41<32:57,  5.43s/it] 92%|█████████▏| 4104/4467 [05:44<28:44,  4.75s/it] 92%|█████████▏| 4105/4467 [05:47<25:42,  4.26s/it] 92%|█████████▏| 4106/4467 [05:51<23:29,  3.91s/it] 92%|█████████▏| 4107/4467 [05:54<22:02,  3.67s/it] 92%|█████████▏| 4108/4467 [05:57<21:06,  3.53s/it] 92%|█████████▏| 4109/4467 [06:00<20:18,  3.40s/it] 92%|█████████▏| 4110/4467 [06:03<19:42,  3.31s/it]                                                    92%|█████████▏| 4110/4467 [06:03<19:42,  3.31s/it] 92%|█████████▏| 4111/4467 [06:06<19:18,  3.25s/it] 92%|█████████▏| 4112/4467 [06:09<18:54,  3.20s/it] 92%|█████████▏| 4113/4467 [06:12<18:45,  3.18s/it] 92%|█████████▏| 4114/4467 [06:15<18:36,  3.16s/it] 92%|█████████▏| 4115/4467 [06:19<18:36,  3.17s/it] 92%|█████████▏| 4116/4467 [06:22<18:25,  3.15s/it] 92%|█████████▏| 4117/4467 [06:25<18:22,  3.15s/it] 92%|█████████▏| 4118/4467 [06:28<18:20,  3.15s/it] 92%|█████████▏| 4119/4467 [06:31<18:09,  3.13s/it] 92%|█████████▏| 4120/4467 [06:34<18:11,  3.15s/it]                                                    92%|█████████▏| 4120/4467 [06:34<18:11,  3.15s/it] 92%|█████████▏| 4121/4467 [06:37<18:08,  3.15s/it] 92%|█████████▏| 4122/4467 [06:41<18:04,  3.14s/it] 92%|█████████▏| 4123/4467 [06:44<18:01,  3.14s/it] 92%|█████████▏| 4124/4467 [06:47<17:49,  3.12s/it] 92%|█████████▏| 4125/4467 [06:50<17:44,  3.11s/it] 92%|█████████▏| 4126/4467 [06:53<17:39,  3.11s/it] 92%|█████████▏| 4127/4467 [06:56<17:42,  3.13s/it] 92%|█████████▏| 4128/4467 [06:59<17:38,  3.12s/it] 92%|█████████▏| 4129/4467 [07:02<17:35,  3.12s/it] 92%|█████████▏| 4130/4467 [07:06<17:30,  3.12s/it]                                                    92%|█████████▏| 4130/4467 [07:06<17:30,  3.12s/it] 92%|█████████▏| 4131/4467 [07:09<17:34,  3.14s/it] 93%|█████████▎| 4132/4467 [07:12<17:31,  3.14s/it] 93%|█████████▎| 4133/4467 [07:15<17:31,  3.15s/it] 93%|█████████▎| 4134/4467 [07:18<17:28,  3.15s/it] 93%|█████████▎| 4135/4467 [07:21<17:26,  3.15s/it] 93%|█████████▎| 4136/4467 [07:25<17:25,  3.16s/it] 93%|█████████▎| 4137/4467 [07:28<17:17,  3.15s/it] 93%|█████████▎| 4138/4467 [07:31<17:16,  3.15s/it] 93%|█████████▎| 4139/4467 [07:34<17:12,  3.15s/it] 93%|█████████▎| 4140/4467 [07:37<17:07,  3.14s/it]                                                    93%|█████████▎| 4140/4467 [07:37<17:07,  3.14s/it] 93%|█████████▎| 4141/4467 [07:40<17:04,  3.14s/it] 93%|█████████▎| 4142/4467 [07:43<16:58,  3.13s/it] 93%|█████████▎| 4143/4467 [07:46<16:52,  3.13s/it] 93%|█████████▎| 4144/4467 [07:50<16:54,  3.14s/it] 93%|█████████▎| 4145/4467 [07:53<16:49,  3.14s/it] 93%|█████████▎| 4146/4467 [07:56<16:43,  3.13s/it] 93%|█████████▎| 4147/4467 [07:59<16:33,  3.11s/it] 93%|█████████▎| 4148/4467 [08:02<16:31,  3.11s/it] 93%|█████████▎| 4149/4467 [08:05<16:29,  3.11s/it] 93%|█████████▎| 4150/4467 [08:08<16:22,  3.10s/it]                                                    93%|█████████▎| 4150/4467 [08:08<16:22,  3.10s/it] 93%|█████████▎| 4151/4467 [08:11<16:15,  3.09s/it] 93%|█████████▎| 4152/4467 [08:14<16:19,  3.11s/it] 93%|█████████▎| 4153/4467 [08:18<16:20,  3.12s/it] 93%|█████████▎| 4154/4467 [08:21<16:16,  3.12s/it] 93%|█████████▎| 4155/4467 [08:24<16:12,  3.12s/it] 93%|█████████▎| 4156/4467 [08:27<16:15,  3.14s/it] 93%|█████████▎| 4157/4467 [08:30<16:02,  3.10s/it] 93%|█████████▎| 4158/4467 [08:33<16:00,  3.11s/it] 93%|█████████▎| 4159/4467 [08:36<16:02,  3.12s/it] 93%|█████████▎| 4160/4467 [08:39<15:59,  3.12s/it]                                                    93%|█████████▎| 4160/4467 [08:39<15:59,  3.12s/it] 93%|█████████▎| 4161/4467 [08:43<15:56,  3.12s/it] 93%|█████████▎| 4162/4467 [08:46<15:52,  3.12s/it] 93%|█████████▎| 4163/4467 [08:49<15:48,  3.12s/it] 93%|█████████▎| 4164/4467 [08:52<15:45,  3.12s/it] 93%|█████████▎| 4165/4467 [08:55<15:43,  3.12s/it] 93%|█████████▎| 4166/4467 [08:58<15:40,  3.12s/it] 93%|█████████▎| 4167/4467 [09:01<15:33,  3.11s/it] 93%|█████████▎| 4168/4467 [09:04<15:30,  3.11s/it] 93%|█████████▎| 4169/4467 [09:07<15:30,  3.12s/it] 93%|█████████▎| 4170/4467 [09:11<15:25,  3.12s/it]                                                    93%|█████████▎| 4170/4467 [09:11<15:25,  3.12s/it] 93%|█████████▎| 4171/4467 [09:14<15:24,  3.12s/it] 93%|█████████▎| 4172/4467 [09:17<15:23,  3.13s/it] 93%|█████████▎| 4173/4467 [09:20<15:14,  3.11s/it] 93%|█████████▎| 4174/4467 [09:23<15:15,  3.13s/it] 93%|█████████▎| 4175/4467 [09:26<15:10,  3.12s/it] 93%|█████████▎| 4176/4467 [09:29<15:09,  3.13s/it] 94%|█████████▎| 4177/4467 [09:32<15:04,  3.12s/it] 94%|█████████▎| 4178/4467 [09:36<15:04,  3.13s/it] 94%|█████████▎| 4179/4467 [09:39<15:02,  3.13s/it] 94%|█████████▎| 4180/4467 [09:42<14:58,  3.13s/it]                                                    94%|█████████▎| 4180/4467 [09:42<14:58,  3.13s/it] 94%|█████████▎| 4181/4467 [09:45<14:55,  3.13s/it] 94%|█████████▎| 4182/4467 [09:48<14:50,  3.12s/it] 94%|█████████▎| 4183/4467 [09:51<14:47,  3.12s/it] 94%|█████████▎| 4184/4467 [09:54<14:46,  3.13s/it] 94%|█████████▎| 4185/4467 [09:57<14:41,  3.12s/it] 94%|█████████▎| 4186/4467 [10:01<14:40,  3.13s/it] 94%|█████████▎| 4187/4467 [10:04<14:36,  3.13s/it] 94%|█████████▍| 4188/4467 [10:07<14:33,  3.13s/it] 94%|█████████▍| 4189/4467 [10:10<14:32,  3.14s/it] 94%|█████████▍| 4190/4467 [10:13<14:29,  3.14s/it]                                                    94%|█████████▍| 4190/4467 [10:13<14:29,  3.14s/it] 94%|█████████▍| 4191/4467 [10:16<14:31,  3.16s/it] 94%|█████████▍| 4192/4467 [10:20<14:25,  3.15s/it] 94%|█████████▍| 4193/4467 [10:23<14:19,  3.14s/it] 94%|█████████▍| 4194/4467 [10:26<14:10,  3.11s/it] 94%|█████████▍| 4195/4467 [10:29<14:12,  3.13s/it] 94%|█████████▍| 4196/4467 [10:32<14:10,  3.14s/it] 94%|█████████▍| 4197/4467 [10:35<14:06,  3.14s/it] 94%|█████████▍| 4198/4467 [10:38<14:09,  3.16s/it] 94%|█████████▍| 4199/4467 [10:41<14:03,  3.15s/it] 94%|█████████▍| 4200/4467 [10:45<13:58,  3.14s/it]                                                    94%|█████████▍| 4200/4467 [10:45<13:58,  3.14s/it][INFO|trainer.py:4643] 2025-10-22 11:37:36,275 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2025-10-22 11:37:36,275 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:37:36,275 >>   Batch size = 8
+[WARNING|utils.py:2443] 2025-10-22 11:37:36,881 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+  0%|          | 0/3 [00:00<?, ?it/s][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:37:41,253 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+ 67%|██████▋   | 2/3 [00:04<00:02,  2.20s/it][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:37:45,688 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+100%|██████████| 3/3 [00:08<00:00,  3.14s/it][A                                                   
+                                             [A 94%|█████████▍| 4200/4467 [10:59<13:58,  3.14s/it]
+100%|██████████| 3/3 [00:08<00:00,  3.14s/it][A
+                                             [Awandb: WARNING Tried to log to step 4200 that is less than the current step 4201. Steps must be monotonically increasing, so this data will be ignored. See https://wandb.me/define-metric to log data out of order.
+ 94%|█████████▍| 4201/4467 [11:02<32:36,  7.35s/it] 94%|█████████▍| 4202/4467 [11:05<26:56,  6.10s/it] 94%|█████████▍| 4203/4467 [11:08<22:58,  5.22s/it] 94%|█████████▍| 4204/4467 [11:11<20:05,  4.58s/it] 94%|█████████▍| 4205/4467 [11:14<18:09,  4.16s/it] 94%|█████████▍| 4206/4467 [11:18<16:46,  3.86s/it] 94%|█████████▍| 4207/4467 [11:21<15:47,  3.65s/it] 94%|█████████▍| 4208/4467 [11:24<15:03,  3.49s/it] 94%|█████████▍| 4209/4467 [11:27<14:32,  3.38s/it] 94%|█████████▍| 4210/4467 [11:30<14:16,  3.33s/it]                                                    94%|█████████▍| 4210/4467 [11:30<14:16,  3.33s/it] 94%|█████████▍| 4211/4467 [11:33<13:59,  3.28s/it] 94%|█████████▍| 4212/4467 [11:36<13:41,  3.22s/it] 94%|█████████▍| 4213/4467 [11:40<13:28,  3.18s/it] 94%|█████████▍| 4214/4467 [11:43<13:21,  3.17s/it] 94%|█████████▍| 4215/4467 [11:46<13:15,  3.15s/it] 94%|█████████▍| 4216/4467 [11:49<13:08,  3.14s/it] 94%|█████████▍| 4217/4467 [11:52<13:05,  3.14s/it] 94%|█████████▍| 4218/4467 [11:55<12:58,  3.12s/it] 94%|█████████▍| 4219/4467 [11:58<12:54,  3.12s/it] 94%|█████████▍| 4220/4467 [12:01<12:56,  3.14s/it]                                                    94%|█████████▍| 4220/4467 [12:01<12:56,  3.14s/it] 94%|█████████▍| 4221/4467 [12:05<12:48,  3.12s/it] 95%|█████████▍| 4222/4467 [12:08<12:40,  3.11s/it] 95%|█████████▍| 4223/4467 [12:11<12:42,  3.13s/it] 95%|█████████▍| 4224/4467 [12:14<12:44,  3.15s/it] 95%|█████████▍| 4225/4467 [12:17<12:40,  3.14s/it] 95%|█████████▍| 4226/4467 [12:20<12:32,  3.12s/it] 95%|█████████▍| 4227/4467 [12:23<12:26,  3.11s/it] 95%|█████████▍| 4228/4467 [12:26<12:26,  3.13s/it] 95%|█████████▍| 4229/4467 [12:30<12:26,  3.14s/it] 95%|█████████▍| 4230/4467 [12:33<12:23,  3.14s/it]                                                    95%|█████████▍| 4230/4467 [12:33<12:23,  3.14s/it] 95%|█████████▍| 4231/4467 [12:36<12:17,  3.12s/it] 95%|█████████▍| 4232/4467 [12:39<12:12,  3.12s/it] 95%|█████████▍| 4233/4467 [12:42<12:12,  3.13s/it] 95%|█████████▍| 4234/4467 [12:45<12:10,  3.14s/it] 95%|█████████▍| 4235/4467 [12:48<12:11,  3.15s/it] 95%|█████████▍| 4236/4467 [12:52<12:08,  3.15s/it] 95%|█████████▍| 4237/4467 [12:55<12:10,  3.18s/it] 95%|█████████▍| 4238/4467 [12:58<12:05,  3.17s/it] 95%|█████████▍| 4239/4467 [13:01<11:56,  3.14s/it] 95%|█████████▍| 4240/4467 [13:04<11:49,  3.13s/it]                                                    95%|█████████▍| 4240/4467 [13:04<11:49,  3.13s/it] 95%|█████████▍| 4241/4467 [13:07<11:48,  3.14s/it] 95%|█████████▍| 4242/4467 [13:10<11:42,  3.12s/it] 95%|█████████▍| 4243/4467 [13:13<11:37,  3.12s/it] 95%|█████████▌| 4244/4467 [13:17<11:32,  3.10s/it] 95%|█████████▌| 4245/4467 [13:20<11:34,  3.13s/it] 95%|█████████▌| 4246/4467 [13:23<11:29,  3.12s/it] 95%|█████████▌| 4247/4467 [13:26<11:31,  3.14s/it] 95%|█████████▌| 4248/4467 [13:29<11:26,  3.13s/it] 95%|█████████▌| 4249/4467 [13:32<11:20,  3.12s/it] 95%|█████████▌| 4250/4467 [13:35<11:21,  3.14s/it]                                                    95%|█████████▌| 4250/4467 [13:35<11:21,  3.14s/it] 95%|█████████▌| 4251/4467 [13:39<11:21,  3.16s/it] 95%|█████████▌| 4252/4467 [13:42<11:17,  3.15s/it] 95%|█████████▌| 4253/4467 [13:45<11:13,  3.15s/it] 95%|█████████▌| 4254/4467 [13:48<11:06,  3.13s/it] 95%|█████████▌| 4255/4467 [13:51<11:02,  3.12s/it] 95%|█████████▌| 4256/4467 [13:54<11:01,  3.14s/it] 95%|█████████▌| 4257/4467 [13:57<11:01,  3.15s/it] 95%|█████████▌| 4258/4467 [14:01<11:04,  3.18s/it] 95%|█████████▌| 4259/4467 [14:04<10:56,  3.16s/it] 95%|█████████▌| 4260/4467 [14:07<10:53,  3.16s/it]                                                    95%|█████████▌| 4260/4467 [14:07<10:53,  3.16s/it] 95%|█████████▌| 4261/4467 [14:10<10:46,  3.14s/it] 95%|█████████▌| 4262/4467 [14:13<10:44,  3.14s/it] 95%|█████████▌| 4263/4467 [14:16<10:41,  3.14s/it] 95%|█████████▌| 4264/4467 [14:19<10:37,  3.14s/it] 95%|█████████▌| 4265/4467 [14:23<10:33,  3.13s/it] 96%|█████████▌| 4266/4467 [14:26<10:30,  3.14s/it] 96%|█████████▌| 4267/4467 [14:29<10:33,  3.17s/it] 96%|█████████▌| 4268/4467 [14:32<10:27,  3.15s/it] 96%|█████████▌| 4269/4467 [14:35<10:22,  3.15s/it] 96%|█████████▌| 4270/4467 [14:38<10:25,  3.17s/it]                                                    96%|█████████▌| 4270/4467 [14:38<10:25,  3.17s/it] 96%|█████████▌| 4271/4467 [14:42<10:22,  3.18s/it] 96%|█████████▌| 4272/4467 [14:45<10:16,  3.16s/it] 96%|█████████▌| 4273/4467 [14:48<10:11,  3.15s/it] 96%|█████████▌| 4274/4467 [14:51<10:03,  3.13s/it] 96%|█████████▌| 4275/4467 [14:54<10:01,  3.13s/it] 96%|█████████▌| 4276/4467 [14:57<09:54,  3.11s/it] 96%|█████████▌| 4277/4467 [15:00<09:52,  3.12s/it] 96%|█████████▌| 4278/4467 [15:03<09:51,  3.13s/it] 96%|█████████▌| 4279/4467 [15:07<09:47,  3.13s/it] 96%|█████████▌| 4280/4467 [15:10<09:45,  3.13s/it]                                                    96%|█████████▌| 4280/4467 [15:10<09:45,  3.13s/it] 96%|█████████▌| 4281/4467 [15:13<09:45,  3.15s/it] 96%|█████████▌| 4282/4467 [15:16<09:42,  3.15s/it] 96%|█████████▌| 4283/4467 [15:19<09:36,  3.13s/it] 96%|█████████▌| 4284/4467 [15:22<09:34,  3.14s/it] 96%|█████████▌| 4285/4467 [15:25<09:29,  3.13s/it] 96%|█████████▌| 4286/4467 [15:29<09:26,  3.13s/it] 96%|█████████▌| 4287/4467 [15:32<09:23,  3.13s/it] 96%|█████████▌| 4288/4467 [15:35<09:20,  3.13s/it] 96%|█████████▌| 4289/4467 [15:38<09:18,  3.13s/it] 96%|█████████▌| 4290/4467 [15:41<09:15,  3.14s/it]                                                    96%|█████████▌| 4290/4467 [15:41<09:15,  3.14s/it] 96%|█████████▌| 4291/4467 [15:44<09:08,  3.11s/it] 96%|█████████▌| 4292/4467 [15:47<09:04,  3.11s/it] 96%|█████████▌| 4293/4467 [15:50<09:00,  3.11s/it] 96%|█████████▌| 4294/4467 [15:54<09:02,  3.13s/it] 96%|█████████▌| 4295/4467 [15:57<08:59,  3.14s/it] 96%|█████████▌| 4296/4467 [16:00<08:56,  3.14s/it] 96%|█████████▌| 4297/4467 [16:03<08:51,  3.13s/it] 96%|█████████▌| 4298/4467 [16:06<08:46,  3.12s/it] 96%|█████████▌| 4299/4467 [16:09<08:47,  3.14s/it] 96%|█████████▋| 4300/4467 [16:12<08:44,  3.14s/it]                                                    96%|█████████▋| 4300/4467 [16:12<08:44,  3.14s/it][INFO|trainer.py:4643] 2025-10-22 11:43:04,032 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2025-10-22 11:43:04,032 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:43:04,032 >>   Batch size = 8
+[WARNING|utils.py:2443] 2025-10-22 11:43:04,684 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+  0%|          | 0/3 [00:00<?, ?it/s][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:43:09,100 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+ 67%|██████▋   | 2/3 [00:04<00:02,  2.20s/it][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:43:13,538 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+100%|██████████| 3/3 [00:08<00:00,  3.10s/it][A                                                   
+                                             [A 96%|█████████▋| 4300/4467 [16:26<08:44,  3.14s/it]
+100%|██████████| 3/3 [00:08<00:00,  3.10s/it][A
+                                             [Awandb: WARNING Tried to log to step 4300 that is less than the current step 4301. Steps must be monotonically increasing, so this data will be ignored. See https://wandb.me/define-metric to log data out of order.
+ 96%|█████████▋| 4301/4467 [16:30<20:20,  7.35s/it] 96%|█████████▋| 4302/4467 [16:33<16:42,  6.07s/it] 96%|█████████▋| 4303/4467 [16:36<14:09,  5.18s/it] 96%|█████████▋| 4304/4467 [16:39<12:23,  4.56s/it] 96%|█████████▋| 4305/4467 [16:42<11:08,  4.13s/it] 96%|█████████▋| 4306/4467 [16:45<10:16,  3.83s/it] 96%|█████████▋| 4307/4467 [16:48<09:39,  3.62s/it] 96%|█████████▋| 4308/4467 [16:51<09:12,  3.47s/it] 96%|█████████▋| 4309/4467 [16:55<08:55,  3.39s/it] 96%|█████████▋| 4310/4467 [16:58<08:36,  3.29s/it]                                                    96%|█████████▋| 4310/4467 [16:58<08:36,  3.29s/it] 97%|█████████▋| 4311/4467 [17:01<08:26,  3.25s/it] 97%|█████████▋| 4312/4467 [17:04<08:18,  3.22s/it] 97%|█████████▋| 4313/4467 [17:07<08:14,  3.21s/it] 97%|█████████▋| 4314/4467 [17:10<08:06,  3.18s/it] 97%|█████████▋| 4315/4467 [17:13<08:04,  3.19s/it] 97%|█████████▋| 4316/4467 [17:16<07:54,  3.14s/it] 97%|█████████▋| 4317/4467 [17:20<07:54,  3.16s/it] 97%|█████████▋| 4318/4467 [17:23<07:48,  3.14s/it] 97%|█████████▋| 4319/4467 [17:26<07:42,  3.13s/it] 97%|█████████▋| 4320/4467 [17:29<07:40,  3.14s/it]                                                    97%|█████████▋| 4320/4467 [17:29<07:40,  3.14s/it] 97%|█████████▋| 4321/4467 [17:32<07:36,  3.13s/it] 97%|█████████▋| 4322/4467 [17:35<07:32,  3.12s/it] 97%|█████████▋| 4323/4467 [17:38<07:30,  3.13s/it] 97%|█████████▋| 4324/4467 [17:41<07:26,  3.12s/it] 97%|█████████▋| 4325/4467 [17:45<07:24,  3.13s/it] 97%|█████████▋| 4326/4467 [17:48<07:21,  3.13s/it] 97%|█████████▋| 4327/4467 [17:51<07:17,  3.13s/it] 97%|█████████▋| 4328/4467 [17:54<07:16,  3.14s/it] 97%|█████████▋| 4329/4467 [17:57<07:12,  3.13s/it] 97%|█████████▋| 4330/4467 [18:00<07:09,  3.14s/it]                                                    97%|█████████▋| 4330/4467 [18:00<07:09,  3.14s/it] 97%|█████████▋| 4331/4467 [18:03<07:05,  3.13s/it] 97%|█████████▋| 4332/4467 [18:07<07:02,  3.13s/it] 97%|█████████▋| 4333/4467 [18:10<06:58,  3.12s/it] 97%|█████████▋| 4334/4467 [18:13<06:55,  3.12s/it] 97%|█████████▋| 4335/4467 [18:16<06:52,  3.13s/it] 97%|█████████▋| 4336/4467 [18:19<06:49,  3.13s/it] 97%|█████████▋| 4337/4467 [18:22<06:44,  3.11s/it] 97%|█████████▋| 4338/4467 [18:25<06:42,  3.12s/it] 97%|█████████▋| 4339/4467 [18:28<06:39,  3.12s/it] 97%|█████████▋| 4340/4467 [18:32<06:37,  3.13s/it]                                                    97%|█████████▋| 4340/4467 [18:32<06:37,  3.13s/it] 97%|█████████▋| 4341/4467 [18:35<06:34,  3.13s/it] 97%|█████████▋| 4342/4467 [18:38<06:30,  3.13s/it] 97%|█████████▋| 4343/4467 [18:41<06:26,  3.12s/it] 97%|█████████▋| 4344/4467 [18:44<06:21,  3.10s/it] 97%|█████████▋| 4345/4467 [18:47<06:20,  3.12s/it] 97%|█████████▋| 4346/4467 [18:50<06:17,  3.12s/it] 97%|█████████▋| 4347/4467 [18:53<06:13,  3.12s/it] 97%|█████████▋| 4348/4467 [18:56<06:10,  3.12s/it] 97%|█████████▋| 4349/4467 [19:00<06:08,  3.12s/it] 97%|█████████▋| 4350/4467 [19:03<06:05,  3.12s/it]                                                    97%|█████████▋| 4350/4467 [19:03<06:05,  3.12s/it] 97%|█████████▋| 4351/4467 [19:06<06:02,  3.13s/it] 97%|█████████▋| 4352/4467 [19:09<05:58,  3.12s/it] 97%|█████████▋| 4353/4467 [19:12<05:57,  3.14s/it] 97%|█████████▋| 4354/4467 [19:15<05:54,  3.14s/it] 97%|█████████▋| 4355/4467 [19:18<05:49,  3.12s/it] 98%|█████████▊| 4356/4467 [19:21<05:46,  3.12s/it] 98%|█████████▊| 4357/4467 [19:25<05:42,  3.11s/it] 98%|█████████▊| 4358/4467 [19:28<05:37,  3.10s/it] 98%|█████████▊| 4359/4467 [19:31<05:37,  3.12s/it] 98%|█████████▊| 4360/4467 [19:34<05:34,  3.12s/it]                                                    98%|█████████▊| 4360/4467 [19:34<05:34,  3.12s/it] 98%|█████████▊| 4361/4467 [19:37<05:28,  3.10s/it] 98%|█████████▊| 4362/4467 [19:40<05:27,  3.12s/it] 98%|█████████▊| 4363/4467 [19:43<05:25,  3.13s/it] 98%|█████████▊| 4364/4467 [19:46<05:23,  3.14s/it] 98%|█████████▊| 4365/4467 [19:50<05:20,  3.14s/it] 98%|█████████▊| 4366/4467 [19:53<05:17,  3.15s/it] 98%|█████████▊| 4367/4467 [19:56<05:13,  3.14s/it] 98%|█████████▊| 4368/4467 [19:59<05:08,  3.12s/it] 98%|█████████▊| 4369/4467 [20:02<05:05,  3.12s/it] 98%|█████████▊| 4370/4467 [20:05<05:01,  3.11s/it]                                                    98%|█████████▊| 4370/4467 [20:05<05:01,  3.11s/it] 98%|█████████▊| 4371/4467 [20:08<04:59,  3.12s/it] 98%|█████████▊| 4372/4467 [20:11<04:58,  3.14s/it] 98%|█████████▊| 4373/4467 [20:15<04:54,  3.13s/it] 98%|█████████▊| 4374/4467 [20:18<04:51,  3.13s/it] 98%|█████████▊| 4375/4467 [20:21<04:46,  3.11s/it] 98%|█████████▊| 4376/4467 [20:24<04:43,  3.12s/it] 98%|█████████▊| 4377/4467 [20:27<04:41,  3.13s/it] 98%|█████████▊| 4378/4467 [20:30<04:35,  3.10s/it] 98%|█████████▊| 4379/4467 [20:33<04:34,  3.12s/it] 98%|█████████▊| 4380/4467 [20:36<04:32,  3.13s/it]                                                    98%|█████████▊| 4380/4467 [20:36<04:32,  3.13s/it] 98%|█████████▊| 4381/4467 [20:40<04:29,  3.14s/it] 98%|█████████▊| 4382/4467 [20:43<04:27,  3.15s/it] 98%|█████████▊| 4383/4467 [20:46<04:24,  3.15s/it] 98%|█████████▊| 4384/4467 [20:49<04:19,  3.12s/it] 98%|█████████▊| 4385/4467 [20:52<04:15,  3.11s/it] 98%|█████████▊| 4386/4467 [20:55<04:12,  3.12s/it] 98%|█████████▊| 4387/4467 [20:58<04:08,  3.11s/it] 98%|█████████▊| 4388/4467 [21:01<04:05,  3.11s/it] 98%|█████████▊| 4389/4467 [21:05<04:02,  3.11s/it] 98%|█████████▊| 4390/4467 [21:08<03:59,  3.10s/it]                                                    98%|█████████▊| 4390/4467 [21:08<03:59,  3.10s/it] 98%|█████████▊| 4391/4467 [21:11<03:57,  3.12s/it] 98%|█████████▊| 4392/4467 [21:14<03:52,  3.11s/it] 98%|█████████▊| 4393/4467 [21:17<03:51,  3.12s/it] 98%|█████████▊| 4394/4467 [21:20<03:47,  3.11s/it] 98%|█████████▊| 4395/4467 [21:23<03:44,  3.12s/it] 98%|█████████▊| 4396/4467 [21:26<03:41,  3.12s/it] 98%|█████████▊| 4397/4467 [21:29<03:38,  3.12s/it] 98%|█████████▊| 4398/4467 [21:33<03:35,  3.12s/it] 98%|█████████▊| 4399/4467 [21:36<03:32,  3.13s/it] 99%|█████████▊| 4400/4467 [21:39<03:29,  3.12s/it]                                                    99%|█████████▊| 4400/4467 [21:39<03:29,  3.12s/it][INFO|trainer.py:4643] 2025-10-22 11:48:30,514 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2025-10-22 11:48:30,514 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:48:30,514 >>   Batch size = 8
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:48:31,133 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+  0%|          | 0/3 [00:00<?, ?it/s][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:48:35,559 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+ 67%|██████▋   | 2/3 [00:04<00:02,  2.26s/it][AA decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+[WARNING|utils.py:2443] 2025-10-22 11:48:40,128 >> A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.
+
+100%|██████████| 3/3 [00:08<00:00,  3.17s/it][A                                                   
+                                             [A 99%|█████████▊| 4400/4467 [21:53<03:29,  3.12s/it]
+100%|██████████| 3/3 [00:09<00:00,  3.17s/it][A
+                                             [A 99%|█████████▊| 4401/4467 [21:56<08:07,  7.39s/it] 99%|█████████▊| 4402/4467 [21:59<06:35,  6.09s/it]wandb: WARNING Tried to log to step 4400 that is less than the current step 4401. Steps must be monotonically increasing, so this data will be ignored. See https://wandb.me/define-metric to log data out of order.
+ 99%|█████████▊| 4403/4467 [22:02<05:31,  5.19s/it] 99%|█████████▊| 4404/4467 [22:05<04:47,  4.56s/it] 99%|█████████▊| 4405/4467 [22:09<04:16,  4.13s/it] 99%|█████████▊| 4406/4467 [22:12<03:53,  3.83s/it] 99%|█████████▊| 4407/4467 [22:15<03:36,  3.61s/it] 99%|█████████▊| 4408/4467 [22:18<03:24,  3.47s/it] 99%|█████████▊| 4409/4467 [22:21<03:15,  3.37s/it] 99%|█████████▊| 4410/4467 [22:24<03:08,  3.30s/it]                                                    99%|█████████▊| 4410/4467 [22:24<03:08,  3.30s/it] 99%|█████████▊| 4411/4467 [22:27<03:01,  3.25s/it] 99%|█████████▉| 4412/4467 [22:30<02:55,  3.20s/it] 99%|█████████▉| 4413/4467 [22:34<02:51,  3.18s/it] 99%|█████████▉| 4414/4467 [22:37<02:46,  3.14s/it] 99%|█████████▉| 4415/4467 [22:40<02:42,  3.13s/it] 99%|█████████▉| 4416/4467 [22:43<02:40,  3.14s/it] 99%|█████████▉| 4417/4467 [22:46<02:35,  3.12s/it] 99%|█████████▉| 4418/4467 [22:49<02:32,  3.12s/it] 99%|█████████▉| 4419/4467 [22:52<02:30,  3.14s/it] 99%|█████████▉| 4420/4467 [22:55<02:27,  3.14s/it]                                                    99%|█████████▉| 4420/4467 [22:55<02:27,  3.14s/it] 99%|█████████▉| 4421/4467 [22:59<02:23,  3.13s/it] 99%|█████████▉| 4422/4467 [23:02<02:20,  3.13s/it] 99%|█████████▉| 4423/4467 [23:05<02:17,  3.12s/it] 99%|█████████▉| 4424/4467 [23:08<02:14,  3.13s/it] 99%|█████████▉| 4425/4467 [23:11<02:12,  3.15s/it] 99%|█████████▉| 4426/4467 [23:14<02:08,  3.14s/it] 99%|█████████▉| 4427/4467 [23:17<02:05,  3.14s/it] 99%|█████████▉| 4428/4467 [23:20<02:02,  3.13s/it] 99%|█████████▉| 4429/4467 [23:24<01:59,  3.14s/it] 99%|█████████▉| 4430/4467 [23:27<01:56,  3.14s/it]                                                    99%|█████████▉| 4430/4467 [23:27<01:56,  3.14s/it] 99%|█████████▉| 4431/4467 [23:30<01:53,  3.14s/it] 99%|█████████▉| 4432/4467 [23:33<01:50,  3.15s/it] 99%|█████████▉| 4433/4467 [23:36<01:46,  3.13s/it] 99%|█████████▉| 4434/4467 [23:39<01:42,  3.12s/it] 99%|█████████▉| 4435/4467 [23:42<01:39,  3.12s/it] 99%|█████████▉| 4436/4467 [23:46<01:36,  3.13s/it] 99%|█████████▉| 4437/4467 [23:49<01:33,  3.12s/it] 99%|█████████▉| 4438/4467 [23:52<01:30,  3.13s/it] 99%|█████████▉| 4439/4467 [23:55<01:27,  3.14s/it] 99%|█████████▉| 4440/4467 [23:58<01:24,  3.12s/it]                                                    99%|█████████▉| 4440/4467 [23:58<01:24,  3.12s/it] 99%|█████████▉| 4441/4467 [24:01<01:21,  3.14s/it] 99%|█████████▉| 4442/4467 [24:04<01:18,  3.14s/it] 99%|█████████▉| 4443/4467 [24:07<01:15,  3.13s/it] 99%|█████████▉| 4444/4467 [24:11<01:12,  3.14s/it]100%|█████████▉| 4445/4467 [24:14<01:08,  3.12s/it]100%|█████████▉| 4446/4467 [24:17<01:05,  3.10s/it]100%|█████████▉| 4447/4467 [24:20<01:02,  3.11s/it]100%|█████████▉| 4448/4467 [24:23<00:59,  3.13s/it]100%|█████████▉| 4449/4467 [24:26<00:56,  3.13s/it]100%|█████████▉| 4450/4467 [24:29<00:53,  3.12s/it]                                                   100%|█████████▉| 4450/4467 [24:29<00:53,  3.12s/it]100%|█████████▉| 4451/4467 [24:32<00:49,  3.12s/it]100%|█████████▉| 4452/4467 [24:35<00:46,  3.10s/it]100%|█████████▉| 4453/4467 [24:39<00:43,  3.10s/it]100%|█████████▉| 4454/4467 [24:42<00:40,  3.12s/it]100%|█████████▉| 4455/4467 [24:45<00:37,  3.11s/it]100%|█████████▉| 4456/4467 [24:48<00:34,  3.12s/it]100%|█████████▉| 4457/4467 [24:51<00:31,  3.13s/it]100%|█████████▉| 4458/4467 [24:54<00:28,  3.13s/it]100%|█████████▉| 4459/4467 [24:57<00:25,  3.13s/it]100%|█████████▉| 4460/4467 [25:01<00:22,  3.15s/it]                                                   100%|█████████▉| 4460/4467 [25:01<00:22,  3.15s/it]100%|█████████▉| 4461/4467 [25:04<00:18,  3.17s/it]100%|█████████▉| 4462/4467 [25:07<00:15,  3.14s/it]100%|█████████▉| 4463/4467 [25:10<00:12,  3.13s/it]100%|█████████▉| 4464/4467 [25:13<00:09,  3.12s/it]100%|█████████▉| 4465/4467 [25:16<00:06,  3.11s/it]100%|█████████▉| 4466/4467 [25:19<00:03,  3.14s/it]100%|██████████| 4467/4467 [25:22<00:00,  3.15s/it][INFO|trainer.py:4309] 2025-10-22 11:52:14,145 >> Saving model checkpoint to saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467
+[INFO|configuration_utils.py:765] 2025-10-22 11:52:14,467 >> loading configuration file config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json
+[INFO|configuration_utils.py:839] 2025-10-22 11:52:14,469 >> Model config Qwen2_5_VLConfig {
+  "architectures": [
+    "Qwen2_5_VLForConditionalGeneration"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 2048,
+  "image_token_id": 151655,
+  "initializer_range": 0.02,
+  "intermediate_size": 11008,
+  "max_position_embeddings": 128000,
+  "max_window_layers": 70,
+  "model_type": "qwen2_5_vl",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 36,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": {
+    "mrope_section": [
+      16,
+      24,
+      24
+    ],
+    "rope_type": "default",
+    "type": "default"
+  },
+  "rope_theta": 1000000.0,
+  "sliding_window": 32768,
+  "text_config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "hidden_act": "silu",
+    "hidden_size": 2048,
+    "initializer_range": 0.02,
+    "intermediate_size": 11008,
+    "layer_types": [
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention"
+    ],
+    "max_position_embeddings": 128000,
+    "max_window_layers": 70,
+    "model_type": "qwen2_5_vl_text",
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 2,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000.0,
+    "sliding_window": null,
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vision_token_id": 151654,
+    "vocab_size": 151936
+  },
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "video_token_id": 151656,
+  "vision_config": {
+    "depth": 32,
+    "fullatt_block_indexes": [
+      7,
+      15,
+      23,
+      31
+    ],
+    "hidden_act": "silu",
+    "hidden_size": 1280,
+    "in_channels": 3,
+    "in_chans": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 3420,
+    "model_type": "qwen2_5_vl",
+    "num_heads": 16,
+    "out_hidden_size": 2048,
+    "patch_size": 14,
+    "spatial_merge_size": 2,
+    "spatial_patch_size": 14,
+    "temporal_patch_size": 2,
+    "tokens_per_second": 2,
+    "window_size": 112
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652,
+  "vision_token_id": 151654,
+  "vocab_size": 151936
+}
+
+[INFO|tokenization_utils_base.py:2421] 2025-10-22 11:52:14,732 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2025-10-22 11:52:14,734 >> tokenizer config file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2025-10-22 11:52:14,735 >> Special tokens file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/special_tokens_map.json
+[INFO|image_processing_base.py:253] 2025-10-22 11:52:15,085 >> Image processor saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/preprocessor_config.json
+[INFO|tokenization_utils_base.py:2421] 2025-10-22 11:52:15,086 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2025-10-22 11:52:15,087 >> tokenizer config file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2025-10-22 11:52:15,087 >> Special tokens file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/special_tokens_map.json
+[INFO|video_processing_utils.py:600] 2025-10-22 11:52:15,200 >> Video processor saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/video_preprocessor_config.json
+[INFO|processing_utils.py:814] 2025-10-22 11:52:15,201 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467/chat_template.jinja
+[INFO|trainer.py:2810] 2025-10-22 11:52:15,525 >> 
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+                                                   100%|██████████| 4467/4467 [25:24<00:00,  3.15s/it]100%|██████████| 4467/4467 [25:24<00:00,  2.93it/s]
+[INFO|image_processing_base.py:253] 2025-10-22 11:52:15,548 >> Image processor saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/preprocessor_config.json
+[INFO|tokenization_utils_base.py:2421] 2025-10-22 11:52:15,549 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2025-10-22 11:52:15,551 >> tokenizer config file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2025-10-22 11:52:15,552 >> Special tokens file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/special_tokens_map.json
+[INFO|video_processing_utils.py:600] 2025-10-22 11:52:15,708 >> Video processor saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/video_preprocessor_config.json
+[INFO|processing_utils.py:814] 2025-10-22 11:52:15,708 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/chat_template.jinja
+[INFO|trainer.py:4309] 2025-10-22 11:52:16,144 >> Saving model checkpoint to saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train
+[INFO|configuration_utils.py:765] 2025-10-22 11:52:16,420 >> loading configuration file config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct/snapshots/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json
+[INFO|configuration_utils.py:839] 2025-10-22 11:52:16,422 >> Model config Qwen2_5_VLConfig {
+  "architectures": [
+    "Qwen2_5_VLForConditionalGeneration"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "dtype": "bfloat16",
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 2048,
+  "image_token_id": 151655,
+  "initializer_range": 0.02,
+  "intermediate_size": 11008,
+  "max_position_embeddings": 128000,
+  "max_window_layers": 70,
+  "model_type": "qwen2_5_vl",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 36,
+  "num_key_value_heads": 2,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": {
+    "mrope_section": [
+      16,
+      24,
+      24
+    ],
+    "rope_type": "default",
+    "type": "default"
+  },
+  "rope_theta": 1000000.0,
+  "sliding_window": 32768,
+  "text_config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "hidden_act": "silu",
+    "hidden_size": 2048,
+    "initializer_range": 0.02,
+    "intermediate_size": 11008,
+    "layer_types": [
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention",
+      "full_attention"
+    ],
+    "max_position_embeddings": 128000,
+    "max_window_layers": 70,
+    "model_type": "qwen2_5_vl_text",
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 2,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_section": [
+        16,
+        24,
+        24
+      ],
+      "rope_type": "default",
+      "type": "default"
+    },
+    "rope_theta": 1000000.0,
+    "sliding_window": null,
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vision_token_id": 151654,
+    "vocab_size": 151936
+  },
+  "transformers_version": "4.57.1",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "video_token_id": 151656,
+  "vision_config": {
+    "depth": 32,
+    "fullatt_block_indexes": [
+      7,
+      15,
+      23,
+      31
+    ],
+    "hidden_act": "silu",
+    "hidden_size": 1280,
+    "in_channels": 3,
+    "in_chans": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 3420,
+    "model_type": "qwen2_5_vl",
+    "num_heads": 16,
+    "out_hidden_size": 2048,
+    "patch_size": 14,
+    "spatial_merge_size": 2,
+    "spatial_patch_size": 14,
+    "temporal_patch_size": 2,
+    "tokens_per_second": 2,
+    "window_size": 112
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652,
+  "vision_token_id": 151654,
+  "vocab_size": 151936
+}
+
+[INFO|tokenization_utils_base.py:2421] 2025-10-22 11:52:16,638 >> chat template saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/chat_template.jinja
+[INFO|tokenization_utils_base.py:2590] 2025-10-22 11:52:16,642 >> tokenizer config file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2599] 2025-10-22 11:52:16,643 >> Special tokens file saved in saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/special_tokens_map.json
+[INFO|trainer.py:4643] 2025-10-22 11:52:16,994 >> 
+***** Running Prediction *****
+[INFO|trainer.py:4645] 2025-10-22 11:52:16,994 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:52:16,994 >>   Batch size = 8
+  0%|          | 0/3 [00:00<?, ?it/s] 67%|██████▋   | 2/3 [00:04<00:02,  2.47s/it]100%|██████████| 3/3 [00:09<00:00,  3.53s/it]100%|██████████| 3/3 [00:10<00:00,  3.38s/it]
+[INFO|trainer.py:4643] 2025-10-22 11:52:32,777 >> 
+***** Running Evaluation *****
+[INFO|trainer.py:4645] 2025-10-22 11:52:32,777 >>   Num examples = 83
+[INFO|trainer.py:4648] 2025-10-22 11:52:32,777 >>   Batch size = 8
+  0%|          | 0/3 [00:00<?, ?it/s] 67%|██████▋   | 2/3 [00:04<00:02,  2.47s/it]100%|██████████| 3/3 [00:09<00:00,  3.52s/it]100%|██████████| 3/3 [00:10<00:00,  3.36s/it]
+[INFO|modelcard.py:456] 2025-10-22 11:52:48,433 >> Dropping the following result as it does not have all the necessary fields:
+{'task': {'name': 'Causal Language Modeling', 'type': 'text-generation'}}

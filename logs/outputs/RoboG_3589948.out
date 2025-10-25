@@ -1,0 +1,19 @@
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3589948
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: CANCELLED (exit code 0)
+Partition: accelerated
+Nodes: 1
+Cores per node: 64
+Nodelist: hkn0523
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:05:20 core-walltime
+Job Wall-clock time: 00:00:05
+Starttime: Wed Oct 22 01:31:08 2025
+Endtime: Wed Oct 22 01:31:13 2025
+Memory Utilized: 0.00 MB
+Memory Efficiency: 0.00% of 485.84 GB (485.84 GB/node)

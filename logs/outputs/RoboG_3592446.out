@@ -1,0 +1,22 @@
+[WARNING|2025-10-23 13:52:08] llamafactory.extras.misc:154 >> Version checking has been disabled, may lead to unexpected behaviors.
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3592446
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: FAILED (exit code 1)
+Partition: accelerated
+Nodes: 1
+Cores per node: 64
+Nodelist: hkn0536
+CPU Utilized: 00:00:06
+CPU Efficiency: 0.25% of 00:40:32 core-walltime
+Job Wall-clock time: 00:00:38
+Starttime: Thu Oct 23 13:51:31 2025
+Endtime: Thu Oct 23 13:52:09 2025
+Memory Utilized: 484.63 MB
+Memory Efficiency: 0.10% of 485.84 GB (485.84 GB/node)
+Energy Consumed: 6989 Joule / 1.94138888888889 Watthours
+Average node power draw: 183.921052631579 Watt

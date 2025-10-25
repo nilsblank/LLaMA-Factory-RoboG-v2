@@ -1,0 +1,361 @@
+Using config: examples/train_full/qwen3vl/qwen3vl_roboG_poc_box_qwen.yaml
+[INFO|2025-10-21 23:20:09] llamafactory.launcher:143 >> Initializing 4 distributed tasks at: 127.0.0.1:53301
+[2025-10-21 23:20:21,102] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-21 23:20:21,102] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-21 23:20:21,102] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-21 23:20:21,102] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+[INFO|2025-10-21 23:20:32] llamafactory.hparams.parser:426 >> Process rank: 0, world size: 4, device: cuda:0, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-21 23:20:32] llamafactory.hparams.parser:426 >> Process rank: 1, world size: 4, device: cuda:1, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-21 23:20:32] llamafactory.hparams.parser:426 >> Process rank: 2, world size: 4, device: cuda:2, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-21 23:20:32] llamafactory.hparams.parser:426 >> Process rank: 3, world size: 4, device: cuda:3, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-21 23:20:34] llamafactory.data.loader:143 >> Loading dataset /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_temporal_grounding_box_qwen_train.jsonl...
+[INFO|2025-10-21 23:20:46] llamafactory.data.loader:143 >> Loading dataset /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_temporal_grounding_box_qwen_eval.jsonl...
+training example:
+input_ids:
+[151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 27, 15, 13, 17, 6486, 29, 151652, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151653, 5542, 279, 2766, 11, 1477, 700, 892, 1633, 279, 12305, 476, 3738, 16282, 291, 448, 13, 3411, 279, 2383, 323, 13934, 315, 279, 16282, 291, 1633, 304, 4718, 3561, 369, 279, 3897, 1156, 4034, 13, 151645, 198, 151644, 77091, 198, 785, 12305, 16282, 291, 448, 279, 15097, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 15, 11, 220, 17, 17, 20, 11, 220, 19, 19, 19, 11, 220, 19, 18, 20, 1125, 330, 1502, 788, 330, 32578, 6375, 16707, 921, 73594, 151645, 198]
+inputs:
+<|im_start|>user
+<|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|><0.2 seconds><|vision_start|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|vision_end|> From the video, find out which object the robot or human interacted with. Return the label and coordinates of the interacted object in JSON format for the provided first frame.<|im_end|>
+<|im_start|>assistant
+The robot interacted with the clothes.
+```json
+[
+{"bbox_2d": [260, 225, 444, 435], "label": "clothes"}
+]
+```<|im_end|>
+
+label_ids:
+[-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 785, 12305, 16282, 291, 448, 279, 15097, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 15, 11, 220, 17, 17, 20, 11, 220, 19, 19, 19, 11, 220, 19, 18, 20, 1125, 330, 1502, 788, 330, 32578, 6375, 16707, 921, 73594, 151645, 198]
+labels:
+The robot interacted with the clothes.
+```json
+[
+{"bbox_2d": [260, 225, 444, 435], "label": "clothes"}
+]
+```<|im_end|>
+
+eval example:
+input_ids:
+[151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 27, 15, 13, 17, 6486, 29, 151652, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151656, 151653, 10294, 279, 2766, 323, 24523, 279, 1633, 429, 572, 16634, 553, 279, 12305, 476, 3738, 13, 9258, 279, 2383, 323, 30618, 3745, 315, 279, 16282, 291, 1633, 304, 4718, 3561, 369, 279, 2661, 1156, 4034, 13, 151645, 198, 151644, 77091, 198]
+inputs:
+<|im_start|>user
+<|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|><0.2 seconds><|vision_start|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|video_pad|><|vision_end|> Review the video and locate the object that was engaged by the robot or human. Output the label and bounding box of the interacted object in JSON format for the given first frame.<|im_end|>
+<|im_start|>assistant
+
+label_ids:
+[785, 12305, 16282, 291, 448, 279, 14961, 26334, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 17, 11, 220, 17, 19, 19, 11, 220, 18, 20, 20, 11, 220, 18, 15, 19, 1125, 330, 1502, 788, 330, 81914, 26334, 16707, 921, 73594, 151645, 198]
+labels:
+The robot interacted with the silver lid.
+```json
+[
+{"bbox_2d": [262, 244, 355, 304], "label": "silver lid"}
+]
+```<|im_end|>
+
+[INFO|2025-10-21 23:26:31] llamafactory.model.model_utils.kv_cache:143 >> KV cache is disabled during training.
+[INFO|2025-10-21 23:27:00] llamafactory.model.model_utils.checkpointing:143 >> Gradient checkpointing enabled.
+[INFO|2025-10-21 23:27:00] llamafactory.model.model_utils.attention:143 >> Using FlashAttention-2 for faster training and inference.
+[INFO|2025-10-21 23:27:00] llamafactory.model.adapter:143 >> Pure bf16 / BAdam detected, remaining trainable params in half precision.
+[INFO|2025-10-21 23:27:00] llamafactory.model.adapter:143 >> Fine-tuning method: Full
+[INFO|2025-10-21 23:27:00] llamafactory.model.model_utils.visual:143 >> Set vision model not trainable: ['visual.patch_embed', 'visual.blocks'].
+[INFO|2025-10-21 23:27:00] llamafactory.model.model_utils.visual:143 >> Set multi model projector not trainable: visual.merger.
+[INFO|2025-10-21 23:27:00] llamafactory.model.loader:143 >> trainable params: 4,106,660,864 || all params: 4,437,815,808 || trainable%: 92.5379
+[WARNING|2025-10-21 23:27:00] llamafactory.train.callbacks:154 >> Previous trainer log in this folder will be deleted.
+{'loss': 1.6459, 'grad_norm': 23.0, 'learning_rate': 5.094339622641509e-06, 'epoch': 0.01}
+{'loss': 0.6912, 'grad_norm': 2.296875, 'learning_rate': 1.0754716981132076e-05, 'epoch': 0.02}
+{'loss': 0.5335, 'grad_norm': 2.15625, 'learning_rate': 1.6415094339622643e-05, 'epoch': 0.03}
+{'loss': 0.493, 'grad_norm': 1.765625, 'learning_rate': 2.2075471698113208e-05, 'epoch': 0.05}
+{'loss': 0.4741, 'grad_norm': 2.9375, 'learning_rate': 2.7735849056603773e-05, 'epoch': 0.06}
+{'loss': 0.4562, 'grad_norm': 2.125, 'learning_rate': 3.339622641509434e-05, 'epoch': 0.07}
+{'loss': 0.4266, 'grad_norm': 2.609375, 'learning_rate': 3.905660377358491e-05, 'epoch': 0.08}
+{'loss': 0.4182, 'grad_norm': 3.765625, 'learning_rate': 4.471698113207547e-05, 'epoch': 0.09}
+{'loss': 0.4257, 'grad_norm': 2.25, 'learning_rate': 5.037735849056604e-05, 'epoch': 0.1}
+{'loss': 0.4034, 'grad_norm': 2.671875, 'learning_rate': 5.603773584905661e-05, 'epoch': 0.11}
+{'loss': 0.4015, 'grad_norm': 1.5703125, 'learning_rate': 5.999979051986555e-05, 'epoch': 0.13}
+{'loss': 0.3944, 'grad_norm': 1.9140625, 'learning_rate': 5.9996066509968966e-05, 'epoch': 0.14}
+{'loss': 0.3943, 'grad_norm': 2.078125, 'learning_rate': 5.9987688051104644e-05, 'epoch': 0.15}
+{'loss': 0.3925, 'grad_norm': 1.1796875, 'learning_rate': 5.9974656443346674e-05, 'epoch': 0.16}
+{'loss': 0.3896, 'grad_norm': 1.515625, 'learning_rate': 5.995697370879197e-05, 'epoch': 0.17}
+{'loss': 0.3869, 'grad_norm': 1.4609375, 'learning_rate': 5.993464259124646e-05, 'epoch': 0.18}
+{'loss': 0.3805, 'grad_norm': 1.3984375, 'learning_rate': 5.99076665557994e-05, 'epoch': 0.19}
+{'loss': 0.3698, 'grad_norm': 1.140625, 'learning_rate': 5.9876049788285617e-05, 'epoch': 0.21}
+{'loss': 0.3719, 'grad_norm': 1.6328125, 'learning_rate': 5.983979719463605e-05, 'epoch': 0.22}
+{'loss': 0.3679, 'grad_norm': 1.015625, 'learning_rate': 5.979891440011652e-05, 'epoch': 0.23}
+{'loss': 0.3897, 'grad_norm': 1.4140625, 'learning_rate': 5.9753407748454794e-05, 'epoch': 0.24}
+{'loss': 0.3674, 'grad_norm': 1.4375, 'learning_rate': 5.970328430085632e-05, 'epoch': 0.25}
+{'loss': 0.3706, 'grad_norm': 11.8125, 'learning_rate': 5.964855183490849e-05, 'epoch': 0.26}
+{'loss': 0.3594, 'grad_norm': 1.1328125, 'learning_rate': 5.958921884337385e-05, 'epoch': 0.27}
+{'loss': 0.365, 'grad_norm': 1.390625, 'learning_rate': 5.952529453287223e-05, 'epoch': 0.29}
+{'loss': 0.3625, 'grad_norm': 1.21875, 'learning_rate': 5.945678882245221e-05, 'epoch': 0.3}
+{'loss': 0.3757, 'grad_norm': 1.1015625, 'learning_rate': 5.9383712342051994e-05, 'epoch': 0.31}
+{'loss': 0.3424, 'grad_norm': 1.3984375, 'learning_rate': 5.930607643084997e-05, 'epoch': 0.32}
+{'loss': 0.3519, 'grad_norm': 1.2421875, 'learning_rate': 5.922389313550518e-05, 'epoch': 0.33}
+{'loss': 0.3481, 'grad_norm': 1.0390625, 'learning_rate': 5.913717520828815e-05, 'epoch': 0.34}
+{'loss': 0.3481, 'grad_norm': 1.7265625, 'learning_rate': 5.9045936105102066e-05, 'epoch': 0.35}
+{'loss': 0.3601, 'grad_norm': 1.0078125, 'learning_rate': 5.8950189983394843e-05, 'epoch': 0.37}
+{'loss': 0.3467, 'grad_norm': 1.2734375, 'learning_rate': 5.884995169996237e-05, 'epoch': 0.38}
+{'loss': 0.3532, 'grad_norm': 1.296875, 'learning_rate': 5.8745236808643164e-05, 'epoch': 0.39}
+{'loss': 0.4322, 'grad_norm': 1.3828125, 'learning_rate': 5.863606155790493e-05, 'epoch': 0.4}
+{'loss': 0.3534, 'grad_norm': 1.2734375, 'learning_rate': 5.8522442888323285e-05, 'epoch': 0.41}
+{'loss': 0.3476, 'grad_norm': 47.5, 'learning_rate': 5.840439842995314e-05, 'epoch': 0.42}
+{'loss': 0.3544, 'grad_norm': 0.9609375, 'learning_rate': 5.828194649959302e-05, 'epoch': 0.43}
+{'loss': 0.3456, 'grad_norm': 1.0234375, 'learning_rate': 5.8155106097942946e-05, 'epoch': 0.45}
+{'loss': 0.3434, 'grad_norm': 2.046875, 'learning_rate': 5.802389690665605e-05, 'epoch': 0.46}
+{'loss': 0.3523, 'grad_norm': 1.3515625, 'learning_rate': 5.788833928528462e-05, 'epoch': 0.47}
+{'loss': 0.3414, 'grad_norm': 1.59375, 'learning_rate': 5.774845426812096e-05, 'epoch': 0.48}
+{'loss': 0.3405, 'grad_norm': 1.03125, 'learning_rate': 5.760426356093352e-05, 'epoch': 0.49}
+{'loss': 0.3396, 'grad_norm': 1.265625, 'learning_rate': 5.745578953759882e-05, 'epoch': 0.5}
+{'loss': 0.3433, 'grad_norm': 1.109375, 'learning_rate': 5.730305523662973e-05, 'epoch': 0.51}
+{'loss': 0.3392, 'grad_norm': 1.28125, 'learning_rate': 5.714608435760064e-05, 'epoch': 0.53}
+{'loss': 0.34, 'grad_norm': 1.125, 'learning_rate': 5.6984901257470016e-05, 'epoch': 0.54}
+{'loss': 0.3311, 'grad_norm': 1.0859375, 'learning_rate': 5.681953094680093e-05, 'epoch': 0.55}
+{'loss': 0.3321, 'grad_norm': 1.0703125, 'learning_rate': 5.6649999085880276e-05, 'epoch': 0.56}
+{'loss': 0.3368, 'grad_norm': 1.0625, 'learning_rate': 5.6476331980737035e-05, 'epoch': 0.57}
+{'loss': 0.3385, 'grad_norm': 1.296875, 'learning_rate': 5.629855657906044e-05, 'epoch': 0.58}
+{'loss': 0.3278, 'grad_norm': 1.53125, 'learning_rate': 5.61167004660185e-05, 'epoch': 0.59}
+{'loss': 0.3296, 'grad_norm': 1.1953125, 'learning_rate': 5.593079185997769e-05, 'epoch': 0.61}
+{'loss': 0.3197, 'grad_norm': 0.890625, 'learning_rate': 5.574085960812435e-05, 'epoch': 0.62}
+{'loss': 0.3266, 'grad_norm': 1.0625, 'learning_rate': 5.554693318198846e-05, 'epoch': 0.63}
+{'loss': 0.3364, 'grad_norm': 0.73046875, 'learning_rate': 5.534904267287061e-05, 'epoch': 0.64}
+{'loss': 0.327, 'grad_norm': 1.109375, 'learning_rate': 5.5147218787172765e-05, 'epoch': 0.65}
+{'loss': 0.3186, 'grad_norm': 1.3359375, 'learning_rate': 5.4941492841633614e-05, 'epoch': 0.66}
+{'loss': 0.3241, 'grad_norm': 1.03125, 'learning_rate': 5.473189675846919e-05, 'epoch': 0.67}
+{'loss': 0.3238, 'grad_norm': 0.8828125, 'learning_rate': 5.451846306041949e-05, 'epoch': 0.68}
+{'loss': 0.3216, 'grad_norm': 1.8203125, 'learning_rate': 5.430122486570207e-05, 'epoch': 0.7}
+{'loss': 0.3287, 'grad_norm': 1.1171875, 'learning_rate': 5.4080215882873024e-05, 'epoch': 0.71}
+{'loss': 0.3196, 'grad_norm': 1.3125, 'learning_rate': 5.385547040559656e-05, 'epoch': 0.72}
+{'loss': 0.3244, 'grad_norm': 0.91796875, 'learning_rate': 5.3627023307323634e-05, 'epoch': 0.73}
+{'loss': 0.3222, 'grad_norm': 1.1953125, 'learning_rate': 5.339491003588073e-05, 'epoch': 0.74}
+{'loss': 0.313, 'grad_norm': 1.3203125, 'learning_rate': 5.315916660796945e-05, 'epoch': 0.75}
+{'loss': 0.3223, 'grad_norm': 1.3046875, 'learning_rate': 5.291982960357786e-05, 'epoch': 0.76}
+{'loss': 0.3293, 'grad_norm': 1.859375, 'learning_rate': 5.267693616030439e-05, 'epoch': 0.78}
+{'loss': 0.3202, 'grad_norm': 1.7421875, 'learning_rate': 5.2430523967595296e-05, 'epoch': 0.79}
+{'loss': 0.3108, 'grad_norm': 0.90234375, 'learning_rate': 5.218063126089639e-05, 'epoch': 0.8}
+{'loss': 0.3169, 'grad_norm': 1.4453125, 'learning_rate': 5.1927296815720154e-05, 'epoch': 0.81}
+{'loss': 0.3173, 'grad_norm': 1.4453125, 'learning_rate': 5.167055994162893e-05, 'epoch': 0.82}
+{'loss': 0.3101, 'grad_norm': 0.93359375, 'learning_rate': 5.1410460476135355e-05, 'epoch': 0.83}
+{'loss': 0.3223, 'grad_norm': 1.375, 'learning_rate': 5.114703877852082e-05, 'epoch': 0.84}
+{'loss': 0.3186, 'grad_norm': 1.5234375, 'learning_rate': 5.088033572357294e-05, 'epoch': 0.86}
+{'loss': 0.3165, 'grad_norm': 1.125, 'learning_rate': 5.061039269524314e-05, 'epoch': 0.87}
+{'loss': 0.3034, 'grad_norm': 1.2734375, 'learning_rate': 5.03372515802251e-05, 'epoch': 0.88}
+{'loss': 0.3143, 'grad_norm': 0.80859375, 'learning_rate': 5.0060954761455265e-05, 'epoch': 0.89}
+{'loss': 0.3151, 'grad_norm': 0.9609375, 'learning_rate': 4.978154511153638e-05, 'epoch': 0.9}
+{'loss': 0.3172, 'grad_norm': 1.328125, 'learning_rate': 4.9499065986084945e-05, 'epoch': 0.91}
+{'loss': 0.3209, 'grad_norm': 1.0859375, 'learning_rate': 4.921356121700385e-05, 'epoch': 0.92}
+{'loss': 0.3101, 'grad_norm': 0.96484375, 'learning_rate': 4.892507510568098e-05, 'epoch': 0.94}
+{'loss': 0.3142, 'grad_norm': 0.97265625, 'learning_rate': 4.8633652416115076e-05, 'epoch': 0.95}
+{'loss': 0.3005, 'grad_norm': 1.0625, 'learning_rate': 4.83393383679697e-05, 'epoch': 0.96}
+{'loss': 0.3072, 'grad_norm': 0.9765625, 'learning_rate': 4.804217862955666e-05, 'epoch': 0.97}
+{'loss': 0.304, 'grad_norm': 1.0, 'learning_rate': 4.774221931074962e-05, 'epoch': 0.98}
+{'loss': 0.3068, 'grad_norm': 0.87890625, 'learning_rate': 4.743950695582937e-05, 'epoch': 0.99}
+{'loss': 0.3126, 'grad_norm': 0.91796875, 'learning_rate': 4.713408853626155e-05, 'epoch': 1.0}
+{'loss': 0.2967, 'grad_norm': 1.75, 'learning_rate': 4.682601144340821e-05, 'epoch': 1.02}
+{'loss': 0.2978, 'grad_norm': 1.09375, 'learning_rate': 4.651532348117411e-05, 'epoch': 1.03}
+{'loss': 0.2933, 'grad_norm': 0.90625, 'learning_rate': 4.6202072858589085e-05, 'epoch': 1.04}
+{'loss': 0.2939, 'grad_norm': 0.91796875, 'learning_rate': 4.5886308182327484e-05, 'epoch': 1.05}
+{'loss': 0.2973, 'grad_norm': 1.375, 'learning_rate': 4.556807844916597e-05, 'epoch': 1.06}
+{'loss': 0.2965, 'grad_norm': 1.203125, 'learning_rate': 4.5247433038380764e-05, 'epoch': 1.07}
+{'loss': 0.2909, 'grad_norm': 1.0234375, 'learning_rate': 4.492442170408545e-05, 'epoch': 1.08}
+{'loss': 0.2858, 'grad_norm': 0.96875, 'learning_rate': 4.45990945675108e-05, 'epoch': 1.1}
+{'loss': 0.2861, 'grad_norm': 1.4140625, 'learning_rate': 4.4271502109227484e-05, 'epoch': 1.11}
+{'loss': 0.2831, 'grad_norm': 1.65625, 'learning_rate': 4.394169516131306e-05, 'epoch': 1.12}
+{'loss': 0.2752, 'grad_norm': 0.9140625, 'learning_rate': 4.360972489946443e-05, 'epoch': 1.13}
+{'loss': 0.2952, 'grad_norm': 1.390625, 'learning_rate': 4.3275642835057004e-05, 'epoch': 1.14}
+{'loss': 0.2953, 'grad_norm': 1.015625, 'learning_rate': 4.2939500807151734e-05, 'epoch': 1.15}
+{'loss': 0.2767, 'grad_norm': 1.1171875, 'learning_rate': 4.260135097445127e-05, 'epoch': 1.16}
+{'loss': 0.2856, 'grad_norm': 1.0078125, 'learning_rate': 4.226124580720669e-05, 'epoch': 1.18}
+{'loss': 0.2838, 'grad_norm': 1.0546875, 'learning_rate': 4.19192380790756e-05, 'epoch': 1.19}
+{'loss': 0.2857, 'grad_norm': 1.4375, 'learning_rate': 4.157538085893345e-05, 'epoch': 1.2}
+{'loss': 0.2795, 'grad_norm': 1.2734375, 'learning_rate': 4.122972750263885e-05, 'epoch': 1.21}
+{'loss': 0.2906, 'grad_norm': 2.4375, 'learning_rate': 4.0882331644754396e-05, 'epoch': 1.22}
+{'loss': 0.2828, 'grad_norm': 0.96484375, 'learning_rate': 4.053324719022432e-05, 'epoch': 1.23}
+{'loss': 0.2943, 'grad_norm': 1.46875, 'learning_rate': 4.0182528306010093e-05, 'epoch': 1.24}
+{'loss': 0.2772, 'grad_norm': 1.0859375, 'learning_rate': 3.983022941268543e-05, 'epoch': 1.26}
+{'loss': 0.2848, 'grad_norm': 1.0546875, 'learning_rate': 3.9476405175991926e-05, 'epoch': 1.27}
+{'loss': 0.2808, 'grad_norm': 1.265625, 'learning_rate': 3.912111049835661e-05, 'epoch': 1.28}
+{'loss': 0.2755, 'grad_norm': 1.171875, 'learning_rate': 3.8764400510372876e-05, 'epoch': 1.29}
+{'loss': 0.2796, 'grad_norm': 1.2578125, 'learning_rate': 3.840633056224586e-05, 'epoch': 1.3}
+{'loss': 0.2858, 'grad_norm': 1.015625, 'learning_rate': 3.8046956215203916e-05, 'epoch': 1.31}
+{'loss': 0.2743, 'grad_norm': 1.703125, 'learning_rate': 3.768633323287717e-05, 'epoch': 1.32}
+{'loss': 0.2768, 'grad_norm': 0.96875, 'learning_rate': 3.732451757264483e-05, 'epoch': 1.34}
+{'loss': 0.2725, 'grad_norm': 1.5859375, 'learning_rate': 3.6961565376952273e-05, 'epoch': 1.35}
+{'loss': 0.274, 'grad_norm': 1.3984375, 'learning_rate': 3.6597532964599586e-05, 'epoch': 1.36}
+{'loss': 0.2774, 'grad_norm': 1.328125, 'learning_rate': 3.6232476822002585e-05, 'epoch': 1.37}
+{'loss': 0.2748, 'grad_norm': 1.03125, 'learning_rate': 3.586645359442792e-05, 'epoch': 1.38}
+{'loss': 0.2754, 'grad_norm': 1.3828125, 'learning_rate': 3.549952007720352e-05, 'epoch': 1.39}
+{'loss': 0.2766, 'grad_norm': 1.2265625, 'learning_rate': 3.513173320690571e-05, 'epoch': 1.4}
+{'loss': 0.2732, 'grad_norm': 0.921875, 'learning_rate': 3.476315005252446e-05, 'epoch': 1.42}
+{'loss': 0.2731, 'grad_norm': 0.90234375, 'learning_rate': 3.439382780660807e-05, 'epoch': 1.43}
+{'loss': 0.273, 'grad_norm': 1.0546875, 'learning_rate': 3.402382377638865e-05, 'epoch': 1.44}
+{'loss': 0.2715, 'grad_norm': 1.15625, 'learning_rate': 3.3653195374889875e-05, 'epoch': 1.45}
+{'loss': 0.2723, 'grad_norm': 0.9765625, 'learning_rate': 3.328200011201827e-05, 'epoch': 1.46}
+{'loss': 0.2756, 'grad_norm': 1.4375, 'learning_rate': 3.291029558563944e-05, 'epoch': 1.47}
+{'loss': 0.2616, 'grad_norm': 1.2265625, 'learning_rate': 3.253813947264076e-05, 'epoch': 1.48}
+{'loss': 0.2577, 'grad_norm': 1.3515625, 'learning_rate': 3.216558951998164e-05, 'epoch': 1.5}
+{'loss': 0.2612, 'grad_norm': 1.9375, 'learning_rate': 3.1792703535733106e-05, 'epoch': 1.51}
+{'loss': 0.2642, 'grad_norm': 1.3515625, 'learning_rate': 3.141953938010771e-05, 'epoch': 1.52}
+{'loss': 0.2752, 'grad_norm': 1.171875, 'learning_rate': 3.1046154956481505e-05, 'epoch': 1.53}
+{'loss': 0.2634, 'grad_norm': 2.078125, 'learning_rate': 3.0672608202409206e-05, 'epoch': 1.54}
+{'loss': 0.2563, 'grad_norm': 1.1328125, 'learning_rate': 3.0298957080634153e-05, 'epoch': 1.55}
+{'loss': 0.2646, 'grad_norm': 1.140625, 'learning_rate': 2.9925259570094276e-05, 'epoch': 1.56}
+{'loss': 0.2631, 'grad_norm': 0.9765625, 'learning_rate': 2.955157365692555e-05, 'epoch': 1.58}
+{'loss': 0.2584, 'grad_norm': 1.421875, 'learning_rate': 2.917795732546445e-05, 'epoch': 1.59}
+{'loss': 0.2659, 'grad_norm': 1.3671875, 'learning_rate': 2.8804468549250523e-05, 'epoch': 1.6}
+{'loss': 0.2585, 'grad_norm': 1.171875, 'learning_rate': 2.8431165282030744e-05, 'epoch': 1.61}
+{'loss': 0.2489, 'grad_norm': 1.6015625, 'learning_rate': 2.805810544876693e-05, 'epoch': 1.62}
+{'loss': 0.2534, 'grad_norm': 1.1953125, 'learning_rate': 2.768534693664755e-05, 'epoch': 1.63}
+{'loss': 0.2661, 'grad_norm': 1.484375, 'learning_rate': 2.7312947586105504e-05, 'epoch': 1.64}
+{'loss': 0.2606, 'grad_norm': 1.578125, 'learning_rate': 2.6940965181843062e-05, 'epoch': 1.66}
+{'loss': 0.2609, 'grad_norm': 0.99609375, 'learning_rate': 2.656945744386551e-05, 'epoch': 1.67}
+{'loss': 0.2641, 'grad_norm': 1.0390625, 'learning_rate': 2.6198482018524815e-05, 'epoch': 1.68}
+{'loss': 0.2535, 'grad_norm': 1.7265625, 'learning_rate': 2.5828096469574713e-05, 'epoch': 1.69}
+{'loss': 0.2602, 'grad_norm': 1.140625, 'learning_rate': 2.5458358269238596e-05, 'epoch': 1.7}
+{'loss': 0.2613, 'grad_norm': 1.4296875, 'learning_rate': 2.5089324789291697e-05, 'epoch': 1.71}
+{'loss': 0.2595, 'grad_norm': 1.15625, 'learning_rate': 2.472105329215871e-05, 'epoch': 1.72}
+{'loss': 0.2551, 'grad_norm': 1.8515625, 'learning_rate': 2.4353600922028486e-05, 'epoch': 1.74}
+{'loss': 0.2541, 'grad_norm': 1.078125, 'learning_rate': 2.3987024695987066e-05, 'epoch': 1.75}
+{'loss': 0.2563, 'grad_norm': 0.921875, 'learning_rate': 2.3621381495170377e-05, 'epoch': 1.76}
+{'loss': 0.2607, 'grad_norm': 1.6328125, 'learning_rate': 2.3256728055938127e-05, 'epoch': 1.77}
+{'loss': 0.2614, 'grad_norm': 1.1796875, 'learning_rate': 2.2893120961070014e-05, 'epoch': 1.78}
+{'loss': 0.2532, 'grad_norm': 3.84375, 'learning_rate': 2.2530616630985923e-05, 'epoch': 1.79}
+{'loss': 0.2534, 'grad_norm': 1.25, 'learning_rate': 2.216927131499125e-05, 'epoch': 1.8}
+{'loss': 0.2533, 'grad_norm': 1.5234375, 'learning_rate': 2.1809141082548687e-05, 'epoch': 1.82}
+{'loss': 0.2589, 'grad_norm': 1.546875, 'learning_rate': 2.1450281814578112e-05, 'epoch': 1.83}
+{'loss': 0.2597, 'grad_norm': 1.703125, 'learning_rate': 2.1092749194785532e-05, 'epoch': 1.84}
+{'loss': 0.2527, 'grad_norm': 1.2109375, 'learning_rate': 2.0736598701022782e-05, 'epoch': 1.85}
+{'loss': 0.2444, 'grad_norm': 1.4375, 'learning_rate': 2.0381885596679052e-05, 'epoch': 1.86}
+{'loss': 0.2462, 'grad_norm': 1.1640625, 'learning_rate': 2.0028664922105787e-05, 'epoch': 1.87}
+{'loss': 0.2489, 'grad_norm': 1.171875, 'learning_rate': 1.9676991486076105e-05, 'epoch': 1.88}
+{'loss': 0.245, 'grad_norm': 1.203125, 'learning_rate': 1.932691985728024e-05, 'epoch': 1.89}
+{'loss': 0.2519, 'grad_norm': 1.1328125, 'learning_rate': 1.897850435585817e-05, 'epoch': 1.91}
+{'loss': 0.2509, 'grad_norm': 1.0234375, 'learning_rate': 1.8631799044970796e-05, 'epoch': 1.92}
+{'loss': 0.2431, 'grad_norm': 1.15625, 'learning_rate': 1.828685772241113e-05, 'epoch': 1.93}
+{'loss': 0.2437, 'grad_norm': 1.2578125, 'learning_rate': 1.7943733912256445e-05, 'epoch': 1.94}
+{'loss': 0.2509, 'grad_norm': 1.09375, 'learning_rate': 1.7602480856563133e-05, 'epoch': 1.95}
+{'loss': 0.2483, 'grad_norm': 0.96875, 'learning_rate': 1.7263151507105127e-05, 'epoch': 1.96}
+{'loss': 0.2558, 'grad_norm': 1.2265625, 'learning_rate': 1.692579851715746e-05, 'epoch': 1.97}
+{'loss': 0.2365, 'grad_norm': 1.1875, 'learning_rate': 1.6590474233326174e-05, 'epoch': 1.99}
+{'loss': 0.2429, 'grad_norm': 1.1015625, 'learning_rate': 1.6257230687425705e-05, 'epoch': 2.0}
+{'loss': 0.2195, 'grad_norm': 1.3359375, 'learning_rate': 1.5926119588405225e-05, 'epoch': 2.01}
+{'loss': 0.2168, 'grad_norm': 1.4453125, 'learning_rate': 1.5597192314324987e-05, 'epoch': 2.02}
+{'loss': 0.2059, 'grad_norm': 1.296875, 'learning_rate': 1.5270499904384118e-05, 'epoch': 2.03}
+{'loss': 0.2149, 'grad_norm': 1.3671875, 'learning_rate': 1.4946093051000897e-05, 'epoch': 2.04}
+{'loss': 0.2134, 'grad_norm': 1.1484375, 'learning_rate': 1.4624022091946896e-05, 'epoch': 2.05}
+{'loss': 0.2196, 'grad_norm': 1.4609375, 'learning_rate': 1.4304337002536097e-05, 'epoch': 2.07}
+{'loss': 0.2142, 'grad_norm': 1.1953125, 'learning_rate': 1.3987087387870383e-05, 'epoch': 2.08}
+{'loss': 0.2097, 'grad_norm': 1.1953125, 'learning_rate': 1.3672322475142296e-05, 'epoch': 2.09}
+{'loss': 0.2093, 'grad_norm': 1.1875, 'learning_rate': 1.3360091105996519e-05, 'epoch': 2.1}
+{'loss': 0.2065, 'grad_norm': 1.125, 'learning_rate': 1.3050441728951252e-05, 'epoch': 2.11}
+{'loss': 0.2178, 'grad_norm': 1.1796875, 'learning_rate': 1.2743422391880465e-05, 'epoch': 2.12}
+{'loss': 0.2061, 'grad_norm': 1.1171875, 'learning_rate': 1.2439080734558408e-05, 'epoch': 2.13}
+{'loss': 0.2083, 'grad_norm': 1.421875, 'learning_rate': 1.213746398126736e-05, 'epoch': 2.15}
+{'loss': 0.1994, 'grad_norm': 1.921875, 'learning_rate': 1.1838618933469952e-05, 'epoch': 2.16}
+{'loss': 0.2094, 'grad_norm': 1.765625, 'learning_rate': 1.1542591962547076e-05, 'epoch': 2.17}
+{'loss': 0.2036, 'grad_norm': 1.2578125, 'learning_rate': 1.1249429002602382e-05, 'epoch': 2.18}
+{'loss': 0.2084, 'grad_norm': 1.2421875, 'learning_rate': 1.0959175543334868e-05, 'epoch': 2.19}
+{'loss': 0.209, 'grad_norm': 1.25, 'learning_rate': 1.0671876622980244e-05, 'epoch': 2.2}
+{'loss': 0.211, 'grad_norm': 1.25, 'learning_rate': 1.0387576821322432e-05, 'epoch': 2.21}
+{'loss': 0.2003, 'grad_norm': 1.2578125, 'learning_rate': 1.0106320252776151e-05, 'epoch': 2.23}
+{'loss': 0.2077, 'grad_norm': 1.171875, 'learning_rate': 9.82815055954177e-06, 'epoch': 2.24}
+{'loss': 0.2129, 'grad_norm': 1.296875, 'learning_rate': 9.553110904833445e-06, 'epoch': 2.25}
+{'loss': 0.2034, 'grad_norm': 1.3515625, 'learning_rate': 9.281243966181424e-06, 'epoch': 2.26}
+{'loss': 0.2063, 'grad_norm': 1.953125, 'learning_rate': 9.012591928809965e-06, 'epoch': 2.27}
+{'loss': 0.2061, 'grad_norm': 1.4609375, 'learning_rate': 8.747196479091429e-06, 'epoch': 2.28}
+{'loss': 0.205, 'grad_norm': 1.3203125, 'learning_rate': 8.485098798077898e-06, 'epoch': 2.29}
+{'loss': 0.2024, 'grad_norm': 1.5703125, 'learning_rate': 8.226339555111132e-06, 'epoch': 2.31}
+{'loss': 0.2112, 'grad_norm': 1.6328125, 'learning_rate': 7.970958901512008e-06, 'epoch': 2.32}
+{'loss': 0.21, 'grad_norm': 1.5078125, 'learning_rate': 7.718996464350273e-06, 'epoch': 2.33}
+{'loss': 0.2083, 'grad_norm': 1.6796875, 'learning_rate': 7.470491340295653e-06, 'epoch': 2.34}
+{'loss': 0.2081, 'grad_norm': 1.375, 'learning_rate': 7.225482089551293e-06, 'epoch': 2.35}
+{'loss': 0.2073, 'grad_norm': 1.3828125, 'learning_rate': 6.984006729870415e-06, 'epoch': 2.36}
+{'loss': 0.2053, 'grad_norm': 1.1484375, 'learning_rate': 6.746102730657165e-06, 'epoch': 2.37}
+{'loss': 0.1998, 'grad_norm': 1.203125, 'learning_rate': 6.511807007152503e-06, 'epoch': 2.39}
+{'loss': 0.2059, 'grad_norm': 1.40625, 'learning_rate': 6.281155914706164e-06, 'epoch': 2.4}
+{'loss': 0.2047, 'grad_norm': 1.3125, 'learning_rate': 6.054185243135424e-06, 'epoch': 2.41}
+{'loss': 0.2025, 'grad_norm': 2.375, 'learning_rate': 5.830930211171611e-06, 'epoch': 2.42}
+{'loss': 0.2095, 'grad_norm': 1.515625, 'learning_rate': 5.61142546099534e-06, 'epoch': 2.43}
+{'loss': 0.2087, 'grad_norm': 1.4921875, 'learning_rate': 5.39570505286106e-06, 'epoch': 2.44}
+{'loss': 0.2013, 'grad_norm': 1.3359375, 'learning_rate': 5.183802459811989e-06, 'epoch': 2.45}
+{'loss': 0.1987, 'grad_norm': 1.3125, 'learning_rate': 4.975750562486165e-06, 'epoch': 2.47}
+{'loss': 0.1995, 'grad_norm': 1.2734375, 'learning_rate': 4.7715816440144e-06, 'epoch': 2.48}
+{'loss': 0.2015, 'grad_norm': 1.4609375, 'learning_rate': 4.571327385010934e-06, 'epoch': 2.49}
+{'loss': 0.2018, 'grad_norm': 1.265625, 'learning_rate': 4.375018858657597e-06, 'epoch': 2.5}
+{'loss': 0.1981, 'grad_norm': 1.4453125, 'learning_rate': 4.182686525882242e-06, 'epoch': 2.51}
+{'loss': 0.1977, 'grad_norm': 1.3984375, 'learning_rate': 3.994360230632174e-06, 'epoch': 2.52}
+{'loss': 0.2012, 'grad_norm': 1.5625, 'learning_rate': 3.8100691952432487e-06, 'epoch': 2.53}
+{'loss': 0.2002, 'grad_norm': 1.359375, 'learning_rate': 3.6298420159055502e-06, 'epoch': 2.55}
+{'loss': 0.209, 'grad_norm': 1.359375, 'learning_rate': 3.4537066582261212e-06, 'epoch': 2.56}
+{'loss': 0.1997, 'grad_norm': 1.0703125, 'learning_rate': 3.281690452889591e-06, 'epoch': 2.57}
+{'loss': 0.1973, 'grad_norm': 1.453125, 'learning_rate': 3.1138200914172885e-06, 'epoch': 2.58}
+{'loss': 0.2067, 'grad_norm': 1.1640625, 'learning_rate': 2.9501216220255857e-06, 'epoch': 2.59}
+{'loss': 0.2049, 'grad_norm': 1.2109375, 'learning_rate': 2.7906204455840156e-06, 'epoch': 2.6}
+{'loss': 0.1985, 'grad_norm': 1.359375, 'learning_rate': 2.6353413116738533e-06, 'epoch': 2.61}
+{'loss': 0.1994, 'grad_norm': 1.75, 'learning_rate': 2.484308314747762e-06, 'epoch': 2.63}
+{'loss': 0.2038, 'grad_norm': 1.2890625, 'learning_rate': 2.3375448903910803e-06, 'epoch': 2.64}
+{'loss': 0.206, 'grad_norm': 1.328125, 'learning_rate': 2.1950738116853754e-06, 'epoch': 2.65}
+{'loss': 0.1952, 'grad_norm': 1.328125, 'learning_rate': 2.0569171856747326e-06, 'epoch': 2.66}
+{'loss': 0.198, 'grad_norm': 1.6328125, 'learning_rate': 1.92309644993549e-06, 'epoch': 2.67}
+{'loss': 0.2058, 'grad_norm': 1.2578125, 'learning_rate': 1.7936323692497568e-06, 'epoch': 2.68}
+{'loss': 0.208, 'grad_norm': 1.3046875, 'learning_rate': 1.6685450323833918e-06, 'epoch': 2.69}
+{'loss': 0.2045, 'grad_norm': 1.34375, 'learning_rate': 1.5478538489688421e-06, 'epoch': 2.71}
+{'loss': 0.206, 'grad_norm': 1.265625, 'learning_rate': 1.4315775464933923e-06, 'epoch': 2.72}
+{'loss': 0.2024, 'grad_norm': 1.140625, 'learning_rate': 1.3197341673932372e-06, 'epoch': 2.73}
+{'loss': 0.198, 'grad_norm': 1.390625, 'learning_rate': 1.2123410662538525e-06, 'epoch': 2.74}
+{'loss': 0.1977, 'grad_norm': 1.4609375, 'learning_rate': 1.1094149071171312e-06, 'epoch': 2.75}
+{'loss': 0.1986, 'grad_norm': 1.5078125, 'learning_rate': 1.0109716608956188e-06, 'epoch': 2.76}
+{'loss': 0.1936, 'grad_norm': 1.234375, 'learning_rate': 9.170266028943597e-07, 'epoch': 2.77}
+{'loss': 0.205, 'grad_norm': 1.6328125, 'learning_rate': 8.275943104406092e-07, 'epoch': 2.79}
+{'loss': 0.2, 'grad_norm': 1.34375, 'learning_rate': 7.426886606219297e-07, 'epoch': 2.8}
+{'loss': 0.2049, 'grad_norm': 1.21875, 'learning_rate': 6.623228281328831e-07, 'epoch': 2.81}
+{'loss': 0.2086, 'grad_norm': 1.3203125, 'learning_rate': 5.865092832307128e-07, 'epoch': 2.82}
+{'loss': 0.2011, 'grad_norm': 1.3125, 'learning_rate': 5.152597898003919e-07, 'epoch': 2.83}
+{'loss': 0.2042, 'grad_norm': 1.2421875, 'learning_rate': 4.485854035292058e-07, 'epoch': 2.84}
+{'loss': 0.2037, 'grad_norm': 1.328125, 'learning_rate': 3.864964701912654e-07, 'epoch': 2.85}
+{'loss': 0.1984, 'grad_norm': 1.1875, 'learning_rate': 3.290026240421673e-07, 'epoch': 2.87}
+{'loss': 0.2055, 'grad_norm': 1.625, 'learning_rate': 2.7611278632405977e-07, 'epoch': 2.88}
+{'loss': 0.2025, 'grad_norm': 1.296875, 'learning_rate': 2.2783516388135029e-07, 'epoch': 2.89}
+{'loss': 0.2039, 'grad_norm': 1.3828125, 'learning_rate': 1.8417724788725054e-07, 'epoch': 2.9}
+{'loss': 0.2035, 'grad_norm': 1.7578125, 'learning_rate': 1.451458126813865e-07, 'epoch': 2.91}
+{'loss': 0.1942, 'grad_norm': 1.1796875, 'learning_rate': 1.1074691471863907e-07, 'epoch': 2.92}
+{'loss': 0.1992, 'grad_norm': 1.4921875, 'learning_rate': 8.098589162935932e-08, 'epoch': 2.93}
+{'loss': 0.2063, 'grad_norm': 1.625, 'learning_rate': 5.5867361391147565e-08, 'epoch': 2.95}
+{'loss': 0.2055, 'grad_norm': 1.2421875, 'learning_rate': 3.5395221612279924e-08, 'epoch': 2.96}
+{'loss': 0.2105, 'grad_norm': 1.5546875, 'learning_rate': 1.9572648926925452e-08, 'epoch': 2.97}
+{'loss': 0.2032, 'grad_norm': 1.9921875, 'learning_rate': 8.402098502240385e-09, 'epoch': 2.98}
+{'loss': 0.195, 'grad_norm': 1.390625, 'learning_rate': 1.8853036573829307e-09, 'epoch': 2.99}
+{'train_runtime': 3395.7239, 'train_samples_per_second': 49.493, 'train_steps_per_second': 0.774, 'train_loss': 0.28112469615820157, 'epoch': 3.0}
+***** train metrics *****
+  epoch                    =          3.0
+  total_flos               = 1530010390GF
+  train_loss               =       0.2811
+  train_runtime            =   0:56:35.72
+  train_samples_per_second =       49.493
+  train_steps_per_second   =        0.774
+Figure saved at: saves/qwen3_5vl-4b/full/sft/roboG_qwen3_vl_temporal_grounding_box_train/training_loss.png
+[WARNING|2025-10-22 00:23:43] llamafactory.extras.ploting:148 >> No metric eval_loss to plot.
+[WARNING|2025-10-22 00:23:43] llamafactory.extras.ploting:148 >> No metric eval_accuracy to plot.
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3589778
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: FAILED (exit code 1)
+Partition: accelerated-h100
+Nodes: 1
+Cores per node: 32
+Nodelist: hkn0916
+CPU Utilized: 13:11:28
+CPU Efficiency: 38.40% of 1-10:21:20 core-walltime
+Job Wall-clock time: 01:04:25
+Starttime: Tue Oct 21 23:19:21 2025
+Endtime: Wed Oct 22 00:23:46 2025
+Memory Utilized: 40.75 GB
+Memory Efficiency: 5.43% of 750.00 GB (750.00 GB/node)
+Energy Consumed: 7912345 Joule / 2197.87361111111 Watthours
+Average node power draw: 2047.17852522639 Watt

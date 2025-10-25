@@ -1,0 +1,176 @@
+GpuFreq=control_disabled
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+    run_exp()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 127, in run_exp
+    run_exp()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 127, in run_exp
+    args = read_args(args)
+     run_exp() 
+           File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 127, in run_exp
+^^^^    ^run_exp()^
+^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 127, in run_exp
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 113, in read_args
+    args = read_args(args)
+           ^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 113, in read_args
+    args = read_args(args)
+     args = read_args(args) 
+            ^ ^ ^ ^ ^ ^ ^ ^ ^^^^^^^^^^^^^
+^^^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 113, in read_args
+^^^    ^dict_config = OmegaConf.load(sys.argv[1])  ^
+^
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 113, in read_args
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/omegaconf.py", line 190, in load
+        dict_config = OmegaConf.load(sys.argv[1])  dict_config = OmegaConf.load(sys.argv[1])  
+
+                                 dict_config = OmegaConf.load(sys.argv[1])    
+     ^^^^^^^^^^ ^^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^^^^^^^^^^^^
+^
+^^  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/omegaconf.py", line 190, in load
+^  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/omegaconf.py", line 190, in load
+^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/omegaconf.py", line 190, in load
+    obj = yaml.load(f, Loader=get_yaml_loader())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^    ^obj = yaml.load(f, Loader=get_yaml_loader())obj = yaml.load(f, Loader=get_yaml_loader())^
+
+^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/__init__.py", line 81, in load
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/__init__.py", line 81, in load
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/__init__.py", line 81, in load
+    obj = yaml.load(f, Loader=get_yaml_loader())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/__init__.py", line 81, in load
+    return loader.get_single_data()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 51, in get_single_data
+        return loader.get_single_data()return loader.get_single_data()
+
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^return loader.get_single_data()^^
+^^^^^^^^^^
+
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 51, in get_single_data
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 51, in get_single_data
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 51, in get_single_data
+    return self.construct_document(node)
+           ^^^^^^^^^^^^^^^^^        ^^return self.construct_document(node)return self.construct_document(node)^
+
+^^^^^^^^^
+       File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 60, in construct_document
+          return self.construct_document(node)  
+         ^^^^^^^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+^^  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 60, in construct_document
+^  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 60, in construct_document
+^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 60, in construct_document
+    for dummy in generator:
+                      for dummy in generator:for dummy in generator: 
+ 
+ ^^^^^^ ^  ^  ^ 
+         File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 413, in construct_yaml_map
+                     ^^^^^^^^^^^^^^^^^^
+
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 413, in construct_yaml_map
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 413, in construct_yaml_map
+    for dummy in generator:
+                 ^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/yaml/constructor.py", line 413, in construct_yaml_map
+    value = self.construct_mapping(node)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/_utils.py", line 144, in construct_mapping
+    value = self.construct_mapping(node)
+    value = self.construct_mapping(node)
+                   ^ ^ ^ ^ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/_utils.py", line 144, in construct_mapping
+^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/_utils.py", line 144, in construct_mapping
+    value = self.construct_mapping(node)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/omegaconf/_utils.py", line 144, in construct_mapping
+    raise yaml.constructor.ConstructorError(
+yaml.constructor.ConstructorError: while constructing a mapping
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 2, column 1
+found duplicate key resume_from_checkpoint
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 44, column 1
+    raise yaml.constructor.ConstructorError(
+yaml.constructor.ConstructorError: while constructing a mapping
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 2, column 1
+found duplicate key resume_from_checkpoint
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 44, column 1
+        raise yaml.constructor.ConstructorError(raise yaml.constructor.ConstructorError(
+
+yaml.constructoryaml.constructor..ConstructorErrorConstructorError: : while constructing a mapping
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 2, column 1
+found duplicate key resume_from_checkpoint
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 44, column 1while constructing a mapping
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 2, column 1
+found duplicate key resume_from_checkpoint
+  in "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml", line 44, column 1
+
+W1022 10:59:16.490000 1695899 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 1695903 closing signal SIGTERM
+W1022 10:59:16.491000 1695899 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 1695905 closing signal SIGTERM
+E1022 10:59:16.556000 1695899 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 1 (pid: 1695904) of binary: /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/python3.12
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 357, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 143, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 277, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2025-10-22_10:59:16
+  host      : hkn0426.localdomain
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 1695906)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-10-22_10:59:16
+  host      : hkn0426.localdomain
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 1695904)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 31, in <module>
+    main()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 24, in main
+    launcher.launch()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 110, in launch
+    process = subprocess.run(
+              ^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['torchrun', '--nnodes', '1', '--node_rank', '0', '--nproc_per_node', '4', '--master_addr', '127.0.0.1', '--master_port', '39385', '/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py', 'examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml']' returned non-zero exit status 1.
+srun: error: hkn0426: task 0: Exited with exit code 1

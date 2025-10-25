@@ -1,0 +1,496 @@
+GpuFreq=control_disabled
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+[W1024 22:23:34.605077351 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1024 22:23:34.605078621 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1024 22:23:34.606822216 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[W1024 22:23:34.606824777 ProcessGroupNCCL.cpp:981] Warning: TORCH_NCCL_AVOID_RECORD_STREAMS is the default now, this environment variable is thus deprecated. (function operator())
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file vocab.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/vocab.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file merges.txt from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/merges.txt
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file tokenizer.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/tokenizer.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file tokenizer_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:36,457 >> loading file chat_template.jinja from cache at None
+[INFO|tokenization_utils_base.py:2364] 2025-10-24 22:23:36,639 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|image_processing_base.py:383] 2025-10-24 22:23:37,137 >> loading configuration file preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/preprocessor_config.json
+[INFO|image_processing_base.py:383] 2025-10-24 22:23:37,383 >> loading configuration file preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/preprocessor_config.json
+[INFO|image_processing_base.py:428] 2025-10-24 22:23:37,389 >> Image processor Qwen2VLImageProcessorFast {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "disable_grouping": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_pad": null,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "image_processor_type": "Qwen2VLImageProcessorFast",
+  "image_std": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "input_data_format": null,
+  "max_pixels": null,
+  "merge_size": 2,
+  "min_pixels": null,
+  "pad_size": null,
+  "patch_size": 16,
+  "processor_class": "Qwen3VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_tensors": null,
+  "size": {
+    "longest_edge": 16777216,
+    "shortest_edge": 65536
+  },
+  "temporal_patch_size": 2
+}
+
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file vocab.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/vocab.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file merges.txt from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/merges.txt
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file tokenizer.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/tokenizer.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file tokenizer_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2095] 2025-10-24 22:23:37,645 >> loading file chat_template.jinja from cache at None
+[INFO|tokenization_utils_base.py:2364] 2025-10-24 22:23:37,802 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|video_processing_utils.py:726] 2025-10-24 22:23:38,179 >> loading configuration file video_preprocessor_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/video_preprocessor_config.json
+[INFO|video_processing_utils.py:770] 2025-10-24 22:23:38,180 >> Video processor Qwen3VLVideoProcessor {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "do_sample_frames": true,
+  "fps": 2,
+  "image_mean": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "image_std": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "input_data_format": null,
+  "max_frames": 768,
+  "merge_size": 2,
+  "min_frames": 4,
+  "num_frames": null,
+  "pad_size": null,
+  "patch_size": 16,
+  "processor_class": "Qwen3VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_metadata": false,
+  "size": {
+    "longest_edge": 25165824,
+    "shortest_edge": 4096
+  },
+  "temporal_patch_size": 2,
+  "video_metadata": null,
+  "video_processor_type": "Qwen3VLVideoProcessor"
+}
+
+[INFO|processing_utils.py:1116] 2025-10-24 22:23:38,773 >> loading configuration file processor_config.json from cache at None
+[INFO|processing_utils.py:1199] 2025-10-24 22:23:39,052 >> Processor Qwen3VLProcessor:
+- image_processor: Qwen2VLImageProcessorFast {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "disable_grouping": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_pad": null,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "image_processor_type": "Qwen2VLImageProcessorFast",
+  "image_std": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "input_data_format": null,
+  "max_pixels": null,
+  "merge_size": 2,
+  "min_pixels": null,
+  "pad_size": null,
+  "patch_size": 16,
+  "processor_class": "Qwen3VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_tensors": null,
+  "size": {
+    "longest_edge": 16777216,
+    "shortest_edge": 65536
+  },
+  "temporal_patch_size": 2
+}
+
+- tokenizer: Qwen2TokenizerFast(name_or_path='Qwen/Qwen3-VL-4B-Instruct', vocab_size=151643, model_max_length=262144, is_fast=True, padding_side='right', truncation_side='right', special_tokens={'eos_token': '<|im_end|>', 'pad_token': '<|endoftext|>', 'additional_special_tokens': ['<|im_start|>', '<|im_end|>', '<|object_ref_start|>', '<|object_ref_end|>', '<|box_start|>', '<|box_end|>', '<|quad_start|>', '<|quad_end|>', '<|vision_start|>', '<|vision_end|>', '<|vision_pad|>', '<|image_pad|>', '<|video_pad|>']}, clean_up_tokenization_spaces=False, added_tokens_decoder={
+	151643: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151644: AddedToken("<|im_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151645: AddedToken("<|im_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151646: AddedToken("<|object_ref_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151647: AddedToken("<|object_ref_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151648: AddedToken("<|box_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151649: AddedToken("<|box_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151650: AddedToken("<|quad_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151651: AddedToken("<|quad_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151652: AddedToken("<|vision_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151653: AddedToken("<|vision_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151654: AddedToken("<|vision_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151655: AddedToken("<|image_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151656: AddedToken("<|video_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151657: AddedToken("<tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151658: AddedToken("</tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151659: AddedToken("<|fim_prefix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151660: AddedToken("<|fim_middle|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151661: AddedToken("<|fim_suffix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151662: AddedToken("<|fim_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151663: AddedToken("<|repo_name|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151664: AddedToken("<|file_sep|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151665: AddedToken("<tool_response>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151666: AddedToken("</tool_response>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151667: AddedToken("<think>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+	151668: AddedToken("</think>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
+}
+)
+- video_processor: Qwen3VLVideoProcessor {
+  "crop_size": null,
+  "data_format": "channels_first",
+  "default_to_square": true,
+  "device": null,
+  "do_center_crop": null,
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "do_sample_frames": true,
+  "fps": 2,
+  "image_mean": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "image_std": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "input_data_format": null,
+  "max_frames": 768,
+  "merge_size": 2,
+  "min_frames": 4,
+  "num_frames": null,
+  "pad_size": null,
+  "patch_size": 16,
+  "processor_class": "Qwen3VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "return_metadata": false,
+  "size": {
+    "longest_edge": 25165824,
+    "shortest_edge": 4096
+  },
+  "temporal_patch_size": 2,
+  "video_metadata": null,
+  "video_processor_type": "Qwen3VLVideoProcessor"
+}
+
+
+{
+  "processor_class": "Qwen3VLProcessor"
+}
+
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank1]:[W1024 22:23:39.675985546 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank2]:[W1024 22:23:39.986208665 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 2]  using GPU 2 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+Setting num_proc from 128 back to 1 for the train split to disable multiprocessing as it only contains one shard.
+Generating train split: 0 examples [00:00, ? examples/s]/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank3]:[W1024 22:23:39.053011049 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 3]  using GPU 3 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+Generating train split: 3954 examples [00:00, 31813.49 examples/s]Generating train split: 20101 examples [00:00, 84968.61 examples/s]Generating train split: 22808 examples [00:00, 81023.68 examples/s]
+Converting format of dataset (num_proc=128):   0%|          | 0/22808 [00:00<?, ? examples/s]Converting format of dataset (num_proc=128):   0%|          | 3/22808 [00:00<14:46, 25.71 examples/s]Converting format of dataset (num_proc=128):   1%|          | 150/22808 [00:00<00:27, 816.51 examples/s]Converting format of dataset (num_proc=128):   1%|          | 272/22808 [00:00<00:22, 990.63 examples/s]Converting format of dataset (num_proc=128):   2%|▏         | 446/22808 [00:00<00:17, 1277.34 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 577/22808 [00:00<00:17, 1285.82 examples/s]Converting format of dataset (num_proc=128):   3%|▎         | 741/22808 [00:00<00:15, 1396.64 examples/s]Converting format of dataset (num_proc=128):   4%|▍         | 904/22808 [00:00<00:14, 1469.38 examples/s]Converting format of dataset (num_proc=128):   5%|▍         | 1053/22808 [00:00<00:14, 1467.86 examples/s]Converting format of dataset (num_proc=128):   5%|▌         | 1202/22808 [00:00<00:14, 1459.19 examples/s]Converting format of dataset (num_proc=128):   6%|▌         | 1351/22808 [00:01<00:14, 1466.89 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 1506/22808 [00:01<00:14, 1489.71 examples/s]Converting format of dataset (num_proc=128):   7%|▋         | 1676/22808 [00:01<00:13, 1551.35 examples/s]Converting format of dataset (num_proc=128):   8%|▊         | 1833/22808 [00:01<00:14, 1496.94 examples/s]Converting format of dataset (num_proc=128):   9%|▊         | 1984/22808 [00:01<00:14, 1454.62 examples/s]Converting format of dataset (num_proc=128):   9%|▉         | 2162/22808 [00:01<00:13, 1547.02 examples/s]Converting format of dataset (num_proc=128):  10%|█         | 2318/22808 [00:01<00:13, 1543.09 examples/s]Converting format of dataset (num_proc=128):  11%|█         | 2474/22808 [00:01<00:13, 1535.44 examples/s]Converting format of dataset (num_proc=128):  12%|█▏        | 2628/22808 [00:01<00:13, 1482.87 examples/s]Converting format of dataset (num_proc=128):  12%|█▏        | 2795/22808 [00:01<00:13, 1535.13 examples/s]Converting format of dataset (num_proc=128):  13%|█▎        | 2950/22808 [00:02<00:13, 1523.92 examples/s]Converting format of dataset (num_proc=128):  14%|█▎        | 3103/22808 [00:02<00:12, 1520.36 examples/s]Converting format of dataset (num_proc=128):  14%|█▍        | 3261/22808 [00:02<00:12, 1535.70 examples/s]Converting format of dataset (num_proc=128):  15%|█▌        | 3425/22808 [00:02<00:12, 1565.29 examples/s]Converting format of dataset (num_proc=128):  16%|█▌        | 3582/22808 [00:02<00:12, 1526.95 examples/s]Converting format of dataset (num_proc=128):  16%|█▋        | 3752/22808 [00:02<00:12, 1576.09 examples/s]Converting format of dataset (num_proc=128):  17%|█▋        | 3910/22808 [00:02<00:12, 1519.96 examples/s]Converting format of dataset (num_proc=128):  18%|█▊        | 4064/22808 [00:02<00:12, 1502.38 examples/s]Converting format of dataset (num_proc=128):  18%|█▊        | 4216/22808 [00:02<00:12, 1491.91 examples/s]Converting format of dataset (num_proc=128):  19%|█▉        | 4374/22808 [00:03<00:12, 1516.36 examples/s]Converting format of dataset (num_proc=128):  20%|██        | 4591/22808 [00:03<00:10, 1699.07 examples/s]Converting format of dataset (num_proc=128):  21%|██        | 4762/22808 [00:03<00:11, 1625.99 examples/s]Converting format of dataset (num_proc=128):  22%|██▏       | 4926/22808 [00:03<00:11, 1625.17 examples/s]Converting format of dataset (num_proc=128):  22%|██▏       | 5090/22808 [00:03<00:11, 1581.70 examples/s]Converting format of dataset (num_proc=128):  23%|██▎       | 5254/22808 [00:03<00:10, 1596.67 examples/s]Converting format of dataset (num_proc=128):  24%|██▎       | 5415/22808 [00:03<00:11, 1566.12 examples/s]Converting format of dataset (num_proc=128):  24%|██▍       | 5575/22808 [00:03<00:10, 1575.51 examples/s]Converting format of dataset (num_proc=128):  25%|██▌       | 5733/22808 [00:03<00:11, 1536.45 examples/s]Converting format of dataset (num_proc=128):  26%|██▌       | 5889/22808 [00:03<00:11, 1455.67 examples/s]Converting format of dataset (num_proc=128):  27%|██▋       | 6074/22808 [00:04<00:10, 1565.56 examples/s]Converting format of dataset (num_proc=128):  27%|██▋       | 6246/22808 [00:04<00:10, 1608.29 examples/s]Converting format of dataset (num_proc=128):  28%|██▊       | 6409/22808 [00:04<00:10, 1593.28 examples/s]Converting format of dataset (num_proc=128):  29%|██▉       | 6570/22808 [00:04<00:10, 1590.32 examples/s]Converting format of dataset (num_proc=128):  30%|██▉       | 6730/22808 [00:04<00:10, 1510.14 examples/s]Converting format of dataset (num_proc=128):  30%|███       | 6886/22808 [00:04<00:10, 1523.72 examples/s]Converting format of dataset (num_proc=128):  31%|███       | 7046/22808 [00:04<00:10, 1545.54 examples/s]Converting format of dataset (num_proc=128):  32%|███▏      | 7202/22808 [00:04<00:10, 1544.81 examples/s]Converting format of dataset (num_proc=128):  32%|███▏      | 7360/22808 [00:04<00:09, 1554.08 examples/s]Converting format of dataset (num_proc=128):  33%|███▎      | 7517/22808 [00:05<00:09, 1534.71 examples/s]Converting format of dataset (num_proc=128):  34%|███▎      | 7671/22808 [00:05<00:09, 1527.91 examples/s]Converting format of dataset (num_proc=128):  34%|███▍      | 7836/22808 [00:05<00:09, 1558.39 examples/s]Converting format of dataset (num_proc=128):  35%|███▌      | 7993/22808 [00:05<00:09, 1544.40 examples/s]Converting format of dataset (num_proc=128):  36%|███▌      | 8158/22808 [00:05<00:09, 1575.40 examples/s]Converting format of dataset (num_proc=128):  36%|███▋      | 8316/22808 [00:05<00:09, 1527.71 examples/s]Converting format of dataset (num_proc=128):  37%|███▋      | 8471/22808 [00:05<00:09, 1527.88 examples/s]Converting format of dataset (num_proc=128):  38%|███▊      | 8638/22808 [00:05<00:09, 1565.03 examples/s]Converting format of dataset (num_proc=128):  39%|███▊      | 8795/22808 [00:05<00:08, 1564.35 examples/s]Converting format of dataset (num_proc=128):  39%|███▉      | 8952/22808 [00:05<00:08, 1548.09 examples/s]Converting format of dataset (num_proc=128):  40%|███▉      | 9107/22808 [00:06<00:08, 1525.42 examples/s]Converting format of dataset (num_proc=128):  41%|████      | 9267/22808 [00:06<00:08, 1545.74 examples/s]Converting format of dataset (num_proc=128):  41%|████▏     | 9428/22808 [00:06<00:08, 1560.38 examples/s]Converting format of dataset (num_proc=128):  42%|████▏     | 9589/22808 [00:06<00:08, 1573.23 examples/s]Converting format of dataset (num_proc=128):  43%|████▎     | 9747/22808 [00:06<00:08, 1485.97 examples/s]Converting format of dataset (num_proc=128):  44%|████▎     | 9926/22808 [00:06<00:08, 1567.83 examples/s]Converting format of dataset (num_proc=128):  44%|████▍     | 10084/22808 [00:06<00:08, 1543.11 examples/s]Converting format of dataset (num_proc=128):  45%|████▍     | 10240/22808 [00:06<00:08, 1521.57 examples/s]Converting format of dataset (num_proc=128):  46%|████▌     | 10399/22808 [00:06<00:08, 1539.85 examples/s]Converting format of dataset (num_proc=128):  46%|████▋     | 10554/22808 [00:06<00:07, 1533.87 examples/s]Converting format of dataset (num_proc=128):  47%|████▋     | 10716/22808 [00:07<00:07, 1558.66 examples/s]Converting format of dataset (num_proc=128):  48%|████▊     | 10874/22808 [00:07<00:07, 1562.06 examples/s]Converting format of dataset (num_proc=128):  48%|████▊     | 11031/22808 [00:07<00:07, 1563.67 examples/s]Converting format of dataset (num_proc=128):  49%|████▉     | 11189/22808 [00:07<00:07, 1514.80 examples/s]Converting format of dataset (num_proc=128):  50%|████▉     | 11363/22808 [00:07<00:07, 1578.79 examples/s]Converting format of dataset (num_proc=128):  51%|█████     | 11522/22808 [00:07<00:07, 1497.48 examples/s]Converting format of dataset (num_proc=128):  51%|█████▏    | 11692/22808 [00:07<00:07, 1554.37 examples/s]Converting format of dataset (num_proc=128):  52%|█████▏    | 11852/22808 [00:07<00:07, 1559.36 examples/s]Converting format of dataset (num_proc=128):  53%|█████▎    | 12009/22808 [00:07<00:07, 1528.07 examples/s]Converting format of dataset (num_proc=128):  53%|█████▎    | 12172/22808 [00:08<00:06, 1553.98 examples/s]Converting format of dataset (num_proc=128):  54%|█████▍    | 12333/22808 [00:08<00:06, 1570.03 examples/s]Converting format of dataset (num_proc=128):  55%|█████▍    | 12491/22808 [00:08<00:06, 1536.02 examples/s]Converting format of dataset (num_proc=128):  56%|█████▌    | 12665/22808 [00:08<00:06, 1591.60 examples/s]Converting format of dataset (num_proc=128):  56%|█████▌    | 12825/22808 [00:08<00:06, 1562.62 examples/s]Converting format of dataset (num_proc=128):  57%|█████▋    | 12989/22808 [00:08<00:06, 1583.08 examples/s]Converting format of dataset (num_proc=128):  58%|█████▊    | 13148/22808 [00:08<00:06, 1534.09 examples/s]Converting format of dataset (num_proc=128):  58%|█████▊    | 13309/22808 [00:08<00:06, 1555.97 examples/s]Converting format of dataset (num_proc=128):  59%|█████▉    | 13466/22808 [00:08<00:06, 1538.77 examples/s]Converting format of dataset (num_proc=128):  60%|█████▉    | 13622/22808 [00:08<00:05, 1533.96 examples/s]Converting format of dataset (num_proc=128):  60%|██████    | 13795/22808 [00:09<00:05, 1587.11 examples/s]Converting format of dataset (num_proc=128):  61%|██████    | 13955/22808 [00:09<00:05, 1569.01 examples/s]Converting format of dataset (num_proc=128):  62%|██████▏   | 14113/22808 [00:09<00:05, 1500.94 examples/s]Converting format of dataset (num_proc=128):  63%|██████▎   | 14282/22808 [00:09<00:05, 1553.45 examples/s]Converting format of dataset (num_proc=128):  63%|██████▎   | 14439/22808 [00:09<00:05, 1557.37 examples/s]Converting format of dataset (num_proc=128):  64%|██████▍   | 14596/22808 [00:09<00:05, 1545.90 examples/s]Converting format of dataset (num_proc=128):  65%|██████▍   | 14751/22808 [00:09<00:05, 1529.29 examples/s]Converting format of dataset (num_proc=128):  65%|██████▌   | 14905/22808 [00:09<00:05, 1501.52 examples/s]Converting format of dataset (num_proc=128):  66%|██████▌   | 15081/22808 [00:09<00:04, 1565.95 examples/s]Converting format of dataset (num_proc=128):  67%|██████▋   | 15239/22808 [00:09<00:04, 1554.60 examples/s]Converting format of dataset (num_proc=128):  68%|██████▊   | 15400/22808 [00:10<00:04, 1569.29 examples/s]Converting format of dataset (num_proc=128):  68%|██████▊   | 15558/22808 [00:10<00:05, 1365.68 examples/s]Converting format of dataset (num_proc=128):  69%|██████▉   | 15732/22808 [00:10<00:04, 1452.66 examples/s]Converting format of dataset (num_proc=128):  70%|██████▉   | 15883/22808 [00:10<00:04, 1460.00 examples/s]Converting format of dataset (num_proc=128):  70%|███████   | 16040/22808 [00:10<00:04, 1490.36 examples/s]Converting format of dataset (num_proc=128):  71%|███████   | 16211/22808 [00:10<00:04, 1547.70 examples/s]Converting format of dataset (num_proc=128):  72%|███████▏  | 16380/22808 [00:10<00:04, 1586.51 examples/s]Converting format of dataset (num_proc=128):  73%|███████▎  | 16541/22808 [00:10<00:03, 1581.80 examples/s]Converting format of dataset (num_proc=128):  73%|███████▎  | 16707/22808 [00:10<00:03, 1600.14 examples/s]Converting format of dataset (num_proc=128):  74%|███████▍  | 16869/22808 [00:11<00:03, 1571.03 examples/s]Converting format of dataset (num_proc=128):  75%|███████▍  | 17027/22808 [00:11<00:03, 1538.80 examples/s]Converting format of dataset (num_proc=128):  75%|███████▌  | 17203/22808 [00:11<00:03, 1593.12 examples/s]Converting format of dataset (num_proc=128):  76%|███████▌  | 17364/22808 [00:11<00:03, 1548.94 examples/s]Converting format of dataset (num_proc=128):  77%|███████▋  | 17524/22808 [00:11<00:03, 1531.74 examples/s]Converting format of dataset (num_proc=128):  78%|███████▊  | 17681/22808 [00:11<00:03, 1528.52 examples/s]Converting format of dataset (num_proc=128):  78%|███████▊  | 17835/22808 [00:11<00:03, 1519.39 examples/s]Converting format of dataset (num_proc=128):  79%|███████▉  | 17992/22808 [00:11<00:03, 1531.66 examples/s]Converting format of dataset (num_proc=128):  80%|███████▉  | 18146/22808 [00:11<00:03, 1459.71 examples/s]Converting format of dataset (num_proc=128):  80%|████████  | 18305/22808 [00:12<00:03, 1494.34 examples/s]Converting format of dataset (num_proc=128):  81%|████████  | 18461/22808 [00:12<00:02, 1511.37 examples/s]Converting format of dataset (num_proc=128):  82%|████████▏ | 18613/22808 [00:12<00:02, 1426.33 examples/s]Converting format of dataset (num_proc=128):  82%|████████▏ | 18758/22808 [00:12<00:02, 1416.50 examples/s]Converting format of dataset (num_proc=128):  83%|████████▎ | 18903/22808 [00:12<00:02, 1384.78 examples/s]Converting format of dataset (num_proc=128):  83%|████████▎ | 19044/22808 [00:12<00:02, 1295.36 examples/s]Converting format of dataset (num_proc=128):  84%|████████▍ | 19182/22808 [00:12<00:02, 1318.17 examples/s]Converting format of dataset (num_proc=128):  85%|████████▍ | 19315/22808 [00:12<00:02, 1302.98 examples/s]Converting format of dataset (num_proc=128):  85%|████████▌ | 19447/22808 [00:12<00:02, 1282.70 examples/s]Converting format of dataset (num_proc=128):  86%|████████▌ | 19578/22808 [00:12<00:02, 1290.28 examples/s]Converting format of dataset (num_proc=128):  86%|████████▋ | 19725/22808 [00:13<00:02, 1332.21 examples/s]Converting format of dataset (num_proc=128):  87%|████████▋ | 19860/22808 [00:13<00:02, 1307.85 examples/s]Converting format of dataset (num_proc=128):  88%|████████▊ | 19992/22808 [00:13<00:02, 1266.90 examples/s]Converting format of dataset (num_proc=128):  88%|████████▊ | 20124/22808 [00:13<00:02, 1279.25 examples/s]Converting format of dataset (num_proc=128):  89%|████████▉ | 20253/22808 [00:13<00:02, 1197.39 examples/s]Converting format of dataset (num_proc=128):  89%|████████▉ | 20374/22808 [00:13<00:02, 1136.37 examples/s]Converting format of dataset (num_proc=128):  90%|████████▉ | 20489/22808 [00:13<00:02, 1058.58 examples/s]Converting format of dataset (num_proc=128):  90%|█████████ | 20607/22808 [00:13<00:02, 1078.27 examples/s]Converting format of dataset (num_proc=128):  91%|█████████ | 20726/22808 [00:13<00:01, 1098.29 examples/s]Converting format of dataset (num_proc=128):  91%|█████████▏| 20841/22808 [00:14<00:01, 1112.21 examples/s]Converting format of dataset (num_proc=128):  92%|█████████▏| 20954/22808 [00:14<00:01, 1039.90 examples/s]Converting format of dataset (num_proc=128):  92%|█████████▏| 21061/22808 [00:14<00:01, 1027.07 examples/s]Converting format of dataset (num_proc=128):  93%|█████████▎| 21165/22808 [00:14<00:01, 974.43 examples/s] Converting format of dataset (num_proc=128):  93%|█████████▎| 21275/22808 [00:14<00:01, 1007.42 examples/s]Converting format of dataset (num_proc=128):  94%|█████████▎| 21378/22808 [00:14<00:01, 982.37 examples/s] Converting format of dataset (num_proc=128):  94%|█████████▍| 21477/22808 [00:14<00:01, 944.88 examples/s]Converting format of dataset (num_proc=128):  95%|█████████▍| 21573/22808 [00:14<00:01, 914.90 examples/s]Converting format of dataset (num_proc=128):  95%|█████████▍| 21667/22808 [00:15<00:01, 856.49 examples/s]Converting format of dataset (num_proc=128):  95%|█████████▌| 21754/22808 [00:15<00:01, 835.21 examples/s]Converting format of dataset (num_proc=128):  96%|█████████▌| 21850/22808 [00:15<00:01, 865.20 examples/s]Converting format of dataset (num_proc=128):  96%|█████████▌| 21938/22808 [00:15<00:01, 860.31 examples/s]Converting format of dataset (num_proc=128):  97%|█████████▋| 22034/22808 [00:15<00:00, 881.88 examples/s]Converting format of dataset (num_proc=128):  97%|█████████▋| 22123/22808 [00:15<00:00, 863.87 examples/s]Converting format of dataset (num_proc=128):  97%|█████████▋| 22214/22808 [00:15<00:00, 875.40 examples/s]Converting format of dataset (num_proc=128):  98%|█████████▊| 22303/22808 [00:15<00:00, 843.02 examples/s]Converting format of dataset (num_proc=128):  98%|█████████▊| 22389/22808 [00:15<00:00, 806.94 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▊| 22473/22808 [00:16<00:00, 769.86 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▉| 22551/22808 [00:16<00:00, 735.49 examples/s]Converting format of dataset (num_proc=128):  99%|█████████▉| 22643/22808 [00:16<00:00, 778.89 examples/s]Converting format of dataset (num_proc=128): 100%|█████████▉| 22729/22808 [00:16<00:00, 779.66 examples/s]Converting format of dataset (num_proc=128): 100%|██████████| 22808/22808 [00:16<00:00, 527.14 examples/s]Converting format of dataset (num_proc=128): 100%|██████████| 22808/22808 [00:16<00:00, 1354.65 examples/s]
+Setting num_proc from 128 back to 1 for the train split to disable multiprocessing as it only contains one shard.
+Generating train split: 0 examples [00:00, ? examples/s]Generating train split: 47 examples [00:00, 15839.01 examples/s]
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+Converting format of dataset (num_proc=47):   0%|          | 0/47 [00:00<?, ? examples/s]Converting format of dataset (num_proc=47):  49%|████▉     | 23/47 [00:00<00:00, 228.16 examples/s]Converting format of dataset (num_proc=47): 100%|██████████| 47/47 [00:00<00:00, 219.93 examples/s]
+/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:4807: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
+  warnings.warn(  # warn only once
+[rank0]:[W1024 22:24:00.523184951 ProcessGroupNCCL.cpp:5023] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 as device used by this process is currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. You can specify device_id in init_process_group() to force use of a particular device.
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+Running tokenizer on dataset (num_proc=128):   0%|          | 0/22808 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=128):   1%|          | 179/22808 [00:44<1:34:18,  4.00 examples/s]Running tokenizer on dataset (num_proc=128):   2%|▏         | 357/22808 [00:45<39:50,  9.39 examples/s]  Running tokenizer on dataset (num_proc=128):   2%|▏         | 536/22808 [00:45<21:32, 17.23 examples/s]Running tokenizer on dataset (num_proc=128):   3%|▎         | 715/22808 [00:46<13:27, 27.36 examples/s]Running tokenizer on dataset (num_proc=128):   4%|▍         | 893/22808 [00:46<08:50, 41.29 examples/s]Running tokenizer on dataset (num_proc=128):   5%|▌         | 1251/22808 [00:47<04:25, 81.32 examples/s]Running tokenizer on dataset (num_proc=128):   6%|▋         | 1430/22808 [00:47<03:35, 99.09 examples/s]Running tokenizer on dataset (num_proc=128):   8%|▊         | 1787/22808 [00:48<02:04, 168.93 examples/s]Running tokenizer on dataset (num_proc=128):   9%|▊         | 1965/22808 [00:48<01:47, 194.01 examples/s]Running tokenizer on dataset (num_proc=128):   9%|▉         | 2143/22808 [00:48<01:23, 246.51 examples/s]Running tokenizer on dataset (num_proc=128):  10%|█         | 2322/22808 [00:48<01:04, 318.00 examples/s]Running tokenizer on dataset (num_proc=128):  11%|█         | 2500/22808 [00:48<00:51, 392.33 examples/s]Running tokenizer on dataset (num_proc=128):  13%|█▎        | 2857/22808 [00:49<00:31, 636.08 examples/s]Running tokenizer on dataset (num_proc=128):  13%|█▎        | 3036/22808 [00:49<00:32, 609.67 examples/s]Running tokenizer on dataset (num_proc=128):  14%|█▍        | 3214/22808 [00:49<00:37, 529.37 examples/s]Running tokenizer on dataset (num_proc=128):  15%|█▍        | 3392/22808 [00:50<00:40, 481.89 examples/s]Running tokenizer on dataset (num_proc=128):  16%|█▋        | 3749/22808 [00:50<00:27, 693.13 examples/s]Running tokenizer on dataset (num_proc=128):  18%|█▊        | 4105/22808 [00:50<00:20, 912.15 examples/s]Running tokenizer on dataset (num_proc=128):  20%|█▉        | 4462/22808 [00:50<00:15, 1208.46 examples/s]Running tokenizer on dataset (num_proc=128):  21%|██        | 4819/22808 [00:51<00:13, 1355.49 examples/s]Running tokenizer on dataset (num_proc=128):  23%|██▎       | 5177/22808 [00:51<00:13, 1349.43 examples/s]Running tokenizer on dataset (num_proc=128):  23%|██▎       | 5356/22808 [00:51<00:17, 1013.86 examples/s]Running tokenizer on dataset (num_proc=128):  26%|██▌       | 5891/22808 [00:51<00:11, 1417.40 examples/s]Running tokenizer on dataset (num_proc=128):  28%|██▊       | 6425/22808 [00:51<00:08, 1957.13 examples/s]Running tokenizer on dataset (num_proc=128):  30%|██▉       | 6781/22808 [00:52<00:07, 2062.49 examples/s]Running tokenizer on dataset (num_proc=128):  31%|███▏      | 7138/22808 [00:52<00:07, 2205.78 examples/s]Running tokenizer on dataset (num_proc=128):  33%|███▎      | 7495/22808 [00:52<00:07, 1925.62 examples/s]Running tokenizer on dataset (num_proc=128):  34%|███▍      | 7851/22808 [00:52<00:08, 1724.12 examples/s]Running tokenizer on dataset (num_proc=128):  36%|███▌      | 8207/22808 [00:53<00:11, 1218.46 examples/s]Running tokenizer on dataset (num_proc=128):  40%|███▉      | 9098/22808 [00:53<00:06, 2010.14 examples/s]Running tokenizer on dataset (num_proc=128):  41%|████▏     | 9456/22808 [00:53<00:05, 2227.87 examples/s]Running tokenizer on dataset (num_proc=128):  43%|████▎     | 9812/22808 [00:53<00:06, 2058.46 examples/s]Running tokenizer on dataset (num_proc=128):  45%|████▌     | 10347/22808 [00:53<00:05, 2394.00 examples/s]Running tokenizer on dataset (num_proc=128):  47%|████▋     | 10703/22808 [00:54<00:06, 1760.08 examples/s]Running tokenizer on dataset (num_proc=128):  48%|████▊     | 11060/22808 [00:54<00:09, 1184.83 examples/s]Running tokenizer on dataset (num_proc=128):  50%|█████     | 11416/22808 [00:55<00:08, 1315.02 examples/s]Running tokenizer on dataset (num_proc=128):  52%|█████▏    | 11772/22808 [00:55<00:07, 1517.72 examples/s]Running tokenizer on dataset (num_proc=128):  54%|█████▍    | 12306/22808 [00:55<00:06, 1650.57 examples/s]Running tokenizer on dataset (num_proc=128):  56%|█████▌    | 12662/22808 [00:55<00:06, 1542.45 examples/s]Running tokenizer on dataset (num_proc=128):  57%|█████▋    | 13018/22808 [00:55<00:06, 1512.50 examples/s]Running tokenizer on dataset (num_proc=128):  58%|█████▊    | 13196/22808 [00:56<00:06, 1537.32 examples/s]Running tokenizer on dataset (num_proc=128):  59%|█████▉    | 13552/22808 [00:56<00:05, 1821.78 examples/s]Running tokenizer on dataset (num_proc=128):  61%|██████    | 13908/22808 [00:56<00:05, 1776.88 examples/s]Running tokenizer on dataset (num_proc=128):  63%|██████▎   | 14264/22808 [00:56<00:07, 1115.08 examples/s]Running tokenizer on dataset (num_proc=128):  64%|██████▍   | 14620/22808 [00:57<00:06, 1203.31 examples/s]Running tokenizer on dataset (num_proc=128):  67%|██████▋   | 15332/22808 [00:57<00:04, 1668.32 examples/s]Running tokenizer on dataset (num_proc=128):  69%|██████▉   | 15688/22808 [00:57<00:04, 1518.38 examples/s]Running tokenizer on dataset (num_proc=128):  72%|███████▏  | 16400/22808 [00:57<00:03, 2134.60 examples/s]Running tokenizer on dataset (num_proc=128):  75%|███████▌  | 17112/22808 [00:58<00:02, 2650.85 examples/s]Running tokenizer on dataset (num_proc=128):  78%|███████▊  | 17824/22808 [00:58<00:01, 3255.27 examples/s]Running tokenizer on dataset (num_proc=128):  80%|████████  | 18358/22808 [00:58<00:01, 3608.04 examples/s]Running tokenizer on dataset (num_proc=128):  83%|████████▎ | 18892/22808 [00:58<00:01, 2127.38 examples/s]Running tokenizer on dataset (num_proc=128):  88%|████████▊ | 20138/22808 [00:58<00:00, 3489.85 examples/s]Running tokenizer on dataset (num_proc=128):  91%|█████████▏| 20850/22808 [00:59<00:00, 2221.88 examples/s]Running tokenizer on dataset (num_proc=128):  95%|█████████▌| 21740/22808 [00:59<00:00, 2789.32 examples/s]Running tokenizer on dataset (num_proc=128):  98%|█████████▊| 22274/22808 [01:01<00:00, 1106.71 examples/s]Running tokenizer on dataset (num_proc=128):  99%|█████████▉| 22630/22808 [01:01<00:00, 892.77 examples/s] Running tokenizer on dataset (num_proc=128): 100%|██████████| 22808/22808 [01:02<00:00, 362.48 examples/s]
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+Running tokenizer on dataset (num_proc=47):   0%|          | 0/47 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=47):   2%|▏         | 1/47 [00:00<00:30,  1.49 examples/s]Running tokenizer on dataset (num_proc=47):  11%|█         | 5/47 [00:00<00:05,  8.09 examples/s]Running tokenizer on dataset (num_proc=47):  17%|█▋        | 8/47 [00:01<00:07,  5.27 examples/s]Running tokenizer on dataset (num_proc=47):  40%|████      | 19/47 [00:01<00:02, 12.55 examples/s]Running tokenizer on dataset (num_proc=47):  60%|█████▉    | 28/47 [00:02<00:00, 19.71 examples/s]Running tokenizer on dataset (num_proc=47):  68%|██████▊   | 32/47 [00:02<00:00, 20.05 examples/s]Running tokenizer on dataset (num_proc=47):  77%|███████▋  | 36/47 [00:02<00:00, 21.94 examples/s]Running tokenizer on dataset (num_proc=47):  85%|████████▌ | 40/47 [00:02<00:00, 18.08 examples/s]Running tokenizer on dataset (num_proc=47):  91%|█████████▏| 43/47 [00:02<00:00, 17.20 examples/s]Running tokenizer on dataset (num_proc=47):  98%|█████████▊| 46/47 [00:03<00:00, 17.42 examples/s]Running tokenizer on dataset (num_proc=47): 100%|██████████| 47/47 [00:03<00:00, 14.36 examples/s]
+[INFO|configuration_utils.py:765] 2025-10-24 22:25:14,924 >> loading configuration file config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/config.json
+[INFO|configuration_utils.py:839] 2025-10-24 22:25:14,933 >> Model config Qwen3VLConfig {
+  "architectures": [
+    "Qwen3VLForConditionalGeneration"
+  ],
+  "image_token_id": 151655,
+  "model_type": "qwen3_vl",
+  "text_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 2560,
+    "initializer_range": 0.02,
+    "intermediate_size": 9728,
+    "max_position_embeddings": 262144,
+    "model_type": "qwen3_vl_text",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "mrope_interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_type": "default"
+    },
+    "rope_theta": 5000000,
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "vocab_size": 151936
+  },
+  "tie_word_embeddings": true,
+  "transformers_version": "4.57.1",
+  "video_token_id": 151656,
+  "vision_config": {
+    "deepstack_visual_indexes": [
+      5,
+      11,
+      17
+    ],
+    "depth": 24,
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1024,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4096,
+    "model_type": "qwen3_vl",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 2560,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652
+}
+
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+num_proc must be <= 47. Reducing num_proc to 47 for dataset of size 47.
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+[WARNING|logging.py:328] 2025-10-24 22:25:15,762 >> `torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+[INFO|modeling_utils.py:1172] 2025-10-24 22:25:15,768 >> loading weights file model.safetensors from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/model.safetensors.index.json
+[INFO|modeling_utils.py:2341] 2025-10-24 22:25:15,778 >> Instantiating Qwen3VLForConditionalGeneration model under default dtype torch.bfloat16.
+[INFO|configuration_utils.py:986] 2025-10-24 22:25:15,788 >> Generate config GenerationConfig {
+  "use_cache": false
+}
+
+[INFO|modeling_utils.py:2341] 2025-10-24 22:25:15,793 >> Instantiating Qwen3VLVisionModel model under default dtype torch.bfloat16.
+[INFO|modeling_utils.py:2341] 2025-10-24 22:25:15,874 >> Instantiating Qwen3VLTextModel model under default dtype torch.bfloat16.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:17<00:17, 17.54s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:17<00:17, 17.57s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:17<00:17, 17.57s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:17<00:17, 17.59s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.18s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.68s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.19s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.70s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.19s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.69s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.19s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:29<00:00, 14.70s/it]
+[INFO|configuration_utils.py:941] 2025-10-24 22:25:45,566 >> loading configuration file generation_config.json from cache at /home/hk-project-sustainebot/bm3844/.cache/huggingface/hub/models--Qwen--Qwen3-VL-4B-Instruct/snapshots/ebb281ec70b05090aa6165b016eac8ec08e71b17/generation_config.json
+[INFO|configuration_utils.py:986] 2025-10-24 22:25:45,567 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "temperature": 0.7,
+  "top_k": 20,
+  "top_p": 0.8
+}
+
+[INFO|dynamic_module_utils.py:423] 2025-10-24 22:25:45,692 >> Could not locate the custom_generate/generate.py inside Qwen/Qwen3-VL-4B-Instruct.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+[WARNING|trainer.py:906] 2025-10-24 22:25:45,721 >> The model is already on multiple devices. Skipping the move to device specified in `args`.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+[INFO|trainer.py:749] 2025-10-24 22:25:45,749 >> Using auto half precision backend
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+[rank1]:     run_exp()
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 142, in run_exp
+[rank1]:     _training_function(config={"args": args, "callbacks": callbacks})
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 82, in _training_function
+[rank1]:     run_sft(model_args, data_args, training_args, finetuning_args, generating_args,custom_args, callbacks)
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 108, in run_sft
+[rank1]:     ground_truths_decoded = eval_tokenizer.batch_decode(
+[rank1]:                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3885, in batch_decode
+[rank1]:     self.decode(
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3924, in decode
+[rank1]:     return self._decode(
+[rank1]:            ^^^^^^^^^^^^^
+[rank1]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_fast.py", line 682, in _decode
+[rank1]:     text = self._tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]: OverflowError: out of range integral type conversion attempted
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+[rank2]:     run_exp()
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 142, in run_exp
+[rank2]:     _training_function(config={"args": args, "callbacks": callbacks})
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 82, in _training_function
+[rank2]:     run_sft(model_args, data_args, training_args, finetuning_args, generating_args,custom_args, callbacks)
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 108, in run_sft
+[rank2]:     ground_truths_decoded = eval_tokenizer.batch_decode(
+[rank2]:                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3885, in batch_decode
+[rank2]:     self.decode(
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3924, in decode
+[rank2]:     return self._decode(
+[rank2]:            ^^^^^^^^^^^^^
+[rank2]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_fast.py", line 682, in _decode
+[rank2]:     text = self._tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]: OverflowError: out of range integral type conversion attempted
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+[rank3]:     run_exp()
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 142, in run_exp
+[rank3]:     _training_function(config={"args": args, "callbacks": callbacks})
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 82, in _training_function
+[rank3]:     run_sft(model_args, data_args, training_args, finetuning_args, generating_args,custom_args, callbacks)
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 108, in run_sft
+[rank3]:     ground_truths_decoded = eval_tokenizer.batch_decode(
+[rank3]:                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3885, in batch_decode
+[rank3]:     self.decode(
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3924, in decode
+[rank3]:     return self._decode(
+[rank3]:            ^^^^^^^^^^^^^
+[rank3]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_fast.py", line 682, in _decode
+[rank3]:     text = self._tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]: OverflowError: out of range integral type conversion attempted
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 180, in <module>
+[rank0]:     run_exp()
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 142, in run_exp
+[rank0]:     _training_function(config={"args": args, "callbacks": callbacks})
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 82, in _training_function
+[rank0]:     run_sft(model_args, data_args, training_args, finetuning_args, generating_args,custom_args, callbacks)
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 108, in run_sft
+[rank0]:     ground_truths_decoded = eval_tokenizer.batch_decode(
+[rank0]:                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3885, in batch_decode
+[rank0]:     self.decode(
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 3924, in decode
+[rank0]:     return self._decode(
+[rank0]:            ^^^^^^^^^^^^^
+[rank0]:   File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/transformers/tokenization_utils_fast.py", line 682, in _decode
+[rank0]:     text = self._tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]: OverflowError: out of range integral type conversion attempted
+[rank0]:[W1024 22:25:47.485497878 ProcessGroupNCCL.cpp:1538] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W1024 22:25:49.411000 508449 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 508492 closing signal SIGTERM
+W1024 22:25:49.414000 508449 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 508493 closing signal SIGTERM
+W1024 22:25:49.415000 508449 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 508494 closing signal SIGTERM
+E1024 22:25:49.830000 508449 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 3 (pid: 508495) of binary: /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/python3.12
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 357, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 143, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 277, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-10-24_22:25:49
+  host      : hkn0908.localdomain
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 508495)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 31, in <module>
+    main()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 24, in main
+    launcher.launch()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 110, in launch
+    process = subprocess.run(
+              ^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['torchrun', '--nnodes', '1', '--node_rank', '0', '--nproc_per_node', '4', '--master_addr', '127.0.0.1', '--master_port', '37321', '/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py', 'examples/train_full/qwen3vl/qwen3vl_roboG_poc_box_qwen_8_frames.yaml']' returned non-zero exit status 1.
+srun: error: hkn0908: task 0: Exited with exit code 1

@@ -17,6 +17,7 @@
 
 import json
 import os
+import time
 from types import MethodType
 from typing import TYPE_CHECKING, Any, Optional, Union
 
@@ -31,6 +32,10 @@ from ...extras.packages import is_transformers_version_greater_than
 from ..callbacks import SaveProcessorCallback
 from ..fp8_utils import configure_fp8_environment, verify_fp8_status
 from ..trainer_utils import create_custom_optimizer, create_custom_scheduler
+
+from transformers.trainer_utils import speed_metrics
+from transformers.integrations.tpu import tpu_spmd_dataloader
+import math
 
 
 if TYPE_CHECKING:
@@ -116,6 +121,129 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
     def compute_loss(self, model, inputs, *args, **kwargs):
         return super().compute_loss(model, inputs, *args, **kwargs)
 
+    
+    
+    @override
+    def evaluate(
+        self,
+        eval_dataset = None,
+        ignore_keys: Optional[list[str]] = None,
+        metric_key_prefix: str = "eval",
+        **gen_kwargs,
+    ) -> dict[str, float]:
+        """
+        Run evaluation and returns metrics.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are task-dependent
+        (pass it to the init `compute_metrics` argument).
+
+        You can also subclass and override this method to inject custom behavior.
+
+        Args:
+            eval_dataset (`Dataset`, *optional*):
+                Pass a dataset if you wish to override `self.eval_dataset`. If it is an [`~datasets.Dataset`], columns
+                not accepted by the `model.forward()` method are automatically removed. It must implement the `__len__`
+                method.
+            ignore_keys (`list[str]`, *optional*):
+                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                gathering predictions.
+            metric_key_prefix (`str`, *optional*, defaults to `"eval"`):
+                An optional prefix to be used as the metrics key prefix. For example the metrics "bleu" will be named
+                "eval_bleu" if the prefix is `"eval"` (default)
+            max_length (`int`, *optional*):
+                The maximum target length to use when predicting with the generate method.
+            num_beams (`int`, *optional*):
+                Number of beams for beam search that will be used when predicting with the generate method. 1 means no
+                beam search.
+            gen_kwargs:
+                Additional `generate` specific kwargs.
+
+        Returns:
+            A dictionary containing the evaluation loss and the potential metrics computed from the predictions. The
+            dictionary also contains the epoch number which comes from the training state.
+        """
+
+        gen_kwargs = gen_kwargs.copy()
+
+        # Use legacy argument setting if a) the option is not explicitly passed; and b) the argument is set in the
+        # training args
+        if (
+            gen_kwargs.get("max_length") is None
+            and gen_kwargs.get("max_new_tokens") is None
+            and self.args.generation_max_length is not None
+        ):
+            gen_kwargs["max_length"] = self.args.generation_max_length
+        if gen_kwargs.get("num_beams") is None and self.args.generation_num_beams is not None:
+            gen_kwargs["num_beams"] = self.args.generation_num_beams
+        # We don't want to drop samples in general
+        self.gather_function = self.accelerator.gather
+        self._gen_kwargs = gen_kwargs
+        
+        
+        override = eval_dataset is not None
+        eval_dataset = eval_dataset if override else self.eval_dataset
+        if isinstance(eval_dataset, dict):
+            metrics = {}
+            for eval_dataset_name, _eval_dataset in eval_dataset.items():
+                dataset_metrics = self.evaluate(
+                    eval_dataset=_eval_dataset if override else eval_dataset_name,
+                    ignore_keys=ignore_keys,
+                    metric_key_prefix=f"{metric_key_prefix}_{eval_dataset_name}",
+                )
+                metrics.update(dataset_metrics)
+            return metrics
+
+        # memory metrics - must set up as early as possible
+        self._memory_tracker.start()
+
+        eval_dataloader = self.get_eval_dataloader(eval_dataset)
+        if self.is_fsdp_xla_v2_enabled:
+            eval_dataloader = tpu_spmd_dataloader(eval_dataloader)
+
+        start_time = time.time()
+
+        eval_loop = self.prediction_loop if self.args.use_legacy_prediction_loop else self.evaluation_loop
+        output = eval_loop(
+            eval_dataloader,
+            description="Evaluation",
+            # No point gathering the predictions if there are no metrics, otherwise we defer to
+            # self.args.prediction_loss_only
+            prediction_loss_only=True if self.compute_metrics is None else None,
+            ignore_keys=ignore_keys,
+            metric_key_prefix=metric_key_prefix,
+        )
+
+        total_batch_size = self.args.eval_batch_size * self.args.world_size
+        if f"{metric_key_prefix}_jit_compilation_time" in output.metrics:
+            start_time += output.metrics[f"{metric_key_prefix}_jit_compilation_time"]
+        if f"{metric_key_prefix}_model_preparation_time" in output.metrics:
+            start_time += output.metrics[f"{metric_key_prefix}_model_preparation_time"]
+        output.metrics.update(
+            speed_metrics(
+                metric_key_prefix,
+                start_time,
+                num_samples=output.num_samples,
+                num_steps=math.ceil(output.num_samples / total_batch_size),
+            )
+        )
+
+        self.log(output.metrics)
+
+        # if DebugOption.TPU_METRICS_DEBUG in self.args.debug:
+        #     # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+        #     xm.master_print(met.metrics_report())
+
+
+        if output.predictions is not None:
+            self.latest_predictions = output.predictions.copy()
+
+
+        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output.metrics)
+
+        self._memory_tracker.stop_and_update_metrics(output.metrics)
+
+        return output.metrics
+
     @override
     def prediction_step(
         self,
@@ -134,6 +262,14 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
         else:
             labels = inputs.get("labels")
 
+        
+        #if video_metadata in gen_kwargs, remove
+        if "video_metadata" in gen_kwargs:
+            gen_kwargs.pop("video_metadata")
+            
+        #print("gen_kwargs in prediction_step:", gen_kwargs)
+        #print("inputs keys in prediction_step:", inputs.keys())
+        
         loss, generated_tokens, _ = super().prediction_step(
             model, inputs, prediction_loss_only=prediction_loss_only, ignore_keys=ignore_keys, **gen_kwargs
         )
@@ -173,7 +309,25 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
         decoded_inputs = self.processing_class.batch_decode(dataset["input_ids"], skip_special_tokens=False)
         decoded_preds = self.processing_class.batch_decode(preds, skip_special_tokens=skip_special_tokens)
         decoded_labels = self.processing_class.batch_decode(labels, skip_special_tokens=skip_special_tokens)
+        
+        images = dataset["images"]
+        videos = dataset["videos"]
 
+        # with open(output_prediction_file, "w", encoding="utf-8") as f:
+        #     for text, pred, label in zip(decoded_inputs, decoded_preds, decoded_labels):
+        #         f.write(json.dumps({"prompt": text, "predict": pred, "label": label}, ensure_ascii=False) + "\n")
         with open(output_prediction_file, "w", encoding="utf-8") as f:
-            for text, pred, label in zip(decoded_inputs, decoded_preds, decoded_labels):
-                f.write(json.dumps({"prompt": text, "predict": pred, "label": label}, ensure_ascii=False) + "\n")
+            for text, pred, label, image, video in zip(decoded_inputs, decoded_preds, decoded_labels, images, videos):
+                f.write(
+                    json.dumps(
+                        {
+                            "prompt": text,
+                            "predict": pred,
+                            "label": label,
+                            "image": image,
+                            "video": video,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )

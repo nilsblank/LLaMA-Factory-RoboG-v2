@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from typing import TYPE_CHECKING, Optional
 
 from ...data import SFTDataCollatorWith4DAttentionMask, get_dataset, get_template_and_fix_tokenizer
@@ -26,6 +27,8 @@ from ...model import load_model, load_tokenizer
 from ..trainer_utils import create_modelcard_and_push
 from .metric import ComputeAccuracy, ComputeSimilarity, eval_logit_processor
 from .trainer import CustomSeq2SeqTrainer
+from ...eval.callback_adapters import BoundingBoxEvaluatorCallback,LabelEvaluatorCallback
+
 
 
 if TYPE_CHECKING:
@@ -43,6 +46,7 @@ def run_sft(
     training_args: "Seq2SeqTrainingArguments",
     finetuning_args: "FinetuningArguments",
     generating_args: "GeneratingArguments",
+    custom_args = None,
     callbacks: Optional[list["TrainerCallback"]] = None,
 ):
     tokenizer_module = load_tokenizer(model_args)
@@ -90,6 +94,45 @@ def run_sft(
         **tokenizer_module,
         **metric_module,
     )
+    
+    # Add evaluation callback for bounding box tasks
+    eval_tokenizer = copy.deepcopy(tokenizer)
+    eval_tokenizer.padding_side = "left"  # use right-padding in evaluation
+    
+    
+    #decode val dataset
+    if training_args.predict_with_generate:
+        ground_truths = []
+        for example in dataset_module["eval_dataset"]:
+            ground_truths.append(example["labels"])
+        
+        ground_truths_decoded = eval_tokenizer.batch_decode(
+            ground_truths, skip_special_tokens=True, clean_up_tokenization_spaces=True
+        )
+        
+        if custom_args is not None:
+            for evaluator in custom_args.get("evaluators", []):
+                if evaluator == "bbox_evaluator":
+                    trainer.add_callback(
+                        BoundingBoxEvaluatorCallback(
+                            trainer=trainer,
+                            tokenizer=eval_tokenizer,
+                            val_dataset=ground_truths_decoded,
+                        )
+                    )
+                if evaluator == "label_evaluator":
+                    trainer.add_callback(
+                        LabelEvaluatorCallback(
+                            trainer=trainer,
+                            tokenizer=eval_tokenizer,
+                            val_dataset=ground_truths_decoded,
+                        )
+                    )
+                    # Training
+                    # if training_args.do_train:
+                    # metrics = trainer.evaluate(metric_key_prefix="eval", **gen_kwargs)
+                    # trainer.log_metrics("eval", metrics)
+                    # trainer.save_metrics("eval", metrics)
 
     # Training
     if training_args.do_train:
@@ -117,12 +160,6 @@ def run_sft(
     if training_args.predict_with_generate:
         tokenizer.padding_side = "left"  # use left-padding in generation
 
-    # Evaluation
-    if training_args.do_eval:
-        metrics = trainer.evaluate(metric_key_prefix="eval", **gen_kwargs)
-        trainer.log_metrics("eval", metrics)
-        trainer.save_metrics("eval", metrics)
-
     # Predict
     if training_args.do_predict:
         logger.warning_rank0_once("Batch generation can be very slow. Consider using `scripts/vllm_infer.py` instead.")
@@ -130,6 +167,12 @@ def run_sft(
         trainer.log_metrics("predict", predict_results.metrics)
         trainer.save_metrics("predict", predict_results.metrics)
         trainer.save_predictions(dataset_module["eval_dataset"], predict_results, generating_args.skip_special_tokens)
+    
+    # Evaluation
+    if training_args.do_eval:
+        metrics = trainer.evaluate(metric_key_prefix="eval", **gen_kwargs)
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
 
     # Create model card
     create_modelcard_and_push(trainer, model_args, data_args, training_args, finetuning_args)

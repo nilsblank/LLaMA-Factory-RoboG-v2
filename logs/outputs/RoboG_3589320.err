@@ -1,0 +1,115 @@
+GpuFreq=control_disabled
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 178, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 178, in <module>
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 178, in <module>
+    from llamafactory.train.tuner import run_exp  # use absolute import
+    from llamafactory.train.tuner import run_exp  # use absolute importTraceback (most recent call last):
+
+    ^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 178, in <module>
+^ ^ ^ ^ ^^^^^^^^^^^^    ^^from llamafactory.train.tuner import run_exp  # use absolute import^^
+^^^^^^^^^^^^ ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^from llamafactory.train.tuner import run_exp  # use absolute import^^^
+^^^^
+^^^^^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 36, in <module>
+^^
+^ ^ ^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 36, in <module>
+ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 36, in <module>
+^^^^^^^    ^from .sft import run_sft^
+^^^^    ^from .sft import run_sft  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/__init__.py", line 15, in <module>
+^
+^^^^^  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/__init__.py", line 15, in <module>
+^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/tuner.py", line 36, in <module>
+    from .sft import run_sft
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/__init__.py", line 15, in <module>
+    from .sft import run_sft
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/__init__.py", line 15, in <module>
+    from .workflow import run_sft    
+    from .workflow import run_sftfrom .workflow import run_sft
+
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 29, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 29, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 29, in <module>
+    from .workflow import run_sft
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/workflow.py", line 29, in <module>
+    from .trainer import CustomSeq2SeqTrainer
+    from .trainer import CustomSeq2SeqTrainer
+      File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 52, in <module>
+from .trainer import CustomSeq2SeqTrainer    
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 52, in <module>
+from .trainer import CustomSeq2SeqTrainer
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 52, in <module>
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 52, in <module>
+    class CustomSeq2SeqTrainer(Seq2SeqTrainer):    
+class CustomSeq2SeqTrainer(Seq2SeqTrainer):
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 129, in CustomSeq2SeqTrainer
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 129, in CustomSeq2SeqTrainer
+    class CustomSeq2SeqTrainer(Seq2SeqTrainer):
+    class CustomSeq2SeqTrainer(Seq2SeqTrainer):  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 129, in CustomSeq2SeqTrainer
+
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/train/sft/trainer.py", line 129, in CustomSeq2SeqTrainer
+    eval_dataset: Optional[Dataset] = None,    
+eval_dataset: Optional[Dataset] = None,
+      eval_dataset: Optional[Dataset] = None,  
+          eval_dataset: Optional[Dataset] = None,  
+                                                                                ^   ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^^^ 
+^^ ^ 
+^NameError^^^: NameError^^name 'Dataset' is not defined^: ^
+name 'Dataset' is not defined^^NameError^
+: name 'Dataset' is not defined
+NameError
+: name 'Dataset' is not defined
+
+W1021 16:47:41.250000 3676702 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 3676705 closing signal SIGTERM
+W1021 16:47:41.251000 3676702 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 3676706 closing signal SIGTERM
+W1021 16:47:41.251000 3676702 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 3676707 closing signal SIGTERM
+E1021 16:47:41.466000 3676702 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 0 (pid: 3676704) of binary: /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/python3.12
+Traceback (most recent call last):
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 357, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 143, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 277, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-10-21_16:47:41
+  host      : hkn0922.localdomain
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 3676704)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 31, in <module>
+    main()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/cli.py", line 24, in main
+    launcher.launch()
+  File "/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py", line 110, in launch
+    process = subprocess.run(
+              ^^^^^^^^^^^^^^^
+  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['torchrun', '--nnodes', '1', '--node_rank', '0', '--nproc_per_node', '4', '--master_addr', '127.0.0.1', '--master_port', '53559', '/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src/llamafactory/launcher.py', 'examples/train_full/qwen3vl/qwen3vl_roboG_poc_two_frames.yaml']' returned non-zero exit status 1.
+srun: error: hkn0922: task 0: Exited with exit code 1

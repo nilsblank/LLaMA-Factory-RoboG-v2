@@ -1,0 +1,32 @@
+Using config: examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain_lora.yaml
+[INFO|2025-10-22 10:58:28] llamafactory.launcher:143 >> Initializing 4 distributed tasks at: 127.0.0.1:39385
+[WARNING|2025-10-22 10:58:40] llamafactory.extras.misc:154 >> Version checking has been disabled, may lead to unexpected behaviors.
+[2025-10-22 10:58:44,862] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 10:58:44,862] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 10:58:44,862] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 10:58:44,862] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3590398
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: FAILED (exit code 1)
+Partition: accelerated
+Nodes: 1
+Cores per node: 64
+Nodelist: hkn0426
+CPU Utilized: 00:01:11
+CPU Efficiency: 0.89% of 02:13:20 core-walltime
+Job Wall-clock time: 00:02:05
+Starttime: Wed Oct 22 10:57:13 2025
+Endtime: Wed Oct 22 10:59:18 2025
+Memory Utilized: 5.33 GB
+Memory Efficiency: 1.10% of 485.84 GB (485.84 GB/node)
+Energy Consumed: 57446 Joule / 15.9572222222222 Watthours
+Average node power draw: 459.568 Watt

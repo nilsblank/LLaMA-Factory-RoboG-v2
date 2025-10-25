@@ -1,0 +1,66 @@
+### model
+model_name_or_path: /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen2_5vl-3b/lora/sft/roboG_stagepoc_two_frames_detection_cotrain_train/checkpoint-4467
+resume_from_checkpoint: null
+image_max_pixels: 262144
+video_max_pixels: 16384
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: false
+finetuning_type: lora
+lora_rank: 32
+lora_target: all
+#deepspeed: examples/deepspeed/ds_z2_config.json
+
+### dataset
+dataset: roboG_stagepoc_two_frames_detection_cotrain_train
+template: qwen2_vl
+cutoff_len: 2048
+#max_samples: 1000
+overwrite_cache: true
+preprocessing_num_workers: 128
+dataloader_num_workers: 4
+
+### output
+output_dir: saves/qwen2_5vl-3b/lora/sft/${dataset}
+logging_steps: 10
+save_steps: 800
+plot_loss: true
+overwrite_output_dir: true
+save_only_model: false
+report_to: wandb
+run_name: ${model_name_or_path}_${dataset}_${stage}
+
+### train
+per_device_train_batch_size: 16
+gradient_accumulation_steps: 1
+learning_rate: 6.0e-5
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.04
+bf16: true
+ddp_timeout: 180000000
+#resume_from_checkpoint: null
+
+##optimizationspip
+flash_attn: fa2
+#use_unsloth: true
+optim: adamw_bnb_8bit
+pure_bf16: true
+
+
+evaluators:
+  - bbox_evaluator
+  - label_evaluator
+
+#tokenized_path: /home/hk-project-sustainebot/bm3844/datasets/datasets/${dataset}/tokenized_gen_${predict_with_generate}
+
+### eval
+#val_size: 0.1
+per_device_eval_batch_size: 8
+eval_strategy: steps
+eval_steps: 100
+eval_dataset: roboG_stagepoc_ablation_two_frames_eval
+predict_with_generate: false
+do_predict: true

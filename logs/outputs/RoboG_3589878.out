@@ -1,0 +1,1453 @@
+Using config: examples/train_full/qwen2_5vl_roboG_poc_two_frames_det_cotrain.yaml
+[INFO|2025-10-22 00:47:36] llamafactory.launcher:143 >> Initializing 4 distributed tasks at: 127.0.0.1:33449
+[2025-10-22 00:47:48,016] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 00:47:48,016] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 00:47:48,016] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2025-10-22 00:47:48,016] [INFO] [real_accelerator.py:254:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.
+
+
+[INFO|2025-10-22 00:47:59] llamafactory.hparams.parser:426 >> Process rank: 1, world size: 4, device: cuda:1, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-22 00:47:59] llamafactory.hparams.parser:426 >> Process rank: 0, world size: 4, device: cuda:0, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-22 00:47:59] llamafactory.hparams.parser:426 >> Process rank: 2, world size: 4, device: cuda:2, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-22 00:47:59] llamafactory.hparams.parser:426 >> Process rank: 3, world size: 4, device: cuda:3, distributed training: True, compute dtype: torch.bfloat16
+[INFO|2025-10-22 00:48:01] llamafactory.data.loader:143 >> Loading dataset /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/roboG_stagepoc_two_frames_detection_cotrain_train.jsonl...
+[INFO|2025-10-22 00:48:17] llamafactory.data.loader:143 >> Loading dataset /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/roboG_stagepoc_ablation_two_frames_eval.jsonl...
+training example:
+input_ids:
+[151644, 8948, 198, 2610, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 16246, 279, 1378, 2168, 1573, 323, 1283, 279, 16230, 11, 8253, 1128, 1633, 279, 12305, 476, 3738, 16282, 291, 448, 13, 9258, 279, 2383, 323, 3728, 315, 279, 16282, 291, 1633, 304, 279, 1156, 4034, 304, 4718, 3561, 13, 151645, 198, 151644, 77091, 198, 641, 1948, 279, 5335, 11, 458, 1633, 5497, 13, 576, 12305, 16282, 291, 448, 279, 15097, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 15, 11, 220, 17, 17, 20, 11, 220, 19, 19, 19, 11, 220, 19, 18, 20, 1125, 330, 1502, 788, 330, 32578, 6375, 16707, 921, 73594, 151645, 198]
+inputs:
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+<|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|> Given the two image before and after the interaction, determine what object the robot or human interacted with. Output the label and location of the interacted object in the first frame in JSON format.<|im_end|>
+<|im_start|>assistant
+In between the images, an object changed. The robot interacted with the clothes.
+```json
+[
+{"bbox_2d": [260, 225, 444, 435], "label": "clothes"}
+]
+```<|im_end|>
+
+label_ids:
+[-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 641, 1948, 279, 5335, 11, 458, 1633, 5497, 13, 576, 12305, 16282, 291, 448, 279, 15097, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 15, 11, 220, 17, 17, 20, 11, 220, 19, 19, 19, 11, 220, 19, 18, 20, 1125, 330, 1502, 788, 330, 32578, 6375, 16707, 921, 73594, 151645, 198]
+labels:
+In between the images, an object changed. The robot interacted with the clothes.
+```json
+[
+{"bbox_2d": [260, 225, 444, 435], "label": "clothes"}
+]
+```<|im_end|>
+
+eval example:
+input_ids:
+[151644, 8948, 198, 2610, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 10294, 279, 1378, 5335, 323, 24523, 279, 1633, 429, 572, 16634, 553, 279, 12305, 476, 3738, 13, 9258, 279, 2383, 323, 30618, 3745, 315, 279, 16282, 291, 1633, 304, 4718, 3561, 369, 279, 2661, 1156, 4034, 13, 151645, 198, 151644, 77091, 198]
+inputs:
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+<|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|><|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|> Review the two images and locate the object that was engaged by the robot or human. Output the label and bounding box of the interacted object in JSON format for the given first frame.<|im_end|>
+<|im_start|>assistant
+
+label_ids:
+[785, 12305, 16282, 291, 448, 279, 14961, 26334, 624, 73594, 2236, 198, 9640, 4913, 58456, 62, 17, 67, 788, 508, 17, 21, 18, 11, 220, 17, 19, 17, 11, 220, 18, 20, 22, 11, 220, 18, 15, 16, 1125, 330, 1502, 788, 330, 81914, 26334, 16707, 921, 73594, 151645, 198]
+labels:
+The robot interacted with the silver lid.
+```json
+[
+{"bbox_2d": [263, 242, 357, 301], "label": "silver lid"}
+]
+```<|im_end|>
+
+[INFO|2025-10-22 00:50:13] llamafactory.model.model_utils.kv_cache:143 >> KV cache is disabled during training.
+[INFO|2025-10-22 00:50:38] llamafactory.model.model_utils.checkpointing:143 >> Gradient checkpointing enabled.
+[INFO|2025-10-22 00:50:38] llamafactory.model.model_utils.attention:143 >> Using FlashAttention-2 for faster training and inference.
+[INFO|2025-10-22 00:50:38] llamafactory.model.adapter:143 >> Pure bf16 / BAdam detected, remaining trainable params in half precision.
+[INFO|2025-10-22 00:50:38] llamafactory.model.adapter:143 >> Fine-tuning method: Full
+[INFO|2025-10-22 00:50:38] llamafactory.model.model_utils.visual:143 >> Set vision model not trainable: ['visual.patch_embed', 'visual.blocks'].
+[INFO|2025-10-22 00:50:38] llamafactory.model.model_utils.visual:143 >> Set multi model projector not trainable: visual.merger.
+[INFO|2025-10-22 00:50:38] llamafactory.model.loader:143 >> trainable params: 3,085,938,688 || all params: 3,754,622,976 || trainable%: 82.1904
+{'loss': 1.3148, 'grad_norm': 12.75, 'learning_rate': 6e-06, 'epoch': 0.01}
+{'loss': 0.813, 'grad_norm': 3.15625, 'learning_rate': 1.2666666666666667e-05, 'epoch': 0.03}
+{'loss': 0.5138, 'grad_norm': 1.1015625, 'learning_rate': 1.9333333333333333e-05, 'epoch': 0.04}
+{'loss': 0.4417, 'grad_norm': 1.03125, 'learning_rate': 2.6000000000000002e-05, 'epoch': 0.05}
+{'loss': 0.396, 'grad_norm': 1.296875, 'learning_rate': 3.266666666666666e-05, 'epoch': 0.07}
+{'loss': 0.3769, 'grad_norm': 1.1015625, 'learning_rate': 3.933333333333333e-05, 'epoch': 0.08}
+{'loss': 0.363, 'grad_norm': 1.03125, 'learning_rate': 4.600000000000001e-05, 'epoch': 0.09}
+{'loss': 0.3476, 'grad_norm': 1.171875, 'learning_rate': 5.266666666666667e-05, 'epoch': 0.11}
+{'loss': 0.3442, 'grad_norm': 1.0, 'learning_rate': 5.933333333333334e-05, 'epoch': 0.12}
+{'loss': 0.3327, 'grad_norm': 0.984375, 'learning_rate': 5.9997393755583106e-05, 'epoch': 0.13}
+{'eval_rouge-1': 66.70598645833333, 'eval_rouge-2': 55.96106145833334, 'eval_rouge-l': 73.23957708333332, 'eval_bleu-4': 44.769165625, 'eval_runtime': 7.5268, 'eval_samples_per_second': 11.027, 'eval_steps_per_second': 0.399, 'epoch': 0.13}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0332
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0807
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0293
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0318
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0812
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1422
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1422
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1422
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1179
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.3
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.2133
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0241
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0241
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.0471
+{'loss': 0.3271, 'grad_norm': 1.046875, 'learning_rate': 5.9988385096992396e-05, 'epoch': 0.15}
+{'loss': 0.331, 'grad_norm': 0.77734375, 'learning_rate': 5.997294378031292e-05, 'epoch': 0.16}
+{'loss': 0.3219, 'grad_norm': 0.99609375, 'learning_rate': 5.995107311778407e-05, 'epoch': 0.17}
+{'loss': 0.3207, 'grad_norm': 0.85546875, 'learning_rate': 5.9922777800771984e-05, 'epoch': 0.19}
+{'loss': 0.3118, 'grad_norm': 0.78515625, 'learning_rate': 5.98880638987632e-05, 'epoch': 0.2}
+{'loss': 0.3103, 'grad_norm': 0.81640625, 'learning_rate': 5.9846938858062755e-05, 'epoch': 0.21}
+{'loss': 0.3036, 'grad_norm': 0.96484375, 'learning_rate': 5.9799411500196854e-05, 'epoch': 0.23}
+{'loss': 0.3002, 'grad_norm': 0.80078125, 'learning_rate': 5.974549202002069e-05, 'epoch': 0.24}
+{'loss': 0.2998, 'grad_norm': 0.85546875, 'learning_rate': 5.968519198353153e-05, 'epoch': 0.26}
+{'loss': 0.2961, 'grad_norm': 0.90625, 'learning_rate': 5.96185243253878e-05, 'epoch': 0.27}
+{'eval_rouge-1': 71.143084375, 'eval_rouge-2': 59.407436458333336, 'eval_rouge-l': 77.00394791666668, 'eval_bleu-4': 57.55359166666667, 'eval_runtime': 7.7729, 'eval_samples_per_second': 10.678, 'eval_steps_per_second': 0.386, 'epoch': 0.27}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0585
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.116
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0524
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0718
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.089
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1597
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.3615
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.2689
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1928
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1928
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.3232
+{'loss': 0.299, 'grad_norm': 0.85546875, 'learning_rate': 5.9545503346134474e-05, 'epoch': 0.28}
+{'loss': 0.2946, 'grad_norm': 0.71484375, 'learning_rate': 5.94661447091356e-05, 'epoch': 0.3}
+{'loss': 0.2912, 'grad_norm': 0.7109375, 'learning_rate': 5.938046543721441e-05, 'epoch': 0.31}
+{'loss': 0.2998, 'grad_norm': 0.8515625, 'learning_rate': 5.928848390900181e-05, 'epoch': 0.32}
+{'loss': 0.2879, 'grad_norm': 0.72265625, 'learning_rate': 5.9190219854994115e-05, 'epoch': 0.34}
+{'loss': 0.2887, 'grad_norm': 0.94140625, 'learning_rate': 5.908569435332074e-05, 'epoch': 0.35}
+{'loss': 0.2922, 'grad_norm': 0.71875, 'learning_rate': 5.897492982522283e-05, 'epoch': 0.36}
+{'loss': 0.2934, 'grad_norm': 0.8125, 'learning_rate': 5.885795003024378e-05, 'epoch': 0.38}
+{'loss': 0.2939, 'grad_norm': 0.80078125, 'learning_rate': 5.873478006113275e-05, 'epoch': 0.39}
+{'loss': 0.2869, 'grad_norm': 0.80078125, 'learning_rate': 5.860544633846209e-05, 'epoch': 0.4}
+{'eval_rouge-1': 69.72804270833333, 'eval_rouge-2': 58.368123958333335, 'eval_rouge-l': 76.25173854166667, 'eval_bleu-4': 55.48279270833333, 'eval_runtime': 7.5899, 'eval_samples_per_second': 10.936, 'eval_steps_per_second': 0.395, 'epoch': 0.4}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0263
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0453
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.032
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0216
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0623
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1169
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1169
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1169
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0836
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.3154
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.165
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1566
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1566
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.2708
+{'loss': 0.2885, 'grad_norm': 0.9765625, 'learning_rate': 5.8469976604960006e-05, 'epoch': 0.42}
+{'loss': 0.2821, 'grad_norm': 0.6484375, 'learning_rate': 5.832839991955962e-05, 'epoch': 0.43}
+{'loss': 0.2832, 'grad_norm': 0.6640625, 'learning_rate': 5.818074665116568e-05, 'epoch': 0.44}
+{'loss': 0.2837, 'grad_norm': 0.7734375, 'learning_rate': 5.802704847214028e-05, 'epoch': 0.46}
+{'loss': 0.2813, 'grad_norm': 0.69140625, 'learning_rate': 5.786733835150897e-05, 'epoch': 0.47}
+{'loss': 0.2759, 'grad_norm': 0.69140625, 'learning_rate': 5.770165054788874e-05, 'epoch': 0.48}
+{'loss': 0.2796, 'grad_norm': 0.765625, 'learning_rate': 5.7530020602139386e-05, 'epoch': 0.5}
+{'loss': 0.2834, 'grad_norm': 0.625, 'learning_rate': 5.735248532973982e-05, 'epoch': 0.51}
+{'loss': 0.2758, 'grad_norm': 0.83203125, 'learning_rate': 5.7169082812890925e-05, 'epoch': 0.52}
+{'loss': 0.2764, 'grad_norm': 0.66015625, 'learning_rate': 5.697985239234681e-05, 'epoch': 0.54}
+{'eval_rouge-1': 68.91069166666666, 'eval_rouge-2': 56.063183333333335, 'eval_rouge-l': 72.537896875, 'eval_bleu-4': 56.43278645833334, 'eval_runtime': 7.5466, 'eval_samples_per_second': 10.998, 'eval_steps_per_second': 0.398, 'epoch': 0.54}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0506
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0861
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0563
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0614
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0185
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1482
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1482
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1482
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1731
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0538
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.2144
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.012
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.012
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.0238
+{'loss': 0.2736, 'grad_norm': 0.6953125, 'learning_rate': 5.6784834658975924e-05, 'epoch': 0.55}
+{'loss': 0.2796, 'grad_norm': 0.67578125, 'learning_rate': 5.6584071445054224e-05, 'epoch': 0.56}
+{'loss': 0.2753, 'grad_norm': 0.63671875, 'learning_rate': 5.637760581529183e-05, 'epoch': 0.58}
+{'loss': 0.2753, 'grad_norm': 0.6640625, 'learning_rate': 5.616548205759554e-05, 'epoch': 0.59}
+{'loss': 0.273, 'grad_norm': 0.66015625, 'learning_rate': 5.5947745673568754e-05, 'epoch': 0.6}
+{'loss': 0.2708, 'grad_norm': 0.83203125, 'learning_rate': 5.5724443368751215e-05, 'epoch': 0.62}
+{'loss': 0.2804, 'grad_norm': 0.69140625, 'learning_rate': 5.549562304260041e-05, 'epoch': 0.63}
+{'loss': 0.2677, 'grad_norm': 0.6875, 'learning_rate': 5.526133377821693e-05, 'epoch': 0.64}
+{'loss': 0.2632, 'grad_norm': 1.09375, 'learning_rate': 5.502162583181587e-05, 'epoch': 0.66}
+{'loss': 0.3875, 'grad_norm': 12.375, 'learning_rate': 5.47765506219466e-05, 'epoch': 0.67}
+{'eval_rouge-1': 66.411015625, 'eval_rouge-2': 56.417953125, 'eval_rouge-l': 75.5616625, 'eval_bleu-4': 41.33480729166667, 'eval_runtime': 6.5529, 'eval_samples_per_second': 12.666, 'eval_steps_per_second': 0.458, 'epoch': 0.67}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0197
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.035
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0197
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0232
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0191
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.106
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.106
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.106
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1119
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.1
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1613
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1758
+{'loss': 0.4385, 'grad_norm': 7.5625, 'learning_rate': 5.452616071846332e-05, 'epoch': 0.68}
+{'loss': 0.325, 'grad_norm': 0.67578125, 'learning_rate': 5.427050983124843e-05, 'epoch': 0.7}
+{'loss': 0.2735, 'grad_norm': 0.74609375, 'learning_rate': 5.400965279869161e-05, 'epoch': 0.71}
+{'loss': 0.2646, 'grad_norm': 0.63671875, 'learning_rate': 5.374364557592667e-05, 'epoch': 0.72}
+{'loss': 0.2633, 'grad_norm': 0.64453125, 'learning_rate': 5.347254522282887e-05, 'epoch': 0.74}
+{'loss': 0.2615, 'grad_norm': 0.74609375, 'learning_rate': 5.3196409891775324e-05, 'epoch': 0.75}
+{'loss': 0.2655, 'grad_norm': 0.79296875, 'learning_rate': 5.291529881517103e-05, 'epoch': 0.77}
+{'loss': 0.2589, 'grad_norm': 0.66015625, 'learning_rate': 5.262927229274318e-05, 'epoch': 0.78}
+{'loss': 0.2656, 'grad_norm': 0.765625, 'learning_rate': 5.233839167860662e-05, 'epoch': 0.79}
+{'loss': 0.2595, 'grad_norm': 0.73046875, 'learning_rate': 5.204271936810306e-05, 'epoch': 0.81}
+{'eval_rouge-1': 60.89003541666667, 'eval_rouge-2': 54.82284895833333, 'eval_rouge-l': 71.393203125, 'eval_bleu-4': 29.32456666666667, 'eval_runtime': 7.5035, 'eval_samples_per_second': 11.062, 'eval_steps_per_second': 0.4, 'epoch': 0.81}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0219
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0375
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0218
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0271
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0106
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.109
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0769
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1503
+```json
+[
+{"bbox_2d": [410, 136, 458, 182], "label": "410, 136, 458, 182```
+```json
+[
+{"bbox_2d": [410, 136, 458, 182], "label": "410, 136, 458, 182```Failed to parse JSON: Unterminated string starting at: line 2 column 44 (char 46)
+
+Failed to parse JSON: Unterminated string starting at: line 2 column 44 (char 46)
+```json
+[
+{"bbox_2d": [410, 136, 458, 182], "label": "410, 136, 458, 182```
+Failed to parse JSON: Unterminated string starting at: line 2 column 44 (char 46)
+```json
+[
+{"bbox_2d": [410, 136, 458, 182], "label": "410, 136, 458, 182```
+Failed to parse JSON: Unterminated string starting at: line 2 column 44 (char 46)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0482
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0482
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.092
+{'loss': 0.2645, 'grad_norm': 0.8125, 'learning_rate': 5.1742318784416955e-05, 'epoch': 0.82}
+{'loss': 0.2636, 'grad_norm': 0.71484375, 'learning_rate': 5.143725436497094e-05, 'epoch': 0.83}
+{'loss': 0.2613, 'grad_norm': 0.7578125, 'learning_rate': 5.112759154760369e-05, 'epoch': 0.85}
+{'loss': 0.2643, 'grad_norm': 0.69921875, 'learning_rate': 5.081339675653309e-05, 'epoch': 0.86}
+{'loss': 0.2577, 'grad_norm': 0.69140625, 'learning_rate': 5.0494737388108034e-05, 'epoch': 0.87}
+{'loss': 0.2493, 'grad_norm': 0.7265625, 'learning_rate': 5.01716817963515e-05, 'epoch': 0.89}
+{'loss': 0.2599, 'grad_norm': 0.71875, 'learning_rate': 4.984429927829828e-05, 'epoch': 0.9}
+{'loss': 0.2571, 'grad_norm': 0.6328125, 'learning_rate': 4.951266005913042e-05, 'epoch': 0.91}
+{'loss': 0.251, 'grad_norm': 0.71484375, 'learning_rate': 4.917683527711358e-05, 'epoch': 0.93}
+{'loss': 0.2518, 'grad_norm': 0.72265625, 'learning_rate': 4.883689696833752e-05, 'epoch': 0.94}
+{'eval_rouge-1': 60.9978875, 'eval_rouge-2': 55.08760625, 'eval_rouge-l': 72.11920208333333, 'eval_bleu-4': 29.052192708333326, 'eval_runtime': 6.3009, 'eval_samples_per_second': 13.173, 'eval_steps_per_second': 0.476, 'epoch': 0.94}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0117
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0187
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0134
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.013
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0185
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0759
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0759
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0759
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0836
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0538
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1132
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0602
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0602
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1136
+{'loss': 0.259, 'grad_norm': 0.66015625, 'learning_rate': 4.849291805126399e-05, 'epoch': 0.95}
+{'loss': 0.2499, 'grad_norm': 0.73046875, 'learning_rate': 4.8144972311085356e-05, 'epoch': 0.97}
+{'loss': 0.2525, 'grad_norm': 0.79296875, 'learning_rate': 4.779313438389732e-05, 'epoch': 0.98}
+{'loss': 0.25, 'grad_norm': 0.69921875, 'learning_rate': 4.74374797406891e-05, 'epoch': 0.99}
+{'loss': 0.2463, 'grad_norm': 0.79296875, 'learning_rate': 4.707808467115453e-05, 'epoch': 1.01}
+{'loss': 0.2325, 'grad_norm': 0.83984375, 'learning_rate': 4.671502626732751e-05, 'epoch': 1.02}
+{'loss': 0.23, 'grad_norm': 0.72265625, 'learning_rate': 4.634838240704544e-05, 'epoch': 1.03}
+{'loss': 0.2344, 'grad_norm': 0.76171875, 'learning_rate': 4.5978231737244e-05, 'epoch': 1.05}
+{'loss': 0.234, 'grad_norm': 0.80859375, 'learning_rate': 4.560465365708696e-05, 'epoch': 1.06}
+{'loss': 0.2336, 'grad_norm': 0.734375, 'learning_rate': 4.522772830093474e-05, 'epoch': 1.07}
+{'eval_rouge-1': 59.38008020833333, 'eval_rouge-2': 55.61605312500001, 'eval_rouge-l': 72.013771875, 'eval_bleu-4': 29.220520833333335, 'eval_runtime': 7.4849, 'eval_samples_per_second': 11.089, 'eval_steps_per_second': 0.401, 'epoch': 1.07}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.03
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0521
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0282
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0337
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0377
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0093
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1205
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1205
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1205
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.1
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1299
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0769
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1847
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1758
+{'loss': 0.2257, 'grad_norm': 0.7734375, 'learning_rate': 4.48475365211551e-05, 'epoch': 1.09}
+{'loss': 0.2316, 'grad_norm': 0.73828125, 'learning_rate': 4.446415987077999e-05, 'epoch': 1.1}
+{'loss': 0.2307, 'grad_norm': 0.94921875, 'learning_rate': 4.4077680586011964e-05, 'epoch': 1.11}
+{'loss': 0.2284, 'grad_norm': 0.72265625, 'learning_rate': 4.3688181568584114e-05, 'epoch': 1.13}
+{'loss': 0.2367, 'grad_norm': 0.76171875, 'learning_rate': 4.329574636797725e-05, 'epoch': 1.14}
+{'loss': 0.2276, 'grad_norm': 0.78515625, 'learning_rate': 4.290045916349809e-05, 'epoch': 1.15}
+{'loss': 0.2316, 'grad_norm': 0.75, 'learning_rate': 4.2502404746222426e-05, 'epoch': 1.17}
+{'loss': 0.2256, 'grad_norm': 0.85546875, 'learning_rate': 4.210166850080697e-05, 'epoch': 1.18}
+{'loss': 0.2221, 'grad_norm': 0.72265625, 'learning_rate': 4.169833638717396e-05, 'epoch': 1.19}
+{'loss': 0.2245, 'grad_norm': 0.73046875, 'learning_rate': 4.129249492207228e-05, 'epoch': 1.21}
+{'eval_rouge-1': 59.921437499999996, 'eval_rouge-2': 56.10885729166667, 'eval_rouge-l': 72.71915208333333, 'eval_bleu-4': 29.79589375, 'eval_runtime': 5.959, 'eval_samples_per_second': 13.928, 'eval_steps_per_second': 0.503, 'epoch': 1.21}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0256
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0428
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0281
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0337
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0113
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1229
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1229
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1229
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1373
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0769
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1777
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1325
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1325
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.234
+{'loss': 0.2208, 'grad_norm': 0.80859375, 'learning_rate': 4.088423116051923e-05, 'epoch': 1.22}
+{'loss': 0.2251, 'grad_norm': 0.75, 'learning_rate': 4.047363267712676e-05, 'epoch': 1.23}
+{'loss': 0.2241, 'grad_norm': 0.78125, 'learning_rate': 4.006078754731631e-05, 'epoch': 1.25}
+{'loss': 0.2265, 'grad_norm': 0.79296875, 'learning_rate': 3.964578432842615e-05, 'epoch': 1.26}
+{'loss': 0.2228, 'grad_norm': 0.765625, 'learning_rate': 3.9228712040715456e-05, 'epoch': 1.28}
+{'loss': 0.223, 'grad_norm': 0.890625, 'learning_rate': 3.880966014826893e-05, 'epoch': 1.29}
+{'loss': 0.2191, 'grad_norm': 0.8125, 'learning_rate': 3.838871853980638e-05, 'epoch': 1.3}
+{'loss': 0.2197, 'grad_norm': 0.80859375, 'learning_rate': 3.7965977509401155e-05, 'epoch': 1.32}
+{'loss': 0.2226, 'grad_norm': 0.85546875, 'learning_rate': 3.7541527737111524e-05, 'epoch': 1.33}
+{'loss': 0.2141, 'grad_norm': 0.8359375, 'learning_rate': 3.711546026952943e-05, 'epoch': 1.34}
+{'eval_rouge-1': 58.873533333333334, 'eval_rouge-2': 54.93007291666667, 'eval_rouge-l': 72.13794583333333, 'eval_bleu-4': 29.729113541666663, 'eval_runtime': 6.3357, 'eval_samples_per_second': 13.1, 'eval_steps_per_second': 0.474, 'epoch': 1.34}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0059
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0132
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0038
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0082
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0542
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0542
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0542
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0672
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1042
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1758
+{'loss': 0.2197, 'grad_norm': 0.79296875, 'learning_rate': 3.668786650025053e-05, 'epoch': 1.36}
+{'loss': 0.2161, 'grad_norm': 0.98828125, 'learning_rate': 3.6258838150269794e-05, 'epoch': 1.37}
+{'loss': 0.2115, 'grad_norm': 0.76171875, 'learning_rate': 3.5828467248306896e-05, 'epoch': 1.38}
+{'loss': 0.2152, 'grad_norm': 0.96484375, 'learning_rate': 3.5396846111065615e-05, 'epoch': 1.4}
+{'loss': 0.2142, 'grad_norm': 0.8515625, 'learning_rate': 3.496406732343143e-05, 'epoch': 1.41}
+{'loss': 0.2111, 'grad_norm': 0.84375, 'learning_rate': 3.45302237186116e-05, 'epoch': 1.42}
+{'loss': 0.2119, 'grad_norm': 0.76171875, 'learning_rate': 3.409540835822195e-05, 'epoch': 1.44}
+{'loss': 0.2106, 'grad_norm': 0.77734375, 'learning_rate': 3.3659714512324765e-05, 'epoch': 1.45}
+{'loss': 0.2056, 'grad_norm': 0.89453125, 'learning_rate': 3.322323563942181e-05, 'epoch': 1.46}
+{'loss': 0.207, 'grad_norm': 0.84765625, 'learning_rate': 3.278606536640709e-05, 'epoch': 1.48}
+{'eval_rouge-1': 59.38536250000001, 'eval_rouge-2': 55.91388750000001, 'eval_rouge-l': 72.60546041666667, 'eval_bleu-4': 29.7146, 'eval_runtime': 6.0288, 'eval_samples_per_second': 13.767, 'eval_steps_per_second': 0.498, 'epoch': 1.48}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0242
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0437
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0205
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0332
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0122
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1253
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1253
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1253
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1403
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0769
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1861
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1566
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1566
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.2708
+{'loss': 0.2063, 'grad_norm': 0.859375, 'learning_rate': 3.2348297468483354e-05, 'epoch': 1.49}
+{'loss': 0.1989, 'grad_norm': 0.9765625, 'learning_rate': 3.1910025849046886e-05, 'epoch': 1.5}
+{'loss': 0.2084, 'grad_norm': 0.89453125, 'learning_rate': 3.1471344519544746e-05, 'epoch': 1.52}
+{'loss': 0.2048, 'grad_norm': 0.90234375, 'learning_rate': 3.103234757930883e-05, 'epoch': 1.53}
+{'loss': 0.2043, 'grad_norm': 0.80859375, 'learning_rate': 3.059312919537112e-05, 'epoch': 1.54}
+{'loss': 0.1974, 'grad_norm': 0.8828125, 'learning_rate': 3.01537835822644e-05, 'epoch': 1.56}
+{'loss': 0.1961, 'grad_norm': 0.921875, 'learning_rate': 2.97144049818127e-05, 'epoch': 1.57}
+{'loss': 0.1953, 'grad_norm': 0.98828125, 'learning_rate': 2.927508764291604e-05, 'epoch': 1.58}
+{'loss': 0.1948, 'grad_norm': 0.87890625, 'learning_rate': 2.8835925801333485e-05, 'epoch': 1.6}
+{'loss': 0.1919, 'grad_norm': 1.03125, 'learning_rate': 2.839701365946921e-05, 'epoch': 1.61}
+{'eval_rouge-1': 59.413589583333334, 'eval_rouge-2': 55.7908, 'eval_rouge-l': 72.6021125, 'eval_bleu-4': 29.70406458333333, 'eval_runtime': 5.9799, 'eval_samples_per_second': 13.88, 'eval_steps_per_second': 0.502, 'epoch': 1.61}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.019
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0386
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.013
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0167
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0584
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1193
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1193
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1193
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0985
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.2538
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1712
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1325
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1325
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.234
+{'loss': 0.194, 'grad_norm': 0.87890625, 'learning_rate': 2.79584453661655e-05, 'epoch': 1.62}
+{'loss': 0.1991, 'grad_norm': 0.9921875, 'learning_rate': 2.752031499650745e-05, 'epoch': 1.64}
+{'loss': 0.1976, 'grad_norm': 0.921875, 'learning_rate': 2.7082716531643337e-05, 'epoch': 1.65}
+{'loss': 0.1894, 'grad_norm': 1.078125, 'learning_rate': 2.6645743838625185e-05, 'epoch': 1.66}
+{'loss': 0.1879, 'grad_norm': 0.98046875, 'learning_rate': 2.6209490650273888e-05, 'epoch': 1.68}
+{'loss': 0.1919, 'grad_norm': 0.95703125, 'learning_rate': 2.5774050545072946e-05, 'epoch': 1.69}
+{'loss': 0.1874, 'grad_norm': 1.046875, 'learning_rate': 2.5339516927095522e-05, 'epoch': 1.7}
+{'loss': 0.1883, 'grad_norm': 0.89453125, 'learning_rate': 2.4905983005968714e-05, 'epoch': 1.72}
+{'loss': 0.1876, 'grad_norm': 1.046875, 'learning_rate': 2.4473541776879657e-05, 'epoch': 1.73}
+{'loss': 0.1858, 'grad_norm': 1.09375, 'learning_rate': 2.4042286000627645e-05, 'epoch': 1.74}
+{'eval_rouge-1': 59.12831354166667, 'eval_rouge-2': 55.32161875, 'eval_rouge-l': 72.22351250000001, 'eval_bleu-4': 29.352547916666666, 'eval_runtime': 5.9756, 'eval_samples_per_second': 13.89, 'eval_steps_per_second': 0.502, 'epoch': 1.74}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0132
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0194
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0148
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0159
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0855
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0881
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0923
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1123
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1205
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1205
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.2151
+{'loss': 0.1847, 'grad_norm': 0.9140625, 'learning_rate': 2.3612308183726372e-05, 'epoch': 1.76}
+{'loss': 0.1844, 'grad_norm': 1.171875, 'learning_rate': 2.3183700558560928e-05, 'epoch': 1.77}
+{'loss': 0.1786, 'grad_norm': 1.0078125, 'learning_rate': 2.2756555063603415e-05, 'epoch': 1.79}
+{'loss': 0.1793, 'grad_norm': 1.1171875, 'learning_rate': 2.2330963323691736e-05, 'epoch': 1.8}
+{'loss': 0.1738, 'grad_norm': 1.0078125, 'learning_rate': 2.1907016630375576e-05, 'epoch': 1.81}
+{'loss': 0.1771, 'grad_norm': 1.0859375, 'learning_rate': 2.148480592233392e-05, 'epoch': 1.83}
+{'loss': 0.1753, 'grad_norm': 1.0, 'learning_rate': 2.1064421765868304e-05, 'epoch': 1.84}
+{'loss': 0.1803, 'grad_norm': 0.99609375, 'learning_rate': 2.0645954335475767e-05, 'epoch': 1.85}
+{'loss': 0.1726, 'grad_norm': 1.0390625, 'learning_rate': 2.0229493394506135e-05, 'epoch': 1.87}
+{'loss': 0.1724, 'grad_norm': 1.03125, 'learning_rate': 1.9815128275907185e-05, 'epoch': 1.88}
+{'eval_rouge-1': 58.99887708333333, 'eval_rouge-2': 55.23652708333333, 'eval_rouge-l': 72.08733333333333, 'eval_bleu-4': 29.097404166666667, 'eval_runtime': 6.5461, 'eval_samples_per_second': 12.679, 'eval_steps_per_second': 0.458, 'epoch': 1.88}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0088
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0135
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0082
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0099
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0735
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0735
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0735
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0761
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0769
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1032
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0964
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1758
+{'loss': 0.1661, 'grad_norm': 1.078125, 'learning_rate': 1.9402947863062394e-05, 'epoch': 1.89}
+{'loss': 0.1706, 'grad_norm': 1.2421875, 'learning_rate': 1.8993040570724934e-05, 'epoch': 1.91}
+{'loss': 0.1629, 'grad_norm': 1.09375, 'learning_rate': 1.858549432605231e-05, 'epoch': 1.92}
+{'loss': 0.1658, 'grad_norm': 1.1953125, 'learning_rate': 1.8180396549745537e-05, 'epoch': 1.93}
+{'loss': 0.1651, 'grad_norm': 1.3046875, 'learning_rate': 1.777783413729695e-05, 'epoch': 1.95}
+{'loss': 0.1656, 'grad_norm': 1.171875, 'learning_rate': 1.7377893440350704e-05, 'epoch': 1.96}
+{'loss': 0.1572, 'grad_norm': 1.0546875, 'learning_rate': 1.698066024817991e-05, 'epoch': 1.97}
+{'loss': 0.1589, 'grad_norm': 1.3359375, 'learning_rate': 1.6586219769284416e-05, 'epoch': 1.99}
+{'loss': 0.1534, 'grad_norm': 1.203125, 'learning_rate': 1.6194656613113136e-05, 'epoch': 2.0}
+{'loss': 0.1125, 'grad_norm': 1.6171875, 'learning_rate': 1.580605477191493e-05, 'epoch': 2.01}
+{'eval_rouge-1': 58.98842916666666, 'eval_rouge-2': 55.258776041666664, 'eval_rouge-l': 72.101346875, 'eval_bleu-4': 29.350698958333336, 'eval_runtime': 6.8412, 'eval_samples_per_second': 12.132, 'eval_steps_per_second': 0.439, 'epoch': 2.01}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.014
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0223
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0142
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0131
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0345
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.088
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.088
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.088
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0821
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.1385
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1208
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.1084
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.1084
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1957
+{'loss': 0.1152, 'grad_norm': 1.421875, 'learning_rate': 1.542049760272182e-05, 'epoch': 2.03}
+{'loss': 0.1153, 'grad_norm': 1.3359375, 'learning_rate': 1.5038067809468519e-05, 'epoch': 2.04}
+{'loss': 0.1145, 'grad_norm': 1.3359375, 'learning_rate': 1.4658847425252011e-05, 'epoch': 2.05}
+{'loss': 0.1124, 'grad_norm': 1.4296875, 'learning_rate': 1.4282917794735051e-05, 'epoch': 2.07}
+{'loss': 0.1099, 'grad_norm': 1.28125, 'learning_rate': 1.3910359556697276e-05, 'epoch': 2.08}
+{'loss': 0.1089, 'grad_norm': 1.3359375, 'learning_rate': 1.354125262673791e-05, 'epoch': 2.09}
+{'loss': 0.1103, 'grad_norm': 1.4296875, 'learning_rate': 1.3175676180133304e-05, 'epoch': 2.11}
+{'loss': 0.1115, 'grad_norm': 1.3046875, 'learning_rate': 1.2813708634853612e-05, 'epoch': 2.12}
+{'loss': 0.1066, 'grad_norm': 1.2734375, 'learning_rate': 1.2455427634741581e-05, 'epoch': 2.13}
+{'loss': 0.1061, 'grad_norm': 1.421875, 'learning_rate': 1.2100910032857725e-05, 'epoch': 2.15}
+{'eval_rouge-1': 58.733121875, 'eval_rouge-2': 54.98721979166667, 'eval_rouge-l': 71.92664895833333, 'eval_bleu-4': 29.49512083333333, 'eval_runtime': 6.8079, 'eval_samples_per_second': 12.192, 'eval_steps_per_second': 0.441, 'epoch': 2.15}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0105
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0153
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0107
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0119
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0119
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0761
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0692
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1002
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+``````json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1348
+{'loss': 0.1103, 'grad_norm': 1.5, 'learning_rate': 1.175023187499483e-05, 'epoch': 2.16}
+{'loss': 0.1051, 'grad_norm': 1.2578125, 'learning_rate': 1.140346838336579e-05, 'epoch': 2.17}
+{'loss': 0.1048, 'grad_norm': 1.3046875, 'learning_rate': 1.1060693940468133e-05, 'epoch': 2.19}
+{'loss': 0.1063, 'grad_norm': 1.4296875, 'learning_rate': 1.0721982073128478e-05, 'epoch': 2.2}
+{'loss': 0.1062, 'grad_norm': 1.3359375, 'learning_rate': 1.038740543673081e-05, 'epoch': 2.21}
+{'loss': 0.1025, 'grad_norm': 1.4296875, 'learning_rate': 1.00570357996314e-05, 'epoch': 2.23}
+{'loss': 0.1014, 'grad_norm': 1.359375, 'learning_rate': 9.730944027764235e-06, 'epoch': 2.24}
+{'loss': 0.1052, 'grad_norm': 1.2890625, 'learning_rate': 9.409200069439874e-06, 'epoch': 2.26}
+{'loss': 0.1011, 'grad_norm': 1.453125, 'learning_rate': 9.0918729403412e-06, 'epoch': 2.27}
+{'loss': 0.106, 'grad_norm': 1.4296875, 'learning_rate': 8.779030708719213e-06, 'epoch': 2.28}
+{'eval_rouge-1': 58.919238541666665, 'eval_rouge-2': 55.07345416666667, 'eval_rouge-l': 71.97493020833333, 'eval_bleu-4': 29.840597916666667, 'eval_runtime': 7.0421, 'eval_samples_per_second': 11.786, 'eval_steps_per_second': 0.426, 'epoch': 2.28}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0103
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0156
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0153
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0687
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0687
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0687
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0851
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.0934
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+``````json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0843
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0843
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1556
+{'loss': 0.1012, 'grad_norm': 1.2578125, 'learning_rate': 8.470740480792043e-06, 'epoch': 2.3}
+{'loss': 0.1018, 'grad_norm': 1.46875, 'learning_rate': 8.16706838635034e-06, 'epoch': 2.31}
+{'loss': 0.1046, 'grad_norm': 1.359375, 'learning_rate': 7.868079564572097e-06, 'epoch': 2.32}
+{'loss': 0.0996, 'grad_norm': 1.3359375, 'learning_rate': 7.573838150049983e-06, 'epoch': 2.34}
+{'loss': 0.1054, 'grad_norm': 1.5625, 'learning_rate': 7.284407259034141e-06, 'epoch': 2.35}
+{'loss': 0.0986, 'grad_norm': 1.5546875, 'learning_rate': 6.999848975893438e-06, 'epoch': 2.36}
+{'loss': 0.0984, 'grad_norm': 1.5, 'learning_rate': 6.720224339798071e-06, 'epoch': 2.38}
+{'loss': 0.1022, 'grad_norm': 1.65625, 'learning_rate': 6.445593331626354e-06, 'epoch': 2.39}
+{'loss': 0.0991, 'grad_norm': 1.578125, 'learning_rate': 6.176014861098504e-06, 'epoch': 2.4}
+{'loss': 0.0964, 'grad_norm': 1.21875, 'learning_rate': 5.9115467541402475e-06, 'epoch': 2.42}
+{'eval_rouge-1': 58.91552708333334, 'eval_rouge-2': 54.94534062499999, 'eval_rouge-l': 71.87459479166667, 'eval_bleu-4': 29.713184374999997, 'eval_runtime': 6.4706, 'eval_samples_per_second': 12.827, 'eval_steps_per_second': 0.464, 'epoch': 2.42}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0105
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0168
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0149
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0036
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0711
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0711
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0711
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0806
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0385
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.101
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1348
+{'loss': 0.0949, 'grad_norm': 1.34375, 'learning_rate': 5.65224574047884e-06, 'epoch': 2.43}
+{'loss': 0.0958, 'grad_norm': 1.484375, 'learning_rate': 5.3981674414742675e-06, 'epoch': 2.44}
+{'loss': 0.0975, 'grad_norm': 1.2890625, 'learning_rate': 5.1493663581881924e-06, 'epoch': 2.46}
+{'loss': 0.1, 'grad_norm': 1.4453125, 'learning_rate': 4.905895859693198e-06, 'epoch': 2.47}
+{'loss': 0.0996, 'grad_norm': 1.3359375, 'learning_rate': 4.667808171624858e-06, 'epoch': 2.48}
+{'loss': 0.099, 'grad_norm': 1.3046875, 'learning_rate': 4.435154364979074e-06, 'epoch': 2.5}
+{'loss': 0.0986, 'grad_norm': 1.515625, 'learning_rate': 4.207984345157111e-06, 'epoch': 2.51}
+{'loss': 0.0964, 'grad_norm': 1.4609375, 'learning_rate': 3.986346841260593e-06, 'epoch': 2.52}
+{'loss': 0.0975, 'grad_norm': 1.390625, 'learning_rate': 3.770289395638944e-06, 'epoch': 2.54}
+{'loss': 0.0997, 'grad_norm': 1.5390625, 'learning_rate': 3.559858353691222e-06, 'epoch': 2.55}
+{'eval_rouge-1': 58.896243750000004, 'eval_rouge-2': 54.77674583333334, 'eval_rouge-l': 71.6619875, 'eval_bleu-4': 29.74484375, 'eval_runtime': 6.9945, 'eval_samples_per_second': 11.867, 'eval_steps_per_second': 0.429, 'epoch': 2.55}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0086
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0129
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0082
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0121
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0602
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0602
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0602
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0746
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.0823
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+``````json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0602
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0602
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1136
+{'loss': 0.0975, 'grad_norm': 1.515625, 'learning_rate': 3.3550988539249026e-06, 'epoch': 2.56}
+{'loss': 0.0983, 'grad_norm': 1.34375, 'learning_rate': 3.1560548182733493e-06, 'epoch': 2.58}
+{'loss': 0.0956, 'grad_norm': 1.5625, 'learning_rate': 2.9627689426744043e-06, 'epoch': 2.59}
+{'loss': 0.0996, 'grad_norm': 1.6953125, 'learning_rate': 2.7752826879118732e-06, 'epoch': 2.6}
+{'loss': 0.1058, 'grad_norm': 1.53125, 'learning_rate': 2.5936362707219708e-06, 'epoch': 2.62}
+{'loss': 0.0967, 'grad_norm': 1.46875, 'learning_rate': 2.4178686551666708e-06, 'epoch': 2.63}
+{'loss': 0.0989, 'grad_norm': 1.3984375, 'learning_rate': 2.2480175442756512e-06, 'epoch': 2.64}
+{'loss': 0.0995, 'grad_norm': 1.3046875, 'learning_rate': 2.0841193719588914e-06, 'epoch': 2.66}
+{'loss': 0.0968, 'grad_norm': 1.4921875, 'learning_rate': 1.926209295191326e-06, 'epoch': 2.67}
+{'loss': 0.0963, 'grad_norm': 1.3984375, 'learning_rate': 1.7743211864715802e-06, 'epoch': 2.68}
+{'eval_rouge-1': 58.899084375, 'eval_rouge-2': 54.921209375, 'eval_rouge-l': 71.88003645833334, 'eval_bleu-4': 29.762646875, 'eval_runtime': 6.5569, 'eval_samples_per_second': 12.658, 'eval_steps_per_second': 0.458, 'epoch': 2.68}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0107
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0168
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0151
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0036
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0821
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0385
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1029
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+``````json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1348
+{'loss': 0.0998, 'grad_norm': 1.3046875, 'learning_rate': 1.6284876265561044e-06, 'epoch': 2.7}
+{'loss': 0.0997, 'grad_norm': 1.7578125, 'learning_rate': 1.4887398974704447e-06, 'epoch': 2.71}
+{'loss': 0.0973, 'grad_norm': 1.3984375, 'learning_rate': 1.3551079757990991e-06, 'epoch': 2.72}
+{'loss': 0.096, 'grad_norm': 1.2578125, 'learning_rate': 1.2276205262553974e-06, 'epoch': 2.74}
+{'loss': 0.1009, 'grad_norm': 1.4296875, 'learning_rate': 1.1063048955327625e-06, 'epoch': 2.75}
+{'loss': 0.0994, 'grad_norm': 1.3515625, 'learning_rate': 9.911871064387135e-07, 'epoch': 2.77}
+{'loss': 0.0919, 'grad_norm': 1.1875, 'learning_rate': 8.822918523128465e-07, 'epoch': 2.78}
+{'loss': 0.0983, 'grad_norm': 1.34375, 'learning_rate': 7.796424917299961e-07, 'epoch': 2.79}
+{'loss': 0.0986, 'grad_norm': 1.4453125, 'learning_rate': 6.832610434896858e-07, 'epoch': 2.81}
+{'loss': 0.0995, 'grad_norm': 1.265625, 'learning_rate': 5.931681818930068e-07, 'epoch': 2.82}
+{'eval_rouge-1': 58.90808958333334, 'eval_rouge-2': 54.89768229166666, 'eval_rouge-l': 71.81162916666666, 'eval_bleu-4': 29.73858854166666, 'eval_runtime': 6.4957, 'eval_samples_per_second': 12.778, 'eval_steps_per_second': 0.462, 'epoch': 2.82}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0101
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0156
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0153
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0663
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0663
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0663
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0821
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.0926
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot"
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 51)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1348
+{'loss': 0.0954, 'grad_norm': 1.4765625, 'learning_rate': 5.093832323078651e-07, 'epoch': 2.83}
+{'loss': 0.1036, 'grad_norm': 1.5390625, 'learning_rate': 4.319241670235907e-07, 'epoch': 2.85}
+{'loss': 0.0961, 'grad_norm': 1.34375, 'learning_rate': 3.608076013958117e-07, 'epoch': 2.86}
+{'loss': 0.0996, 'grad_norm': 1.3515625, 'learning_rate': 2.96048790282345e-07, 'epoch': 2.87}
+{'loss': 0.0979, 'grad_norm': 1.3203125, 'learning_rate': 2.3766162477099397e-07, 'epoch': 2.89}
+{'loss': 0.1045, 'grad_norm': 1.34375, 'learning_rate': 1.856586291997986e-07, 'epoch': 2.9}
+{'loss': 0.0986, 'grad_norm': 1.453125, 'learning_rate': 1.4005095847054117e-07, 'epoch': 2.91}
+{'loss': 0.0992, 'grad_norm': 1.40625, 'learning_rate': 1.0084839565593029e-07, 'epoch': 2.93}
+{'loss': 0.1017, 'grad_norm': 1.5625, 'learning_rate': 6.805934990110951e-08, 'epoch': 2.94}
+{'loss': 0.0995, 'grad_norm': 1.3125, 'learning_rate': 4.1690854619836905e-08, 'epoch': 2.95}
+{'eval_rouge-1': 59.027060416666664, 'eval_rouge-2': 55.06876458333334, 'eval_rouge-l': 71.912878125, 'eval_bleu-4': 29.939486458333334, 'eval_runtime': 6.5282, 'eval_samples_per_second': 12.714, 'eval_steps_per_second': 0.46, 'epoch': 2.95}
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.0107
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0168
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0112
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0153
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.0036
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.0723
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.0821
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.0385
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.1029
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+``````json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+```json
+[
+{"bbox_2d": [407, 132, 452, 176], "label": "pot""}
+]
+```
+Failed to parse JSON: Expecting ',' delimiter: line 2 column 49 (char 50)
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.0723
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.1348
+{'loss': 0.1001, 'grad_norm': 1.5234375, 'learning_rate': 2.174856598579189e-08, 'epoch': 2.97}
+{'loss': 0.097, 'grad_norm': 1.3984375, 'learning_rate': 8.236761719299101e-09, 'epoch': 2.98}
+{'loss': 0.0971, 'grad_norm': 1.296875, 'learning_rate': 1.1583401697190521e-09, 'epoch': 2.99}
+{'train_runtime': 6824.9064, 'train_samples_per_second': 41.866, 'train_steps_per_second': 0.327, 'train_loss': 0.20655858109994757, 'epoch': 3.0}
+***** train metrics *****
+  epoch                    =          3.0
+  total_flos               = 4391243450GF
+  train_loss               =       0.2066
+  train_runtime            =   1:53:44.90
+  train_samples_per_second =       41.866
+  train_steps_per_second   =        0.327
+Figure saved at: saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_two_frames_detection_cotrain_train/training_loss.png
+[WARNING|2025-10-22 02:44:31] llamafactory.extras.ploting:148 >> No metric eval_loss to plot.
+[WARNING|2025-10-22 02:44:31] llamafactory.extras.ploting:148 >> No metric eval_accuracy to plot.
+[WARNING|2025-10-22 02:44:31] llamafactory.train.sft.workflow:154 >> Batch generation can be very slow. Consider using `scripts/vllm_infer.py` instead.
+***** predict metrics *****
+  predict_bleu-4             =    62.9307
+  predict_rouge-1            =    73.8472
+  predict_rouge-2            =    62.4965
+  predict_rouge-l            =    79.8132
+  predict_runtime            = 0:00:07.72
+  predict_samples_per_second =      10.74
+  predict_steps_per_second   =      0.388
+[INFO|2025-10-22 02:44:39] llamafactory.train.sft.trainer:143 >> Saving prediction results to saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_two_frames_detection_cotrain_train/generated_predictions.jsonl
+***** eval metrics *****
+  BoundingBoxMAP_eval/map = 0.041
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_50 = 0.0712
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_75 = 0.0417
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_medium = 0.0287
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_large = 0.1574
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_1 = 0.1699
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_10 = 0.1699
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100 = 0.1699
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_small = 0.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_medium = 0.1164
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_large = 0.4846
+***** eval metrics *****
+  BoundingBoxMAP_eval/map_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/mar_100_per_class = -1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/classes = 1.0
+***** eval metrics *****
+  BoundingBoxMAP_eval/iou = 0.2368
+***** eval metrics *****
+  LabelAccuracy_eval/accuracy = 0.2169
+***** eval metrics *****
+  LabelAccuracy_eval/precision = 1.0
+***** eval metrics *****
+  LabelAccuracy_eval/recall = 0.2169
+***** eval metrics *****
+  LabelAccuracy_eval/f1_score = 0.3564
+***** eval metrics *****
+  epoch                   =        3.0
+  eval_bleu-4             =    62.4009
+  eval_rouge-1            =    73.2998
+  eval_rouge-2            =    61.7109
+  eval_rouge-l            =    79.3613
+  eval_runtime            = 0:00:07.87
+  eval_samples_per_second =     10.535
+  eval_steps_per_second   =      0.381
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mQwen/Qwen2.5-VL-3B-Instruct_roboG_stagepoc_two_frames_detection_cotrain_train_sft[0m at: [34m[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../../../../hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/wandb/run-20251022_005043-pqms74x3/logs[0m
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 3589878
+Cluster: hk
+User/Group: bm3844/hk-project-sustainebot
+Account: hk-project-p0024638
+State: COMPLETED (exit code 0)
+Partition: accelerated-h100
+Nodes: 1
+Cores per node: 32
+Nodelist: hkn0916
+CPU Utilized: 10:36:34
+CPU Efficiency: 16.84% of 2-15:00:48 core-walltime
+Job Wall-clock time: 01:58:09
+Starttime: Wed Oct 22 00:46:46 2025
+Endtime: Wed Oct 22 02:44:55 2025
+Memory Utilized: 44.03 GB
+Memory Efficiency: 5.87% of 750.00 GB (750.00 GB/node)
+Energy Consumed: 15335339 Joule / 4259.81638888889 Watthours
+Average node power draw: 2163.25842855128 Watt
