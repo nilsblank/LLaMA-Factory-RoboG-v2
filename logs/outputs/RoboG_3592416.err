@@ -1,6 +1,0 @@
-GpuFreq=control_disabled
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-srun: got SIGCONT
-slurmstepd: error: *** JOB 3592416 ON hkn0536 CANCELLED AT 2025-10-23T13:28:28 ***
-srun: forcing job termination
-slurmstepd: error: *** STEP 3592416.0 ON hkn0536 CANCELLED AT 2025-10-23T13:28:28 ***

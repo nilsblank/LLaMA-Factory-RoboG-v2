@@ -1,979 +1,0 @@
-GpuFreq=control_disabled
-[INFO|training_args.py:2222] 2025-10-23 14:09:27,748 >> PyTorch: setting up devices
-[INFO|training_args.py:1881] 2025-10-23 14:09:27,980 >> The default value for the training argument `--report_to` will change in v5 (from all installed integrations to none). In v5, you will need to use `--report_to all` to get the same behavior as now. You should start updating your code and make this info disappear :-).
-/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
-  warnings.warn(
-/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
-  warnings.warn(
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file vocab.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file merges.txt
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file tokenizer.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file added_tokens.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file special_tokens_map.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file tokenizer_config.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:29,947 >> loading file chat_template.jinja
-[INFO|tokenization_utils_base.py:2364] 2025-10-23 14:09:30,216 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[INFO|image_processing_base.py:381] 2025-10-23 14:09:30,216 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/preprocessor_config.json
-[INFO|image_processing_base.py:381] 2025-10-23 14:09:30,220 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/preprocessor_config.json
-[INFO|image_processing_base.py:428] 2025-10-23 14:09:30,226 >> Image processor Qwen2VLImageProcessorFast {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "disable_grouping": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessorFast",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_pixels": 3136,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_tensors": null,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "temporal_patch_size": 2
-}
-
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file vocab.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file merges.txt
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file tokenizer.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file added_tokens.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file special_tokens_map.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file tokenizer_config.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:30,227 >> loading file chat_template.jinja
-[INFO|tokenization_utils_base.py:2364] 2025-10-23 14:09:30,496 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[INFO|video_processing_utils.py:724] 2025-10-23 14:09:30,496 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/video_preprocessor_config.json
-[INFO|video_processing_utils.py:770] 2025-10-23 14:09:30,500 >> Video processor Qwen2VLVideoProcessor {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "do_sample_frames": false,
-  "fps": null,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessor",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_frames": 768,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_frames": 4,
-  "min_pixels": 3136,
-  "num_frames": null,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_metadata": false,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "size_divisor": null,
-  "temporal_patch_size": 2,
-  "video_metadata": null,
-  "video_processor_type": "Qwen2VLVideoProcessor"
-}
-
-[INFO|processing_utils.py:1114] 2025-10-23 14:09:30,500 >> loading configuration file None
-[INFO|processing_utils.py:1199] 2025-10-23 14:09:30,847 >> Processor Qwen2_5_VLProcessor:
-- image_processor: Qwen2VLImageProcessorFast {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "disable_grouping": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessorFast",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_pixels": 3136,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_tensors": null,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "temporal_patch_size": 2
-}
-
-- tokenizer: Qwen2TokenizerFast(name_or_path='/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train', vocab_size=151643, model_max_length=131072, is_fast=True, padding_side='right', truncation_side='right', special_tokens={'eos_token': '<|im_end|>', 'pad_token': '<|endoftext|>', 'additional_special_tokens': ['<|im_start|>', '<|im_end|>', '<|object_ref_start|>', '<|object_ref_end|>', '<|box_start|>', '<|box_end|>', '<|quad_start|>', '<|quad_end|>', '<|vision_start|>', '<|vision_end|>', '<|vision_pad|>', '<|image_pad|>', '<|video_pad|>']}, clean_up_tokenization_spaces=False, added_tokens_decoder={
-	151643: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151644: AddedToken("<|im_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151645: AddedToken("<|im_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151646: AddedToken("<|object_ref_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151647: AddedToken("<|object_ref_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151648: AddedToken("<|box_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151649: AddedToken("<|box_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151650: AddedToken("<|quad_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151651: AddedToken("<|quad_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151652: AddedToken("<|vision_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151653: AddedToken("<|vision_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151654: AddedToken("<|vision_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151655: AddedToken("<|image_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151656: AddedToken("<|video_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151657: AddedToken("<tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151658: AddedToken("</tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151659: AddedToken("<|fim_prefix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151660: AddedToken("<|fim_middle|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151661: AddedToken("<|fim_suffix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151662: AddedToken("<|fim_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151663: AddedToken("<|repo_name|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151664: AddedToken("<|file_sep|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-}
-)
-- video_processor: Qwen2VLVideoProcessor {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "do_sample_frames": false,
-  "fps": null,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessor",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_frames": 768,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_frames": 4,
-  "min_pixels": 3136,
-  "num_frames": null,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_metadata": false,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "size_divisor": null,
-  "temporal_patch_size": 2,
-  "video_metadata": null,
-  "video_processor_type": "Qwen2VLVideoProcessor"
-}
-
-
-{
-  "processor_class": "Qwen2_5_VLProcessor"
-}
-
-[WARNING|configuration_utils.py:697] 2025-10-23 14:09:30,918 >> The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is ignored.
-[INFO|configuration_utils.py:763] 2025-10-23 14:09:30,918 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/config.json
-[INFO|configuration_utils.py:763] 2025-10-23 14:09:30,919 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/config.json
-[INFO|configuration_utils.py:763] 2025-10-23 14:09:30,919 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/config.json
-[INFO|configuration_utils.py:839] 2025-10-23 14:09:30,925 >> Model config Qwen2_5_VLConfig {
-  "architectures": [
-    "Qwen2_5_VLForConditionalGeneration"
-  ],
-  "attention_dropout": 0.0,
-  "bos_token_id": 151643,
-  "dtype": "bfloat16",
-  "eos_token_id": 151645,
-  "hidden_act": "silu",
-  "hidden_size": 2048,
-  "initializer_range": 0.02,
-  "intermediate_size": 11008,
-  "max_position_embeddings": 128000,
-  "max_window_layers": 70,
-  "model_type": "qwen2_5_vl",
-  "num_attention_heads": 16,
-  "num_hidden_layers": 36,
-  "num_key_value_heads": 2,
-  "rms_norm_eps": 1e-06,
-  "rope_scaling": {
-    "mrope_section": [
-      16,
-      24,
-      24
-    ],
-    "rope_type": "default",
-    "type": "default"
-  },
-  "rope_theta": 1000000.0,
-  "sliding_window": 32768,
-  "text_config": {
-    "_name_or_path": "/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train",
-    "architectures": [
-      "Qwen2_5_VLForConditionalGeneration"
-    ],
-    "attention_dropout": 0.0,
-    "bos_token_id": 151643,
-    "dtype": "bfloat16",
-    "eos_token_id": 151645,
-    "hidden_act": "silu",
-    "hidden_size": 2048,
-    "image_token_id": 151655,
-    "initializer_range": 0.02,
-    "intermediate_size": 11008,
-    "layer_types": [
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention",
-      "full_attention"
-    ],
-    "max_position_embeddings": 128000,
-    "max_window_layers": 70,
-    "model_type": "qwen2_5_vl_text",
-    "num_attention_heads": 16,
-    "num_hidden_layers": 36,
-    "num_key_value_heads": 2,
-    "rms_norm_eps": 1e-06,
-    "rope_scaling": {
-      "mrope_section": [
-        16,
-        24,
-        24
-      ],
-      "rope_type": "default",
-      "type": "default"
-    },
-    "rope_theta": 1000000.0,
-    "sliding_window": null,
-    "tie_word_embeddings": true,
-    "use_cache": false,
-    "use_sliding_window": false,
-    "video_token_id": 151656,
-    "vision_end_token_id": 151653,
-    "vision_start_token_id": 151652,
-    "vision_token_id": 151654,
-    "vocab_size": 151936
-  },
-  "transformers_version": "4.57.1",
-  "use_cache": false,
-  "use_sliding_window": false,
-  "vision_config": {
-    "depth": 32,
-    "dtype": "bfloat16",
-    "fullatt_block_indexes": [
-      7,
-      15,
-      23,
-      31
-    ],
-    "hidden_act": "silu",
-    "hidden_size": 1280,
-    "in_channels": 3,
-    "in_chans": 3,
-    "initializer_range": 0.02,
-    "intermediate_size": 3420,
-    "model_type": "qwen2_5_vl",
-    "num_heads": 16,
-    "out_hidden_size": 2048,
-    "patch_size": 14,
-    "spatial_merge_size": 2,
-    "spatial_patch_size": 14,
-    "temporal_patch_size": 2,
-    "tokens_per_second": 2,
-    "window_size": 112
-  },
-  "vision_token_id": 151654,
-  "vocab_size": 151936
-}
-
-[WARNING|logging.py:328] 2025-10-23 14:09:50,031 >> `torch_dtype` is deprecated! Use `dtype` instead!
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file vocab.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file merges.txt
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file tokenizer.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file added_tokens.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file special_tokens_map.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file tokenizer_config.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,611 >> loading file chat_template.jinja
-[INFO|tokenization_utils_base.py:2364] 2025-10-23 14:09:53,879 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[INFO|configuration_utils.py:939] 2025-10-23 14:09:53,983 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/generation_config.json
-[INFO|configuration_utils.py:986] 2025-10-23 14:09:53,985 >> Generate config GenerationConfig {
-  "bos_token_id": 151643,
-  "do_sample": true,
-  "eos_token_id": [
-    151645,
-    151643
-  ],
-  "pad_token_id": 151643,
-  "repetition_penalty": 1.05,
-  "temperature": 1e-06
-}
-
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file vocab.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file merges.txt
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file tokenizer.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file added_tokens.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file special_tokens_map.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file tokenizer_config.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:09:53,997 >> loading file chat_template.jinja
-[INFO|tokenization_utils_base.py:2364] 2025-10-23 14:09:54,305 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[1;36m(Worker_PP0 pid=3708424)[0;0m Loading safetensors checkpoint shards:   0% Completed | 0/2 [00:00<?, ?it/s]
-[1;36m(Worker_PP0 pid=3708424)[0;0m Loading safetensors checkpoint shards:  50% Completed | 1/2 [00:00<00:00,  2.66it/s]
-[1;36m(Worker_PP0 pid=3708424)[0;0m Loading safetensors checkpoint shards: 100% Completed | 2/2 [00:04<00:00,  2.63s/it]
-[1;36m(Worker_PP0 pid=3708424)[0;0m Loading safetensors checkpoint shards: 100% Completed | 2/2 [00:04<00:00,  2.30s/it]
-[1;36m(Worker_PP0 pid=3708424)[0;0m 
-/scratch/slurm_tmpdir/job_3592469/tmpj4b88ayy/__triton_launcher.c/scratch/slurm_tmpdir/job_3592469/tmp15yg0vmb/__triton_launcher.c:223/scratch/slurm_tmpdir/job_3592469/tmpz058ezxf/__triton_launcher.c::22223:/scratch/slurm_tmpdir/job_3592469/tmpycnflcnv/__triton_launcher.c ::22322:::warning: 22223: passing 'unsigned char *' to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]: 
-22: warning: warning: passing 'unsigned char *' to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]warning: passing 'unsigned char *' to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
-passing 'unsigned char *' to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
-
-  223 |      223   P |   223y |  223F   | l   o   a  Pt Py_PyyFPlFFlaoloaactotk__Pa2a(Ptcfa_k,cP2k( a2cf(,( ku2n(f(fs,iu, ng ((usnnusienids ggicnneeghdn da recc*dhh a)acrr&**hr))e&ar&essrruu*lelst)tu,&,l r t1e1),s); u;
-1      l
-)| ;                     ^~~~~~~~~~~~~~~~~~~~~~~t
-      
-,|                            ^~~~~~~~~~~~~~~~~~~~~~~ 
-| 1                     ^~~~~~~~~~~~~~~~~~~~~~~
-);
-      |                      ^~~~~~~~~~~~~~~~~~~~~~~
-/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/include/python3.12/cpython/floatobject.h/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/include/python3.12/cpython/floatobject.h:/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/include/python3.12/cpython/floatobject.h21/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/include/python3.12/cpython/floatobject.h::47:::21 21note: 21::47::passing argument to parameter 'p' here47 :note: 47
- passing argument to parameter 'p' here:note: 
- passing argument to parameter 'p' herenote: 
-   passing argument to parameter 'p' here   2121
- |     | P21Py | AyPAPyPIAIP   I__F_21F | UFUPNNUCNC(yiC((iAnniPttn)t)I ) _P PyyFPFylFolaoUaFtNtl_oC_aPt(_PaiPacnacckktk)222(( (ddoPdouyouubFbbllelloe ea  txxx,_ ,,Pc a hcacrchka h*2rapr (d,  *i*pnotp,u , l biei)l;nn
-ett         xl| le                                              ^)
-,e; )
-c      ;h| 
-                                              ^      a
-| r                                              ^
- *p, int le);
-      |                                               ^
-1 warning1 generated.
- warning generated.
-1 warning generated.
-1 warning generated.
-[1;36m(Worker_PP0 pid=3708424)[0;0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/67 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 8/67 [00:00<00:00, 74.90it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  28%|██▊       | 19/67 [00:00<00:00, 93.57it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  46%|████▋     | 31/67 [00:00<00:00, 103.67it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 42/67 [00:00<00:00, 101.89it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  81%|████████  | 54/67 [00:00<00:00, 107.78it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  97%|█████████▋| 65/67 [00:00<00:00, 107.36it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 67/67 [00:00<00:00, 87.63it/s] 
-[1;36m(Worker_PP0 pid=3708424)[0;0m Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):  23%|██▎       | 8/35 [00:00<00:00, 76.40it/s]Capturing CUDA graphs (decode, FULL):  54%|█████▍    | 19/35 [00:00<00:00, 95.48it/s]Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:00<00:00, 103.25it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:00<00:00, 100.68it/s]
-Converting format of dataset (num_proc=16):   0%|          | 0/56026 [00:00<?, ? examples/s]Converting format of dataset (num_proc=16):   0%|          | 6/56026 [00:00<16:22, 57.01 examples/s]Converting format of dataset (num_proc=16):   0%|          | 203/56026 [00:00<00:50, 1107.58 examples/s]Converting format of dataset (num_proc=16):   1%|          | 459/56026 [00:00<00:31, 1737.62 examples/s]Converting format of dataset (num_proc=16):   1%|          | 691/56026 [00:00<00:28, 1951.17 examples/s]Converting format of dataset (num_proc=16):   2%|▏         | 949/56026 [00:00<00:25, 2168.49 examples/s]Converting format of dataset (num_proc=16):   2%|▏         | 1186/56026 [00:00<00:24, 2207.32 examples/s]Converting format of dataset (num_proc=16):   3%|▎         | 1419/56026 [00:00<00:24, 2195.80 examples/s]Converting format of dataset (num_proc=16):   3%|▎         | 1644/56026 [00:00<00:27, 1953.55 examples/s]Converting format of dataset (num_proc=16):   3%|▎         | 1850/56026 [00:01<00:32, 1676.24 examples/s]Converting format of dataset (num_proc=16):   4%|▎         | 2030/56026 [00:01<00:35, 1512.23 examples/s]Converting format of dataset (num_proc=16):   4%|▍         | 2194/56026 [00:01<00:35, 1516.81 examples/s]Converting format of dataset (num_proc=16):   4%|▍         | 2395/56026 [00:01<00:33, 1621.36 examples/s]Converting format of dataset (num_proc=16):   5%|▍         | 2591/56026 [00:01<00:31, 1709.79 examples/s]Converting format of dataset (num_proc=16):   5%|▌         | 2889/56026 [00:01<00:25, 2051.91 examples/s]Converting format of dataset (num_proc=16):   6%|▌         | 3128/56026 [00:01<00:24, 2118.59 examples/s]Converting format of dataset (num_proc=16):   6%|▌         | 3406/56026 [00:01<00:23, 2268.69 examples/s]Converting format of dataset (num_proc=16):   7%|▋         | 3705/56026 [00:01<00:21, 2446.30 examples/s]Converting format of dataset (num_proc=16):   7%|▋         | 4011/56026 [00:02<00:20, 2569.32 examples/s]Converting format of dataset (num_proc=16):   8%|▊         | 4328/56026 [00:02<00:19, 2682.88 examples/s]Converting format of dataset (num_proc=16):   8%|▊         | 4633/56026 [00:02<00:18, 2787.83 examples/s]Converting format of dataset (num_proc=16):   9%|▉         | 4937/56026 [00:02<00:18, 2815.02 examples/s]Converting format of dataset (num_proc=16):   9%|▉         | 5272/56026 [00:02<00:17, 2949.53 examples/s]Converting format of dataset (num_proc=16):  10%|▉         | 5599/56026 [00:02<00:16, 3027.60 examples/s]Converting format of dataset (num_proc=16):  11%|█         | 5910/56026 [00:02<00:16, 2960.12 examples/s]Converting format of dataset (num_proc=16):  11%|█         | 6208/56026 [00:02<00:18, 2671.76 examples/s]Converting format of dataset (num_proc=16):  12%|█▏        | 6488/56026 [00:02<00:19, 2490.94 examples/s]Converting format of dataset (num_proc=16):  12%|█▏        | 6770/56026 [00:03<00:19, 2573.72 examples/s]Converting format of dataset (num_proc=16):  13%|█▎        | 7063/56026 [00:03<00:18, 2630.27 examples/s]Converting format of dataset (num_proc=16):  13%|█▎        | 7333/56026 [00:03<00:23, 2036.71 examples/s]Converting format of dataset (num_proc=16):  14%|█▎        | 7575/56026 [00:03<00:23, 2031.83 examples/s]Converting format of dataset (num_proc=16):  14%|█▍        | 7920/56026 [00:03<00:20, 2362.37 examples/s]Converting format of dataset (num_proc=16):  15%|█▍        | 8375/56026 [00:03<00:16, 2914.89 examples/s]Converting format of dataset (num_proc=16):  16%|█▌        | 8757/56026 [00:03<00:14, 3151.93 examples/s]Converting format of dataset (num_proc=16):  16%|█▌        | 9091/56026 [00:04<00:21, 2199.68 examples/s]Converting format of dataset (num_proc=16):  17%|█▋        | 9367/56026 [00:04<00:20, 2283.57 examples/s]Converting format of dataset (num_proc=16):  17%|█▋        | 9772/56026 [00:04<00:17, 2687.66 examples/s]Converting format of dataset (num_proc=16):  18%|█▊        | 10238/56026 [00:04<00:14, 3154.86 examples/s]Converting format of dataset (num_proc=16):  19%|█▉        | 10594/56026 [00:04<00:14, 3206.68 examples/s]Converting format of dataset (num_proc=16):  20%|█▉        | 10948/56026 [00:04<00:14, 3217.35 examples/s]Converting format of dataset (num_proc=16):  20%|██        | 11292/56026 [00:04<00:14, 3140.79 examples/s]Converting format of dataset (num_proc=16):  21%|██        | 11621/56026 [00:04<00:14, 3111.61 examples/s]Converting format of dataset (num_proc=16):  21%|██▏       | 11946/56026 [00:04<00:14, 3047.20 examples/s]Converting format of dataset (num_proc=16):  22%|██▏       | 12257/56026 [00:04<00:14, 3054.30 examples/s]Converting format of dataset (num_proc=16):  22%|██▏       | 12568/56026 [00:05<00:14, 2982.75 examples/s]Converting format of dataset (num_proc=16):  23%|██▎       | 12873/56026 [00:05<00:14, 2934.12 examples/s]Converting format of dataset (num_proc=16):  24%|██▎       | 13178/56026 [00:05<00:14, 2931.45 examples/s]Converting format of dataset (num_proc=16):  24%|██▍       | 13480/56026 [00:05<00:14, 2881.95 examples/s]Converting format of dataset (num_proc=16):  25%|██▍       | 13775/56026 [00:05<00:15, 2799.60 examples/s]Converting format of dataset (num_proc=16):  25%|██▌       | 14087/56026 [00:05<00:14, 2879.19 examples/s]Converting format of dataset (num_proc=16):  26%|██▌       | 14385/56026 [00:05<00:14, 2840.79 examples/s]Converting format of dataset (num_proc=16):  26%|██▌       | 14684/56026 [00:05<00:14, 2848.72 examples/s]Converting format of dataset (num_proc=16):  27%|██▋       | 15020/56026 [00:05<00:14, 2924.55 examples/s]Converting format of dataset (num_proc=16):  27%|██▋       | 15313/56026 [00:06<00:15, 2634.12 examples/s]Converting format of dataset (num_proc=16):  28%|██▊       | 15585/56026 [00:06<00:16, 2477.17 examples/s]Converting format of dataset (num_proc=16):  28%|██▊       | 15888/56026 [00:06<00:15, 2586.15 examples/s]Converting format of dataset (num_proc=16):  29%|██▉       | 16206/56026 [00:06<00:14, 2743.01 examples/s]Converting format of dataset (num_proc=16):  29%|██▉       | 16503/56026 [00:06<00:14, 2757.58 examples/s]Converting format of dataset (num_proc=16):  30%|██▉       | 16784/56026 [00:06<00:14, 2728.20 examples/s]Converting format of dataset (num_proc=16):  30%|███       | 17065/56026 [00:06<00:15, 2502.31 examples/s]Converting format of dataset (num_proc=16):  31%|███       | 17323/56026 [00:06<00:16, 2360.47 examples/s]Converting format of dataset (num_proc=16):  31%|███▏      | 17636/56026 [00:07<00:15, 2551.15 examples/s]Converting format of dataset (num_proc=16):  32%|███▏      | 17974/56026 [00:07<00:13, 2758.62 examples/s]Converting format of dataset (num_proc=16):  33%|███▎      | 18289/56026 [00:07<00:13, 2860.78 examples/s]Converting format of dataset (num_proc=16):  33%|███▎      | 18607/56026 [00:07<00:12, 2910.99 examples/s]Converting format of dataset (num_proc=16):  34%|███▎      | 18906/56026 [00:07<00:13, 2689.02 examples/s]Converting format of dataset (num_proc=16):  34%|███▍      | 19185/56026 [00:07<00:15, 2389.12 examples/s]Converting format of dataset (num_proc=16):  35%|███▍      | 19438/56026 [00:07<00:17, 2046.90 examples/s]Converting format of dataset (num_proc=16):  35%|███▌      | 19666/56026 [00:07<00:17, 2031.69 examples/s]Converting format of dataset (num_proc=16):  36%|███▌      | 19948/56026 [00:07<00:16, 2217.88 examples/s]Converting format of dataset (num_proc=16):  36%|███▌      | 20181/56026 [00:08<00:17, 2099.61 examples/s]Converting format of dataset (num_proc=16):  36%|███▋      | 20405/56026 [00:08<00:16, 2129.31 examples/s]Converting format of dataset (num_proc=16):  37%|███▋      | 20647/56026 [00:08<00:16, 2160.58 examples/s]Converting format of dataset (num_proc=16):  37%|███▋      | 20934/56026 [00:08<00:15, 2329.53 examples/s]Converting format of dataset (num_proc=16):  38%|███▊      | 21278/56026 [00:08<00:13, 2597.53 examples/s]Converting format of dataset (num_proc=16):  39%|███▊      | 21640/56026 [00:08<00:12, 2807.13 examples/s]Converting format of dataset (num_proc=16):  39%|███▉      | 22023/56026 [00:08<00:11, 3059.38 examples/s]Converting format of dataset (num_proc=16):  40%|███▉      | 22363/56026 [00:08<00:10, 3153.03 examples/s]Converting format of dataset (num_proc=16):  40%|████      | 22684/56026 [00:08<00:10, 3143.77 examples/s]Converting format of dataset (num_proc=16):  41%|████      | 23004/56026 [00:09<00:10, 3101.43 examples/s]Converting format of dataset (num_proc=16):  42%|████▏     | 23328/56026 [00:09<00:10, 3079.67 examples/s]Converting format of dataset (num_proc=16):  42%|████▏     | 23648/56026 [00:09<00:10, 3017.00 examples/s]Converting format of dataset (num_proc=16):  43%|████▎     | 23953/56026 [00:09<00:11, 2752.43 examples/s]Converting format of dataset (num_proc=16):  43%|████▎     | 24260/56026 [00:09<00:11, 2765.96 examples/s]Converting format of dataset (num_proc=16):  44%|████▍     | 24544/56026 [00:09<00:11, 2720.82 examples/s]Converting format of dataset (num_proc=16):  44%|████▍     | 24881/56026 [00:09<00:10, 2897.98 examples/s]Converting format of dataset (num_proc=16):  45%|████▌     | 25229/56026 [00:09<00:10, 3031.98 examples/s]Converting format of dataset (num_proc=16):  46%|████▌     | 25573/56026 [00:09<00:09, 3104.30 examples/s]Converting format of dataset (num_proc=16):  46%|████▌     | 25900/56026 [00:10<00:09, 3144.32 examples/s]Converting format of dataset (num_proc=16):  47%|████▋     | 26225/56026 [00:10<00:09, 3092.67 examples/s]Converting format of dataset (num_proc=16):  47%|████▋     | 26536/56026 [00:10<00:09, 3083.63 examples/s]Converting format of dataset (num_proc=16):  48%|████▊     | 26849/56026 [00:10<00:09, 2920.21 examples/s]Converting format of dataset (num_proc=16):  49%|████▊     | 27185/56026 [00:10<00:09, 3041.92 examples/s]Converting format of dataset (num_proc=16):  49%|████▉     | 27532/56026 [00:10<00:09, 3117.82 examples/s]Converting format of dataset (num_proc=16):  50%|████▉     | 27896/56026 [00:10<00:08, 3211.58 examples/s]Converting format of dataset (num_proc=16):  50%|█████     | 28275/56026 [00:10<00:08, 3360.33 examples/s]Converting format of dataset (num_proc=16):  51%|█████     | 28621/56026 [00:10<00:08, 3385.64 examples/s]Converting format of dataset (num_proc=16):  52%|█████▏    | 28968/56026 [00:10<00:08, 3243.62 examples/s]Converting format of dataset (num_proc=16):  52%|█████▏    | 29297/56026 [00:11<00:08, 3077.73 examples/s]Converting format of dataset (num_proc=16):  53%|█████▎    | 29612/56026 [00:11<00:09, 2907.52 examples/s]Converting format of dataset (num_proc=16):  53%|█████▎    | 29912/56026 [00:11<00:08, 2905.72 examples/s]Converting format of dataset (num_proc=16):  54%|█████▍    | 30206/56026 [00:11<00:09, 2685.00 examples/s]Converting format of dataset (num_proc=16):  54%|█████▍    | 30521/56026 [00:11<00:09, 2758.98 examples/s]Converting format of dataset (num_proc=16):  55%|█████▌    | 30845/56026 [00:11<00:08, 2832.78 examples/s]Converting format of dataset (num_proc=16):  56%|█████▌    | 31168/56026 [00:11<00:08, 2890.58 examples/s]Converting format of dataset (num_proc=16):  56%|█████▌    | 31482/56026 [00:11<00:08, 2916.32 examples/s]Converting format of dataset (num_proc=16):  57%|█████▋    | 31804/56026 [00:11<00:08, 2992.11 examples/s]Converting format of dataset (num_proc=16):  57%|█████▋    | 32112/56026 [00:12<00:08, 2949.28 examples/s]Converting format of dataset (num_proc=16):  58%|█████▊    | 32416/56026 [00:12<00:07, 2974.40 examples/s]Converting format of dataset (num_proc=16):  58%|█████▊    | 32768/56026 [00:12<00:07, 3102.32 examples/s]Converting format of dataset (num_proc=16):  59%|█████▉    | 33099/56026 [00:12<00:07, 3116.78 examples/s]Converting format of dataset (num_proc=16):  60%|█████▉    | 33425/56026 [00:12<00:07, 3114.32 examples/s]Converting format of dataset (num_proc=16):  60%|██████    | 33741/56026 [00:12<00:07, 3087.63 examples/s]Converting format of dataset (num_proc=16):  61%|██████    | 34071/56026 [00:12<00:07, 3122.66 examples/s]Converting format of dataset (num_proc=16):  61%|██████▏   | 34387/56026 [00:12<00:07, 3044.11 examples/s]Converting format of dataset (num_proc=16):  62%|██████▏   | 34723/56026 [00:12<00:06, 3134.67 examples/s]Converting format of dataset (num_proc=16):  63%|██████▎   | 35071/56026 [00:13<00:06, 3187.66 examples/s]Converting format of dataset (num_proc=16):  63%|██████▎   | 35392/56026 [00:13<00:06, 3054.75 examples/s]Converting format of dataset (num_proc=16):  64%|██████▎   | 35710/56026 [00:13<00:06, 3059.32 examples/s]Converting format of dataset (num_proc=16):  64%|██████▍   | 36017/56026 [00:13<00:06, 2978.77 examples/s]Converting format of dataset (num_proc=16):  65%|██████▍   | 36328/56026 [00:13<00:06, 2890.98 examples/s]Converting format of dataset (num_proc=16):  65%|██████▌   | 36621/56026 [00:13<00:06, 2833.05 examples/s]Converting format of dataset (num_proc=16):  66%|██████▌   | 36905/56026 [00:13<00:06, 2801.84 examples/s]Converting format of dataset (num_proc=16):  66%|██████▋   | 37187/56026 [00:13<00:06, 2798.07 examples/s]Converting format of dataset (num_proc=16):  67%|██████▋   | 37479/56026 [00:13<00:06, 2753.42 examples/s]Converting format of dataset (num_proc=16):  67%|██████▋   | 37755/56026 [00:14<00:06, 2729.57 examples/s]Converting format of dataset (num_proc=16):  68%|██████▊   | 38029/56026 [00:14<00:06, 2664.13 examples/s]Converting format of dataset (num_proc=16):  68%|██████▊   | 38313/56026 [00:14<00:06, 2677.33 examples/s]Converting format of dataset (num_proc=16):  69%|██████▉   | 38600/56026 [00:14<00:06, 2673.35 examples/s]Converting format of dataset (num_proc=16):  69%|██████▉   | 38875/56026 [00:14<00:06, 2589.23 examples/s]Converting format of dataset (num_proc=16):  70%|██████▉   | 39141/56026 [00:14<00:06, 2552.03 examples/s]Converting format of dataset (num_proc=16):  70%|███████   | 39404/56026 [00:14<00:07, 2264.50 examples/s]Converting format of dataset (num_proc=16):  71%|███████   | 39665/56026 [00:14<00:06, 2351.06 examples/s]Converting format of dataset (num_proc=16):  71%|███████▏  | 39958/56026 [00:14<00:06, 2490.87 examples/s]Converting format of dataset (num_proc=16):  72%|███████▏  | 40232/56026 [00:15<00:06, 2529.07 examples/s]Converting format of dataset (num_proc=16):  72%|███████▏  | 40499/56026 [00:15<00:06, 2528.10 examples/s]Converting format of dataset (num_proc=16):  73%|███████▎  | 40771/56026 [00:15<00:05, 2575.13 examples/s]Converting format of dataset (num_proc=16):  73%|███████▎  | 41035/56026 [00:15<00:06, 2265.88 examples/s]Converting format of dataset (num_proc=16):  74%|███████▎  | 41280/56026 [00:15<00:06, 2238.82 examples/s]Converting format of dataset (num_proc=16):  74%|███████▍  | 41523/56026 [00:15<00:06, 2141.55 examples/s]Converting format of dataset (num_proc=16):  75%|███████▍  | 41840/56026 [00:15<00:05, 2382.88 examples/s]Converting format of dataset (num_proc=16):  75%|███████▌  | 42136/56026 [00:15<00:05, 2537.12 examples/s]Converting format of dataset (num_proc=16):  76%|███████▌  | 42397/56026 [00:15<00:05, 2514.20 examples/s]Converting format of dataset (num_proc=16):  76%|███████▌  | 42655/56026 [00:16<00:05, 2271.57 examples/s]Converting format of dataset (num_proc=16):  77%|███████▋  | 42906/56026 [00:16<00:05, 2287.48 examples/s]Converting format of dataset (num_proc=16):  77%|███████▋  | 43155/56026 [00:16<00:05, 2318.67 examples/s]Converting format of dataset (num_proc=16):  78%|███████▊  | 43508/56026 [00:16<00:04, 2647.45 examples/s]Converting format of dataset (num_proc=16):  78%|███████▊  | 43806/56026 [00:16<00:04, 2735.92 examples/s]Converting format of dataset (num_proc=16):  79%|███████▊  | 44107/56026 [00:16<00:04, 2764.37 examples/s]Converting format of dataset (num_proc=16):  79%|███████▉  | 44477/56026 [00:16<00:03, 3013.35 examples/s]Converting format of dataset (num_proc=16):  80%|███████▉  | 44807/56026 [00:16<00:03, 3003.05 examples/s]Converting format of dataset (num_proc=16):  81%|████████  | 45113/56026 [00:16<00:03, 2942.06 examples/s]Converting format of dataset (num_proc=16):  81%|████████  | 45412/56026 [00:17<00:03, 2836.98 examples/s]Converting format of dataset (num_proc=16):  82%|████████▏ | 45698/56026 [00:17<00:03, 2715.78 examples/s]Converting format of dataset (num_proc=16):  82%|████████▏ | 45972/56026 [00:17<00:03, 2613.98 examples/s]Converting format of dataset (num_proc=16):  83%|████████▎ | 46238/56026 [00:17<00:03, 2549.77 examples/s]Converting format of dataset (num_proc=16):  83%|████████▎ | 46501/56026 [00:17<00:03, 2497.47 examples/s]Converting format of dataset (num_proc=16):  83%|████████▎ | 46773/56026 [00:17<00:03, 2453.63 examples/s]Converting format of dataset (num_proc=16):  84%|████████▍ | 47021/56026 [00:17<00:03, 2266.10 examples/s]Converting format of dataset (num_proc=16):  84%|████████▍ | 47280/56026 [00:17<00:03, 2334.42 examples/s]Converting format of dataset (num_proc=16):  85%|████████▍ | 47524/56026 [00:17<00:03, 2326.09 examples/s]Converting format of dataset (num_proc=16):  85%|████████▌ | 47760/56026 [00:18<00:03, 2324.04 examples/s]Converting format of dataset (num_proc=16):  86%|████████▌ | 47998/56026 [00:18<00:03, 2252.18 examples/s]Converting format of dataset (num_proc=16):  86%|████████▌ | 48229/56026 [00:18<00:03, 2177.57 examples/s]Converting format of dataset (num_proc=16):  86%|████████▋ | 48448/56026 [00:18<00:03, 1950.45 examples/s]Converting format of dataset (num_proc=16):  87%|████████▋ | 48660/56026 [00:18<00:03, 1887.76 examples/s]Converting format of dataset (num_proc=16):  87%|████████▋ | 48855/56026 [00:18<00:04, 1763.37 examples/s]Converting format of dataset (num_proc=16):  88%|████████▊ | 49043/56026 [00:18<00:04, 1566.19 examples/s]Converting format of dataset (num_proc=16):  88%|████████▊ | 49208/56026 [00:18<00:04, 1494.64 examples/s]Converting format of dataset (num_proc=16):  88%|████████▊ | 49364/56026 [00:19<00:04, 1362.05 examples/s]Converting format of dataset (num_proc=16):  88%|████████▊ | 49513/56026 [00:19<00:05, 1222.74 examples/s]Converting format of dataset (num_proc=16):  89%|████████▊ | 49644/56026 [00:19<00:05, 1227.29 examples/s]Converting format of dataset (num_proc=16):  89%|████████▉ | 49775/56026 [00:19<00:05, 1205.26 examples/s]Converting format of dataset (num_proc=16):  89%|████████▉ | 49899/56026 [00:19<00:05, 1197.35 examples/s]Converting format of dataset (num_proc=16):  89%|████████▉ | 50023/56026 [00:19<00:05, 1188.81 examples/s]Converting format of dataset (num_proc=16):  90%|████████▉ | 50150/56026 [00:19<00:05, 1171.40 examples/s]Converting format of dataset (num_proc=16):  90%|████████▉ | 50274/56026 [00:19<00:05, 1036.87 examples/s]Converting format of dataset (num_proc=16):  90%|████████▉ | 50383/56026 [00:20<00:05, 1013.82 examples/s]Converting format of dataset (num_proc=16):  90%|█████████ | 50493/56026 [00:20<00:06, 905.03 examples/s] Converting format of dataset (num_proc=16):  90%|█████████ | 50590/56026 [00:20<00:06, 812.52 examples/s]Converting format of dataset (num_proc=16):  90%|█████████ | 50677/56026 [00:20<00:08, 614.88 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 50755/56026 [00:20<00:09, 532.46 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 50816/56026 [00:20<00:10, 481.99 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 50871/56026 [00:21<00:11, 465.79 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 50925/56026 [00:21<00:11, 457.49 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 50979/56026 [00:21<00:11, 455.60 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 51031/56026 [00:21<00:11, 452.19 examples/s]Converting format of dataset (num_proc=16):  91%|█████████ | 51100/56026 [00:21<00:10, 491.49 examples/s]Converting format of dataset (num_proc=16):  91%|█████████▏| 51157/56026 [00:21<00:09, 503.91 examples/s]Converting format of dataset (num_proc=16):  91%|█████████▏| 51221/56026 [00:21<00:09, 530.04 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51281/56026 [00:21<00:08, 537.16 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51349/56026 [00:22<00:08, 572.92 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51425/56026 [00:22<00:07, 619.12 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51491/56026 [00:22<00:07, 621.87 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51558/56026 [00:22<00:07, 607.67 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51624/56026 [00:22<00:07, 598.48 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51696/56026 [00:22<00:06, 620.25 examples/s]Converting format of dataset (num_proc=16):  92%|█████████▏| 51771/56026 [00:22<00:06, 628.53 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 51838/56026 [00:22<00:06, 637.88 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 51908/56026 [00:22<00:06, 638.89 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 51974/56026 [00:22<00:06, 641.53 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52045/56026 [00:23<00:06, 629.88 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52113/56026 [00:23<00:06, 591.68 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52173/56026 [00:23<00:06, 572.86 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52236/56026 [00:23<00:06, 550.89 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52296/56026 [00:23<00:07, 491.40 examples/s]Converting format of dataset (num_proc=16):  93%|█████████▎| 52350/56026 [00:23<00:07, 468.88 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▎| 52399/56026 [00:23<00:08, 448.30 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▎| 52446/56026 [00:24<00:08, 410.66 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▎| 52488/56026 [00:24<00:09, 382.46 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52530/56026 [00:24<00:09, 375.69 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52568/56026 [00:24<00:09, 367.58 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52607/56026 [00:24<00:09, 353.59 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52646/56026 [00:24<00:10, 335.71 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52691/56026 [00:24<00:09, 355.64 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52733/56026 [00:24<00:08, 366.76 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52777/56026 [00:24<00:08, 378.84 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52825/56026 [00:25<00:08, 395.41 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52871/56026 [00:25<00:07, 408.26 examples/s]Converting format of dataset (num_proc=16):  94%|█████████▍| 52917/56026 [00:25<00:07, 410.14 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 52963/56026 [00:25<00:07, 419.38 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53007/56026 [00:25<00:07, 423.05 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53052/56026 [00:25<00:07, 394.68 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53100/56026 [00:25<00:08, 360.10 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53141/56026 [00:25<00:08, 356.08 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53182/56026 [00:26<00:07, 364.96 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▍| 53221/56026 [00:26<00:07, 357.05 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▌| 53263/56026 [00:26<00:07, 364.85 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▌| 53304/56026 [00:26<00:07, 371.64 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▌| 53354/56026 [00:26<00:06, 391.71 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▌| 53407/56026 [00:26<00:06, 416.58 examples/s]Converting format of dataset (num_proc=16):  95%|█████████▌| 53458/56026 [00:26<00:05, 434.42 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53512/56026 [00:26<00:05, 448.64 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53560/56026 [00:26<00:05, 453.28 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53613/56026 [00:27<00:05, 461.30 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53666/56026 [00:27<00:04, 474.99 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53716/56026 [00:27<00:04, 471.32 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53764/56026 [00:27<00:05, 432.50 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53809/56026 [00:27<00:05, 409.13 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53851/56026 [00:27<00:05, 382.73 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▌| 53893/56026 [00:27<00:06, 354.51 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▋| 53932/56026 [00:27<00:06, 326.37 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▋| 53967/56026 [00:27<00:06, 325.69 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▋| 54005/56026 [00:28<00:07, 287.63 examples/s]Converting format of dataset (num_proc=16):  96%|█████████▋| 54037/56026 [00:28<00:07, 264.62 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54070/56026 [00:28<00:07, 259.44 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54099/56026 [00:28<00:07, 245.85 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54127/56026 [00:28<00:07, 243.30 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54153/56026 [00:28<00:07, 243.27 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54183/56026 [00:28<00:07, 247.26 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54218/56026 [00:29<00:06, 262.32 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54246/56026 [00:29<00:06, 266.05 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54277/56026 [00:29<00:06, 277.14 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54314/56026 [00:29<00:05, 294.82 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54361/56026 [00:29<00:04, 338.38 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54400/56026 [00:29<00:04, 342.45 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54438/56026 [00:29<00:04, 349.00 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54474/56026 [00:29<00:04, 348.16 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54511/56026 [00:29<00:04, 347.64 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54554/56026 [00:29<00:04, 362.54 examples/s]Converting format of dataset (num_proc=16):  97%|█████████▋| 54594/56026 [00:30<00:03, 365.52 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54634/56026 [00:30<00:03, 370.71 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54677/56026 [00:30<00:03, 382.50 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54721/56026 [00:30<00:03, 392.62 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54766/56026 [00:30<00:03, 399.36 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54806/56026 [00:30<00:03, 392.84 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54846/56026 [00:30<00:03, 389.24 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54885/56026 [00:30<00:02, 382.67 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54924/56026 [00:30<00:02, 375.93 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 54965/56026 [00:31<00:02, 377.47 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 55007/56026 [00:31<00:02, 388.46 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 55049/56026 [00:31<00:02, 389.75 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 55095/56026 [00:31<00:02, 384.16 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 55136/56026 [00:31<00:02, 382.75 examples/s]Converting format of dataset (num_proc=16):  98%|█████████▊| 55176/56026 [00:31<00:02, 381.54 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▊| 55222/56026 [00:31<00:02, 358.61 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▊| 55263/56026 [00:31<00:02, 362.98 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▊| 55302/56026 [00:32<00:02, 299.81 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55335/56026 [00:32<00:02, 299.35 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55369/56026 [00:32<00:02, 297.22 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55405/56026 [00:32<00:02, 309.10 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55450/56026 [00:32<00:01, 341.00 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55492/56026 [00:32<00:01, 361.74 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55533/56026 [00:32<00:01, 367.51 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55575/56026 [00:32<00:01, 369.69 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55615/56026 [00:32<00:01, 368.11 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55655/56026 [00:33<00:01, 366.63 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55696/56026 [00:33<00:00, 369.10 examples/s]Converting format of dataset (num_proc=16):  99%|█████████▉| 55738/56026 [00:33<00:01, 234.98 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55774/56026 [00:33<00:01, 171.36 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55802/56026 [00:34<00:01, 159.41 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55826/56026 [00:34<00:01, 154.48 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55851/56026 [00:34<00:01, 155.70 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55878/56026 [00:34<00:00, 160.08 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55903/56026 [00:34<00:00, 159.88 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55929/56026 [00:34<00:00, 159.85 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55949/56026 [00:34<00:00, 165.33 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55967/56026 [00:35<00:00, 166.60 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 55986/56026 [00:35<00:00, 167.44 examples/s]Converting format of dataset (num_proc=16): 100%|█████████▉| 56012/56026 [00:35<00:00, 166.94 examples/s]Converting format of dataset (num_proc=16): 100%|██████████| 56026/56026 [00:35<00:00, 1578.41 examples/s]
-Running tokenizer on dataset (num_proc=16):   0%|          | 0/56026 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=16):   2%|▏         | 1000/56026 [00:00<00:47, 1167.07 examples/s]Running tokenizer on dataset (num_proc=16):   4%|▎         | 2000/56026 [00:01<00:23, 2284.58 examples/s]Running tokenizer on dataset (num_proc=16):   5%|▌         | 3000/56026 [00:01<00:15, 3426.85 examples/s]Running tokenizer on dataset (num_proc=16):   9%|▉         | 5000/56026 [00:01<00:07, 6393.09 examples/s]Running tokenizer on dataset (num_proc=16):  12%|█▏        | 7000/56026 [00:01<00:05, 9180.90 examples/s]Running tokenizer on dataset (num_proc=16):  16%|█▌        | 9000/56026 [00:01<00:04, 11043.00 examples/s]Running tokenizer on dataset (num_proc=16):  27%|██▋       | 15000/56026 [00:01<00:02, 20174.33 examples/s]Running tokenizer on dataset (num_proc=16):  35%|███▍      | 19502/56026 [00:01<00:01, 24975.72 examples/s]Running tokenizer on dataset (num_proc=16):  45%|████▍     | 25004/56026 [00:01<00:00, 32222.49 examples/s]Running tokenizer on dataset (num_proc=16):  52%|█████▏    | 29008/56026 [00:01<00:00, 32148.43 examples/s]Running tokenizer on dataset (num_proc=16):  60%|█████▉    | 33510/56026 [00:02<00:00, 30001.43 examples/s]Running tokenizer on dataset (num_proc=16):  71%|███████▏  | 40012/56026 [00:02<00:00, 37758.96 examples/s]Running tokenizer on dataset (num_proc=16):  79%|███████▉  | 44518/56026 [00:02<00:00, 31645.86 examples/s]Running tokenizer on dataset (num_proc=16):  87%|████████▋ | 49019/56026 [00:02<00:00, 34231.51 examples/s]Running tokenizer on dataset (num_proc=16):  96%|█████████▌| 53523/56026 [00:02<00:00, 25697.50 examples/s]Running tokenizer on dataset (num_proc=16): 100%|██████████| 56026/56026 [00:03<00:00, 18189.21 examples/s]
-Processing batched inference:   0%|          | 0/55 [00:00<?, ?it/s]
-Adding requests:   0%|          | 0/1024 [00:00<?, ?it/s][A[INFO|image_processing_base.py:381] 2025-10-23 14:12:39,178 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/preprocessor_config.json
-[INFO|image_processing_base.py:428] 2025-10-23 14:12:39,179 >> Image processor Qwen2VLImageProcessorFast {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "disable_grouping": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessorFast",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_pixels": 3136,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_tensors": null,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "temporal_patch_size": 2
-}
-
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,182 >> loading file vocab.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,182 >> loading file merges.txt
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,182 >> loading file tokenizer.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,182 >> loading file added_tokens.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,183 >> loading file special_tokens_map.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,183 >> loading file tokenizer_config.json
-[INFO|tokenization_utils_base.py:2093] 2025-10-23 14:12:39,183 >> loading file chat_template.jinja
-[INFO|tokenization_utils_base.py:2364] 2025-10-23 14:12:39,955 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[INFO|video_processing_utils.py:724] 2025-10-23 14:12:39,956 >> loading configuration file /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train/video_preprocessor_config.json
-[INFO|video_processing_utils.py:770] 2025-10-23 14:12:39,956 >> Video processor Qwen2VLVideoProcessor {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "do_sample_frames": false,
-  "fps": null,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessor",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_frames": 768,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_frames": 4,
-  "min_pixels": 3136,
-  "num_frames": null,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_metadata": false,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "size_divisor": null,
-  "temporal_patch_size": 2,
-  "video_metadata": null,
-  "video_processor_type": "Qwen2VLVideoProcessor"
-}
-
-[INFO|processing_utils.py:1114] 2025-10-23 14:12:40,426 >> loading configuration file None
-[INFO|processing_utils.py:1199] 2025-10-23 14:12:40,893 >> Processor Qwen2_5_VLProcessor:
-- image_processor: Qwen2VLImageProcessorFast {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "disable_grouping": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessorFast",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_pixels": 3136,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_tensors": null,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "temporal_patch_size": 2
-}
-
-- tokenizer: CachedQwen2TokenizerFast(name_or_path='/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train', vocab_size=151643, model_max_length=131072, is_fast=True, padding_side='right', truncation_side='left', special_tokens={'eos_token': '<|im_end|>', 'pad_token': '<|endoftext|>', 'additional_special_tokens': ['<|im_start|>', '<|im_end|>', '<|object_ref_start|>', '<|object_ref_end|>', '<|box_start|>', '<|box_end|>', '<|quad_start|>', '<|quad_end|>', '<|vision_start|>', '<|vision_end|>', '<|vision_pad|>', '<|image_pad|>', '<|video_pad|>']}, clean_up_tokenization_spaces=False, added_tokens_decoder={
-	151643: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151644: AddedToken("<|im_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151645: AddedToken("<|im_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151646: AddedToken("<|object_ref_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151647: AddedToken("<|object_ref_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151648: AddedToken("<|box_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151649: AddedToken("<|box_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151650: AddedToken("<|quad_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151651: AddedToken("<|quad_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151652: AddedToken("<|vision_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151653: AddedToken("<|vision_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151654: AddedToken("<|vision_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151655: AddedToken("<|image_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151656: AddedToken("<|video_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
-	151657: AddedToken("<tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151658: AddedToken("</tool_call>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151659: AddedToken("<|fim_prefix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151660: AddedToken("<|fim_middle|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151661: AddedToken("<|fim_suffix|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151662: AddedToken("<|fim_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151663: AddedToken("<|repo_name|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-	151664: AddedToken("<|file_sep|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=False),
-}
-)
-- video_processor: Qwen2VLVideoProcessor {
-  "crop_size": null,
-  "data_format": "channels_first",
-  "default_to_square": true,
-  "device": null,
-  "do_center_crop": null,
-  "do_convert_rgb": true,
-  "do_normalize": true,
-  "do_pad": null,
-  "do_rescale": true,
-  "do_resize": true,
-  "do_sample_frames": false,
-  "fps": null,
-  "image_mean": [
-    0.48145466,
-    0.4578275,
-    0.40821073
-  ],
-  "image_processor_type": "Qwen2VLImageProcessor",
-  "image_std": [
-    0.26862954,
-    0.26130258,
-    0.27577711
-  ],
-  "input_data_format": null,
-  "max_frames": 768,
-  "max_pixels": 12845056,
-  "merge_size": 2,
-  "min_frames": 4,
-  "min_pixels": 3136,
-  "num_frames": null,
-  "pad_size": null,
-  "patch_size": 14,
-  "processor_class": "Qwen2_5_VLProcessor",
-  "resample": 3,
-  "rescale_factor": 0.00392156862745098,
-  "return_metadata": false,
-  "size": {
-    "longest_edge": 12845056,
-    "shortest_edge": 3136
-  },
-  "size_divisor": null,
-  "temporal_patch_size": 2,
-  "video_metadata": null,
-  "video_processor_type": "Qwen2VLVideoProcessor"
-}
-
-
-{
-  "processor_class": "Qwen2_5_VLProcessor"
-}
-
-
-Adding requests:   0%|          | 1/1024 [00:01<32:55,  1.93s/it][A
-Adding requests:   1%|          | 11/1024 [00:02<02:17,  7.34it/s][A
-Adding requests:   2%|▏         | 21/1024 [00:02<01:04, 15.58it/s][A[1;36m(Worker_PP0 pid=3708424)[0;0m /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/distributed/parallel_state.py:516: UserWarning: The given buffer is not writable, and PyTorch does not support non-writable tensors. This means you can write to the underlying (supposedly non-writable) buffer using the tensor. You may want to copy the buffer to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:1578.)
-[1;36m(Worker_PP0 pid=3708424)[0;0m   object_tensor = torch.frombuffer(pickle.dumps(obj), dtype=torch.uint8)
-
-Adding requests:   3%|▎         | 30/1024 [00:02<00:41, 23.85it/s][A[1;36m(Worker_PP1 pid=3708425)[0;0m /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/distributed/parallel_state.py:516: UserWarning: The given buffer is not writable, and PyTorch does not support non-writable tensors. This means you can write to the underlying (supposedly non-writable) buffer using the tensor. You may want to copy the buffer to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:1578.)
-[1;36m(Worker_PP1 pid=3708425)[0;0m   object_tensor = torch.frombuffer(pickle.dumps(obj), dtype=torch.uint8)
-[1;36m(Worker_PP2 pid=3708426)[0;0m /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/distributed/parallel_state.py:516: UserWarning: The given buffer is not writable, and PyTorch does not support non-writable tensors. This means you can write to the underlying (supposedly non-writable) buffer using the tensor. You may want to copy the buffer to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:1578.)
-[1;36m(Worker_PP2 pid=3708426)[0;0m   object_tensor = torch.frombuffer(pickle.dumps(obj), dtype=torch.uint8)
-
-Adding requests:   4%|▍         | 39/1024 [00:02<00:30, 32.70it/s][A
-Adding requests:   5%|▍         | 48/1024 [00:02<00:23, 40.99it/s][A
-Adding requests:   6%|▌         | 58/1024 [00:02<00:19, 50.55it/s][A
-Adding requests:   7%|▋         | 68/1024 [00:02<00:16, 59.26it/s][A
-Adding requests:   8%|▊         | 78/1024 [00:02<00:13, 67.64it/s][A
-Adding requests:   9%|▊         | 88/1024 [00:02<00:12, 74.30it/s][A
-Adding requests:  10%|▉         | 98/1024 [00:03<00:11, 78.45it/s][A
-Adding requests:  10%|█         | 107/1024 [00:03<00:11, 80.57it/s][A
-Adding requests:  11%|█▏        | 117/1024 [00:03<00:10, 84.33it/s][A
-Adding requests:  12%|█▏        | 127/1024 [00:03<00:10, 82.68it/s][A
-Adding requests:  13%|█▎        | 136/1024 [00:03<00:10, 82.68it/s][A
-Adding requests:  14%|█▍        | 146/1024 [00:03<00:10, 86.50it/s][A
-Adding requests:  15%|█▌        | 156/1024 [00:03<00:09, 88.21it/s][A
-Adding requests:  16%|█▌        | 165/1024 [00:03<00:10, 85.47it/s][A
-Adding requests:  17%|█▋        | 175/1024 [00:03<00:09, 87.42it/s][A
-Adding requests:  18%|█▊        | 185/1024 [00:04<00:09, 88.96it/s][A
-Adding requests:  19%|█▉        | 195/1024 [00:04<00:09, 89.62it/s][A
-Adding requests:  20%|██        | 205/1024 [00:04<00:09, 82.50it/s][A
-Adding requests:  21%|██        | 214/1024 [00:04<00:09, 82.20it/s][A
-Adding requests:  22%|██▏       | 223/1024 [00:04<00:09, 81.52it/s][A
-Adding requests:  23%|██▎       | 232/1024 [00:04<00:09, 80.08it/s][A
-Adding requests:  24%|██▎       | 241/1024 [00:04<00:09, 81.83it/s][A
-Adding requests:  24%|██▍       | 250/1024 [00:04<00:10, 71.66it/s][A
-Adding requests:  25%|██▌       | 260/1024 [00:04<00:09, 77.47it/s][A
-Adding requests:  26%|██▋       | 269/1024 [00:05<00:10, 74.42it/s][A
-Adding requests:  27%|██▋       | 278/1024 [00:05<00:09, 77.59it/s][A
-Adding requests:  28%|██▊       | 286/1024 [00:05<00:09, 76.83it/s][A
-Adding requests:  29%|██▊       | 294/1024 [00:05<00:09, 76.98it/s][A
-Adding requests:  30%|██▉       | 303/1024 [00:05<00:08, 80.40it/s][A
-Adding requests:  30%|███       | 312/1024 [00:05<00:08, 81.22it/s][A
-Adding requests:  31%|███▏      | 321/1024 [00:05<00:09, 76.32it/s][A
-Adding requests:  32%|███▏      | 331/1024 [00:05<00:08, 82.30it/s][A
-Adding requests:  33%|███▎      | 340/1024 [00:05<00:08, 83.32it/s][A
-Adding requests:  34%|███▍      | 350/1024 [00:06<00:07, 85.95it/s][A
-Adding requests:  35%|███▌      | 360/1024 [00:06<00:07, 89.63it/s][A
-Adding requests:  36%|███▌      | 370/1024 [00:06<00:07, 92.34it/s][A
-Adding requests:  37%|███▋      | 380/1024 [00:06<00:06, 94.15it/s][A
-Adding requests:  38%|███▊      | 390/1024 [00:06<00:06, 94.88it/s][A
-Adding requests:  39%|███▉      | 401/1024 [00:06<00:06, 98.66it/s][A
-Adding requests:  40%|████      | 412/1024 [00:06<00:06, 97.23it/s][A
-Adding requests:  41%|████      | 422/1024 [00:06<00:06, 97.84it/s][A
-Adding requests:  42%|████▏     | 432/1024 [00:06<00:06, 96.70it/s][A
-Adding requests:  43%|████▎     | 442/1024 [00:07<00:06, 95.56it/s][A
-Adding requests:  44%|████▍     | 452/1024 [00:07<00:06, 94.94it/s][A
-Adding requests:  45%|████▌     | 462/1024 [00:07<00:05, 94.40it/s][A
-Adding requests:  46%|████▌     | 472/1024 [00:07<00:05, 93.97it/s][A
-Adding requests:  47%|████▋     | 482/1024 [00:07<00:05, 93.91it/s][A
-Adding requests:  48%|████▊     | 492/1024 [00:07<00:05, 89.79it/s][A
-Adding requests:  49%|████▉     | 502/1024 [00:07<00:05, 91.56it/s][A
-Adding requests:  50%|█████     | 512/1024 [00:07<00:05, 91.79it/s][A
-Adding requests:  51%|█████     | 522/1024 [00:07<00:05, 92.46it/s][A
-Adding requests:  52%|█████▏    | 532/1024 [00:08<00:05, 88.66it/s][A
-Adding requests:  53%|█████▎    | 541/1024 [00:08<00:05, 87.27it/s][A
-Adding requests:  54%|█████▍    | 551/1024 [00:08<00:05, 88.39it/s][A
-Adding requests:  55%|█████▍    | 560/1024 [00:08<00:05, 88.32it/s][A
-Adding requests:  56%|█████▌    | 570/1024 [00:08<00:05, 90.02it/s][A
-Adding requests:  57%|█████▋    | 580/1024 [00:08<00:05, 87.72it/s][A
-Adding requests:  58%|█████▊    | 590/1024 [00:08<00:04, 89.13it/s][A
-Adding requests:  59%|█████▊    | 600/1024 [00:08<00:04, 91.80it/s][A/pytorch/aten/src/ATen/native/cuda/IndexKernel.cu:402: masked_scatter_size_check: block: [0,0,0], thread: [0,0,0] Assertion `totalElements <= srcSize` failed.
-[rank0]:[E1023 14:12:48.667164050 ProcessGroupNCCL.cpp:2068] [PG ID 4 PG GUID 19 Rank 0] Process group watchdog thread terminated with exception: CUDA error: device-side assert triggered
-CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
-For debugging consider passing CUDA_LAUNCH_BLOCKING=1
-Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
-
-Exception raised from c10_cuda_check_implementation at /pytorch/c10/cuda/CUDAException.cpp:42 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x14fad889feb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x111c7 (0x14fad89321c7 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10_cuda.so)
-frame #2: c10d::ProcessGroupNCCL::WorkNCCL::finishedGPUExecutionInternal() const + 0x50 (0x14fad97f6640 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #3: c10d::ProcessGroupNCCL::WorkNCCL::isCompleted() + 0x68 (0x14fad9805e28 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #4: c10d::ProcessGroupNCCL::Watchdog::runLoop() + 0x978 (0x14fad9808f48 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #5: c10d::ProcessGroupNCCL::Watchdog::run() + 0xd2 (0x14fad980aec2 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x14fb38fa3bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x14fb4a289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x14fb4a30ec60 in /lib64/libc.so.6)
-
-
-Adding requests:  60%|█████▉    | 610/1024 [00:08<00:04, 93.07it/s][A[rank3]:[W1023 14:12:48.798634036 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=96, addr=[localhost]:53630, remote=[localhost]:40779): Connection reset by peer
-Exception raised from recvBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:679 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x15313b811eb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x15317d2934d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d6a933 (0x15317d294933 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b47a (0x15317d29547a in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x31e (0x15317d29019e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x15313c775b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x15319bf15bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x1531ad289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x1531ad30ec60 in /lib64/libc.so.6)
-
-[rank3]:[W1023 14:12:48.802023310 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 3] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Connection reset by peer
-
-Adding requests:  61%|██████    | 620/1024 [00:08<00:04, 89.81it/s][A
-Adding requests:  62%|██████▏   | 630/1024 [00:09<00:04, 82.85it/s][A
-Adding requests:  62%|██████▎   | 640/1024 [00:09<00:04, 83.32it/s][A
-Adding requests:  63%|██████▎   | 650/1024 [00:09<00:04, 85.12it/s][A
-Adding requests:  64%|██████▍   | 660/1024 [00:09<00:04, 87.02it/s][A
-Adding requests:  65%|██████▌   | 670/1024 [00:09<00:03, 89.94it/s][A
-Adding requests:  66%|██████▋   | 680/1024 [00:09<00:03, 92.42it/s][A[rank1]:[W1023 14:12:48.530260214 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=96, addr=[localhost]:53616, remote=[localhost]:40779): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
-Exception raised from recvBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:682 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x148b006ceeb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x148b421504d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d6a8cd (0x148b421518cd in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b47a (0x148b4215247a in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x31e (0x148b4214d19e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x148b01632b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x148b60ed2bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x148b72289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x148b7230ec60 in /lib64/libc.so.6)
-
-[rank1]:[W1023 14:12:48.533583158 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 1] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
-
-Adding requests:  67%|██████▋   | 690/1024 [00:09<00:03, 94.40it/s][A[rank2]:[W1023 14:12:48.635505933 TCPStore.cpp:125] [c10d] recvValue failed on SocketImpl(fd=96, addr=[localhost]:53628, remote=[localhost]:40779): Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
-Exception raised from recvBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:682 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x14701cd9beb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x14705e81d4d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d6a8cd (0x14705e81e8cd in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b47a (0x14705e81f47a in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x31e (0x14705e81a19e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x14701dcffb18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x14707d49fbf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x14708e889c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x14708e90ec60 in /lib64/libc.so.6)
-
-[rank2]:[W1023 14:12:48.638752680 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 2] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Failed to recv, got 0 bytes. Connection was likely closed. Did the remote server shutdown or crash?
-
-Adding requests:  68%|██████▊   | 700/1024 [00:09<00:03, 95.81it/s][A
-Adding requests:  69%|██████▉   | 710/1024 [00:09<00:03, 96.89it/s][A[rank3]:[W1023 14:12:49.802186554 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53630, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x15313b811eb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x15317d2934d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x15317d293d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x15317d29586e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x15317d29018e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x15313c775b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x15319bf15bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x1531ad289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x1531ad30ec60 in /lib64/libc.so.6)
-
-[rank3]:[W1023 14:12:49.805399799 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 3] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  70%|███████   | 720/1024 [00:10<00:03, 97.46it/s][A
-Adding requests:  71%|███████▏  | 730/1024 [00:10<00:03, 97.66it/s][A
-Adding requests:  72%|███████▏  | 741/1024 [00:10<00:02, 96.36it/s][A
-Adding requests:  73%|███████▎  | 752/1024 [00:10<00:02, 99.80it/s][A
-Adding requests:  75%|███████▍  | 763/1024 [00:10<00:02, 97.83it/s][A
-Adding requests:  76%|███████▌  | 774/1024 [00:10<00:02, 100.79it/s][A[rank1]:[W1023 14:12:49.533721957 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53616, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x148b006ceeb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x148b421504d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x148b42150d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x148b4215286e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x148b4214d18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x148b01632b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x148b60ed2bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x148b72289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x148b7230ec60 in /lib64/libc.so.6)
-
-[rank1]:[W1023 14:12:49.536939809 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 1] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  77%|███████▋  | 785/1024 [00:10<00:02, 98.37it/s] [A[rank2]:[W1023 14:12:49.638966101 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53628, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x14701cd9beb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x14705e81d4d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x14705e81dd62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x14705e81f86e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x14705e81a18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x14701dcffb18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x14707d49fbf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x14708e889c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x14708e90ec60 in /lib64/libc.so.6)
-
-[rank2]:[W1023 14:12:49.642186635 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 2] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  78%|███████▊  | 795/1024 [00:10<00:02, 98.55it/s][A
-Adding requests:  79%|███████▊  | 805/1024 [00:10<00:02, 98.75it/s][A[rank3]:[W1023 14:12:50.805549977 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53630, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x15313b811eb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x15317d2934d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x15317d293d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x15317d29586e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x15317d29018e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x15313c775b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x15319bf15bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x1531ad289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x1531ad30ec60 in /lib64/libc.so.6)
-
-[rank3]:[W1023 14:12:50.808805547 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 3] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  80%|███████▉  | 816/1024 [00:11<00:02, 97.03it/s][A
-Adding requests:  81%|████████  | 826/1024 [00:11<00:02, 97.29it/s][A
-Adding requests:  82%|████████▏ | 836/1024 [00:11<00:02, 92.90it/s][A
-Adding requests:  83%|████████▎ | 846/1024 [00:11<00:01, 94.67it/s][A
-Adding requests:  84%|████████▎ | 856/1024 [00:11<00:01, 91.80it/s][A
-Adding requests:  85%|████████▍ | 867/1024 [00:11<00:01, 96.40it/s][A
-Adding requests:  86%|████████▌ | 877/1024 [00:11<00:01, 92.95it/s][A[rank1]:[W1023 14:12:50.537200386 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53616, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x148b006ceeb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x148b421504d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x148b42150d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x148b4215286e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x148b4214d18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x148b01632b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x148b60ed2bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x148b72289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x148b7230ec60 in /lib64/libc.so.6)
-
-[rank1]:[W1023 14:12:50.540451751 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 1] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  87%|████████▋ | 887/1024 [00:11<00:01, 94.41it/s][A[rank2]:[W1023 14:12:50.642323694 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53628, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x14701cd9beb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x14705e81d4d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x14705e81dd62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x14705e81f86e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x14705e81a18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x14701dcffb18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x14707d49fbf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x14708e889c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x14708e90ec60 in /lib64/libc.so.6)
-
-[rank2]:[W1023 14:12:50.645551816 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 2] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  88%|████████▊ | 898/1024 [00:11<00:01, 94.23it/s][A[rank3]:[W1023 14:12:51.808953999 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53630, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x15313b811eb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x15317d2934d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x15317d293d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x15317d29586e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x15317d29018e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x15313c775b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x15319bf15bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x1531ad289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x1531ad30ec60 in /lib64/libc.so.6)
-
-[rank3]:[W1023 14:12:51.812193199 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 3] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  89%|████████▉ | 909/1024 [00:12<00:01, 98.12it/s][A
-Adding requests:  90%|████████▉ | 919/1024 [00:12<00:01, 98.31it/s][A
-Adding requests:  91%|█████████ | 929/1024 [00:12<00:01, 94.38it/s][A
-Adding requests:  92%|█████████▏| 939/1024 [00:12<00:00, 95.91it/s][A
-Adding requests:  93%|█████████▎| 949/1024 [00:12<00:00, 92.55it/s][A
-Adding requests:  94%|█████████▎| 959/1024 [00:12<00:00, 94.23it/s][A
-Adding requests:  95%|█████████▍| 969/1024 [00:12<00:00, 95.77it/s][A[rank1]:[W1023 14:12:51.540590756 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53616, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x148b006ceeb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x148b421504d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x148b42150d62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x148b4215286e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x148b4214d18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x148b01632b18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x148b60ed2bf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x148b72289c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x148b7230ec60 in /lib64/libc.so.6)
-
-[rank1]:[W1023 14:12:51.543835251 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 1] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  96%|█████████▌| 979/1024 [00:12<00:00, 96.76it/s][A[rank2]:[W1023 14:12:51.645690373 TCPStore.cpp:106] [c10d] sendBytes failed on SocketImpl(fd=96, addr=[localhost]:53628, remote=[localhost]:40779): Broken pipe
-Exception raised from sendBytes at /pytorch/torch/csrc/distributed/c10d/Utils.hpp:653 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x14701cd9beb0 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libc10.so)
-frame #1: <unknown function> + 0x5d694d1 (0x14705e81d4d1 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #2: <unknown function> + 0x5d69d62 (0x14705e81dd62 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #3: <unknown function> + 0x5d6b86e (0x14705e81f86e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #4: c10d::TCPStore::check(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) + 0x30e (0x14705e81a18e in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so)
-frame #5: c10d::ProcessGroupNCCL::HeartbeatMonitor::runLoop() + 0x398 (0x14701dcffb18 in /home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so)
-frame #6: <unknown function> + 0xdbbf4 (0x14707d49fbf4 in /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/bin/../lib/libstdc++.so.6)
-frame #7: <unknown function> + 0x89c0a (0x14708e889c0a in /lib64/libc.so.6)
-frame #8: <unknown function> + 0x10ec60 (0x14708e90ec60 in /lib64/libc.so.6)
-
-[rank2]:[W1023 14:12:51.648918128 ProcessGroupNCCL.cpp:1783] [PG ID 0 PG GUID 0 Rank 2] Failed to check the "should dump" flag on TCPStore, (maybe TCPStore server has shut down too early), with error: Broken pipe
-
-Adding requests:  97%|█████████▋| 989/1024 [00:12<00:00, 97.68it/s][A
-Adding requests:  98%|█████████▊| 999/1024 [00:12<00:00, 92.99it/s][AAdding requests:  98%|█████████▊| 1004/1024 [00:13<00:00, 76.82it/s]
-Processing batched inference:   0%|          | 0/55 [00:46<?, ?it/s]
-Traceback (most recent call last):
-  File "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/scripts/vllm_infer.py", line 199, in <module>
-    fire.Fire(vllm_infer)
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/fire/core.py", line 135, in Fire
-    component_trace = _Fire(component, args, parsed_flag_args, context, name)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/fire/core.py", line 468, in _Fire
-    component, remaining_args = _CallAndUpdateTrace(
-                                ^^^^^^^^^^^^^^^^^^^^
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/fire/core.py", line 684, in _CallAndUpdateTrace
-    component = fn(*varargs, **kwargs)
-                ^^^^^^^^^^^^^^^^^^^^^^
-  File "/hkfs/home/project/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/scripts/vllm_infer.py", line 179, in vllm_infer
-    results = llm.generate(vllm_inputs, sampling_params, lora_request=lora_request)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 393, in generate
-    self._validate_and_add_requests(
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1516, in _validate_and_add_requests
-    self._add_request(
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1569, in _add_request
-    self.llm_engine.add_request(
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 240, in add_request
-    self.engine_core.add_request(request)
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 705, in add_request
-    self._send_input(EngineCoreRequestType.ADD, request)
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 676, in _send_input
-    self.ensure_alive()
-  File "/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 528, in ensure_alive
-    raise EngineDeadError()
-vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
-/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 4 leaked semaphore objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
-/home/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 3 leaked shared_memory objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
-srun: error: hkn0425: task 0: Exited with exit code 1

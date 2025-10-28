@@ -271,7 +271,10 @@ def main(filenames: str, save_images = False):
                 for object_name, object_results in list(low_count_objects.items())[:10]:
                     print(f"Total: {object_results['total']}, Object: {object_name}, Accuracy: {object_results['correct']/object_results['total']:.4f}")
             eval_results[exp_id] = ds_results
-    #print as table
+    #print as table without truncation
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', None)
     df = pd.DataFrame.from_dict(eval_results, orient='index')
     print(df)
 
@@ -395,14 +398,20 @@ if __name__ == "__main__":
     
     
     filenames_qwen_3 = glob.glob("/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/*/generated_predictions.jsonl")
+
+    filenames_qwen_3_baseline = glob.glob("/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/*/*/*/generated_predictions.jsonl")
+
+    
     
     filenames.extend(filenames_qwen_3)
     filenames.extend(filenames_new)
     filenames = [f for f in filenames if "train" in f]
     filenames = ["/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train_traineval/generated_predictions.jsonl"]
-    #filenames = [f for f in filenames if "roboG_stagepoc_temporal_grounding_no_box_train" in f]
+    #filenames_qwen_3 = [f for f in filenames_qwen_3 if "multi_frame" in f]
     
-    main(filenames,save_images=False)
+    filenames = filenames_qwen_3 + filenames_qwen_3_baseline
+    
+    main(filenames,save_images=True)
 
 
 

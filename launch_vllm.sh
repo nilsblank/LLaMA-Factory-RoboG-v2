@@ -7,7 +7,7 @@
 # Cluster Settings
 #SBATCH -c 64  # Number of cores per task
 #SBATCH -t 4:00:00 ## 1-00:30:00 # 06:00:00 # 1-00:30:00 # 2-00:00:00
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 
 
 # Define the paths for storing output and error files
@@ -33,20 +33,33 @@ export DISABLE_VERSION_CHECK=1
 #CUDA_VISIBLE_DEVICES=0,1,2,3  
 
 export PYTHONPATH=/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src:$PYTHONPATH
-#srun llamafactory-cli train examples/train_full/qwen2vl_NILS_full_droid.yaml
-#srun python src/llamafactory/cli.py train examples/train_full/qwen2_5vl_roboG_test.yaml
-#srun python -m llamafactory.cli train examples/train_full/qwen2_5vl_roboG.yaml
+
+# Check if model name is provided as argument
+if [ -z "$1" ]; then
+    echo "Error: No model name provided"
+    echo "Usage: sbatch launch_vllm.sh <model_name>"
+    echo "Example: sbatch launch_vllm.sh qwen3_5vl-8b"
+    exit 1
+fi
+
+MODEL_NAME="$1"
 
 
+DATASET=roboG_stagepoc_ablation_multi_frame_8_eval
+SAVE_PATH="saves/${DATASET}/${MODEL_NAME}/generated_predictions.jsonl"
 
+# Create the directory if it doesn't exist
+mkdir -p "saves/${DATASET}/${MODEL_NAME}"
 
+echo "Model name: $MODEL_NAME"
+echo "Save path: $SAVE_PATH"
 
 srun python scripts/vllm_infer.py \
-    --model_name_or_path /home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train \
-    --template qwen2_vl \
-    --dataset roboG_stagepoc_ablation_two_frames_train \
-    --pipeline_parallel_size 4 \
-    --image_max_pixels 262144 \
-    --video_max_pixels 16384 \
-
-#srun python -m llamafactory.cli train examples/train_full/qwen2_5vl_roboG_poc_box.yaml
+    --model_name_or_path $MODEL_NAME \
+    --template qwen3_vl_nothink \
+    --dataset $DATASET \
+    --enable_thinking False \
+    --save_name "$SAVE_PATH" \
+    --pipeline_parallel_size 1 \
+    --image_max_pixels 65536 \
+    --video_max_pixels 16384

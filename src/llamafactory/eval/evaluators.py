@@ -1,6 +1,7 @@
 import ast
 import json
 import os
+from openai import OpenAI
 import torch
 import numpy as np
 import re
@@ -14,6 +15,8 @@ from typing import List, Dict, Any, Union, Optional, Tuple
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
+from llamafactory.extras import logging
+
 try:
     from sentence_transformers import SentenceTransformer, util
     use_sentence_transformers = True
@@ -23,6 +26,59 @@ except ImportError:
     
 from difflib import SequenceMatcher
 
+try:
+    from joblib import Parallel, delayed
+    use_joblib = True
+except ImportError:
+    use_joblib = False
+    print("Warning: joblib not installed, falling back to sequential processing for TaskInstructionEvaluator. Install with `pip install joblib` for parallel processing.")
+
+
+
+import os 
+SECRET_KEY = os.getenv("OPENAI_API_KEY", "test")
+
+
+
+def query_parallel_gpt(prompt, temperature=0.7, model="gpt-4o-mini"):
+
+
+    base_url = "http://localhost:8000/v1"
+    base_url = None
+    #key = "test"
+
+    
+    if "system" in prompt:
+        messages = [{"role": "system", "content": prompt["system"]}, {"role": "user", "content": prompt["user"]}]
+    else:
+        messages = [{"role": "user", "content": prompt["user"]}]
+        
+    if base_url is None:
+        client = OpenAI(api_key=key)
+    else:
+        client = OpenAI(api_key=key,
+                        base_url=base_url)
+
+    n_retries = 2
+    success = False
+    while n_retries > 0 and not success:
+        try:
+            chat_completion = client.chat.completions.create(
+                messages=messages,
+                model=model,
+                temperature=temperature,
+                #extra_body={'repetition_penalty': 1.07},
+            )
+            success = True
+        except Exception as e:
+            logging.error(f"Error in LLM query: {e}")
+            n_retries -= 1
+            if n_retries == 0:
+                return ["Error in response from LLM"]
+
+    llm_response = chat_completion.choices[0].message.content
+
+    return llm_response
 
 
 class BaseEvaluator:
@@ -670,4 +726,242 @@ class PointEvaluator(BaseEvaluator):
         return {
             "accuracy": mean_accuracy,
             "individual_accuracies": accuracies
+        }
+
+
+class TaskInstructionEvaluator(BaseEvaluator):
+    """Evaluator for comparing task instructions using LLM-based semantic similarity."""
+    
+    def __init__(
+        self,
+        ground_truth_file: Optional[str] = None,
+        ground_truths: Optional[List[str]] = None,
+        name: Optional[str] = None,
+        model: str = "gpt-4.1-mini",
+        temperature: float = 0.0,
+        n_jobs: int = 32
+    ):
+        """
+        Initialize the task instruction evaluator.
+        
+        Args:
+            ground_truth_file: Path to ground truth file (one instruction per line)
+            ground_truths: Ground truth task instructions (alternative to file)
+            name: Name for this evaluator
+            model: Model to use for comparison
+            temperature: Temperature for LLM queries
+            n_jobs: Number of parallel jobs (-1 for all cores, 1 for sequential)
+        """
+        super().__init__(name=name or "TaskInstructionSimilarity")
+        self.ground_truth_file = ground_truth_file
+        self.ground_truths = ground_truths
+        self.model = model
+        self.temperature = temperature
+        self.n_jobs = n_jobs if use_joblib else 1
+        
+        self.load_data()
+    
+
+    def parse_task_instruction(self, text: str) -> str:
+        """
+        Parse task instruction from text.
+        May be enclosed in <task>...</task> tags or last line after newline.
+        """
+
+        # Check for <task>...</task> tags
+        pattern = r'<task>(.*?)</task>'
+        matches = re.findall(pattern, text, re.DOTALL)
+        if matches:
+            return matches[0].strip()
+        
+        # Fallback: take last non-empty line
+        lines = text.strip().split('\n')
+        for line in reversed(lines):
+            if line.strip():
+                return line.strip()
+        
+        return text.strip()
+
+    def load_data(self):
+        """Load ground truth data if not provided directly."""
+        if self.ground_truths is None and self.ground_truth_file:
+            with open(self.ground_truth_file, 'r') as f:
+                self.ground_truths = [line.strip() for line in f if line.strip()]
+
+        
+        parsed = []
+
+        for gt in self.ground_truths:
+            instruction = self.parse_task_instruction(gt)
+            parsed.append(instruction)
+        self.ground_truths = parsed
+    
+    
+    @staticmethod
+    def create_comparison_prompt(instruction1: str, instruction2: str) -> Dict[str, str]:
+        """
+        Create a prompt to compare two task instructions.
+        
+        Args:
+            instruction1: First task instruction (predicted)
+            instruction2: Second task instruction (ground truth)
+            
+        Returns:
+            Dictionary with system and user prompts
+        """
+        system_prompt = """You are an expert at comparing task instructions for semantic equivalence.
+Your job is to determine if two task instructions describe the same task, even if they use different wording.
+
+Consider instructions equivalent if they:
+- Describe the same actions and goals
+- Involve the same objects or entities
+- Have the same intended outcome
+- May differ in phrasing, word order, or level of detail but convey the same meaning
+
+Respond with ONLY a JSON object in this exact format:
+{"equivalent": true/false, "confidence": 0.0-1.0, "reason": "brief explanation"}"""
+
+        user_prompt = f"""Compare these two task instructions:
+
+Instruction 1 (Predicted): "{instruction1}"
+
+Instruction 2 (Ground Truth): "{instruction2}"
+
+Are these instructions semantically equivalent? Respond in JSON format."""
+
+        return {
+            "system": system_prompt,
+            "user": user_prompt
+        }
+    
+    def _compare_single_instruction(
+        self, 
+        pred_instruction: str, 
+        gt_instruction: str,
+        index: int
+    ) -> Dict[str, Any]:
+        """
+        Compare a single predicted instruction with ground truth.
+        
+        Args:
+            pred_instruction: Predicted instruction
+            gt_instruction: Ground truth instruction
+            index: Index of the comparison
+            
+        Returns:
+            Dictionary with comparison results
+        """
+        prompt = self.create_comparison_prompt(pred_instruction, gt_instruction)
+        
+        try:
+            response = query_parallel_gpt(
+                prompt=prompt,
+                temperature=self.temperature,
+                model=self.model
+            )
+            
+            # Parse JSON response
+            # Try to extract JSON from markdown code blocks if present
+            if "```json" in response:
+                json_match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
+                if json_match:
+                    response = json_match.group(1)
+            elif "```" in response:
+                json_match = re.search(r'```\s*(.*?)\s*```', response, re.DOTALL)
+                if json_match:
+                    response = json_match.group(1)
+            
+            result = json.loads(response.strip())
+            
+            return {
+                "index": index,
+                "equivalent": result.get("equivalent", False),
+                "confidence": result.get("confidence", 0.0),
+                "reason": result.get("reason", ""),
+                "pred_instruction": pred_instruction,
+                "gt_instruction": gt_instruction,
+                "error": None
+            }
+            
+        except Exception as e:
+            logging.error(f"Error comparing instruction {index}: {e}")
+            return {
+                "index": index,
+                "equivalent": False,
+                "confidence": 0.0,
+                "reason": f"Error: {str(e)}",
+                "pred_instruction": pred_instruction,
+                "gt_instruction": gt_instruction,
+                "error": str(e)
+            }
+    
+    def evaluate(self, predictions: List[Union[str, Dict[str, Any]]]) -> Dict[str, Any]:
+        """
+        Evaluate task instruction predictions against ground truth.
+        
+        Args:
+            predictions: List of predicted task instructions (strings or dicts with 'text' key)
+            
+        Returns:
+            Dictionary with evaluation metrics and detailed results
+        """
+        if not self.ground_truths:
+            raise ValueError("No ground truth data available. Provide either ground_truths or ground_truth_file.")
+        
+        if len(predictions) != len(self.ground_truths):
+            raise ValueError(
+                f"Number of predictions ({len(predictions)}) doesn't match "
+                f"ground truths ({len(self.ground_truths)})"
+            )
+        
+        # Extract text from predictions
+        pred_instructions = [self.extract_text(pred) for pred in predictions]
+        parsed_instructions = []
+        gt_to_compare = []
+        for idx, pred in enumerate(pred_instructions):
+            parsed = self.parse_task_instruction(pred)
+            parsed_instructions.append(parsed)
+            gt_to_compare.append(self.ground_truths[idx])
+        pred_instructions = parsed_instructions
+
+        
+        # Compare instructions in parallel or sequentially
+        if use_joblib and self.n_jobs != 1:
+            logging.info(f"Comparing {len(predictions)} instructions in parallel with {self.n_jobs} jobs...")
+            results = Parallel(n_jobs=self.n_jobs)(
+                delayed(self._compare_single_instruction)(pred, gt, i)
+                for i, (pred, gt) in enumerate(zip(pred_instructions, gt_to_compare))
+            )
+        else:
+            logging.info(f"Comparing {len(predictions)} instructions sequentially...")
+            results = [
+                self._compare_single_instruction(pred, gt, i)
+                for i, (pred, gt) in enumerate(zip(pred_instructions, gt_to_compare))
+            ]
+
+        
+
+        # Calculate metrics
+        equivalences = [r["equivalent"] for r in results]
+        confidences = [r["confidence"] for r in results]
+        errors = [r for r in results if r["error"] is not None]
+        
+        accuracy = np.mean(equivalences) if equivalences else 0.0
+        mean_confidence = np.mean(confidences) if confidences else 0.0
+        
+        # Calculate confidence-weighted accuracy
+        weighted_scores = [
+            float(r["equivalent"]) * r["confidence"] 
+            for r in results
+        ]
+        weighted_accuracy = np.mean(weighted_scores) if weighted_scores else 0.0
+        
+        return {
+            "accuracy": accuracy,
+            "mean_confidence": mean_confidence,
+            "weighted_accuracy": weighted_accuracy,
+            "num_equivalent": sum(equivalences),
+            "num_total": len(equivalences),
+            "num_errors": len(errors),
+            "detailed_results": results
         }

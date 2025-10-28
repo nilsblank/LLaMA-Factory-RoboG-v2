@@ -51,4 +51,16 @@ echo "Using config: $YAML_FILE"
 
 srun python -m llamafactory.cli train "$YAML_FILE"
 
+
+
+
+srun python scripts/vllm_infer_from_cfg.py \
+    --config_path "$YAML_FILE" $OVERRIDE_ARGS
+
+
+#run evaluation
+            
+srun python scripts/eval_boxes_poc_from_config.py \
+    --config_path "$YAML_FILE" $OVERRIDE_ARGS
+
 #srun python -m llamafactory.cli train examples/train_full/qwen2_5vl_roboG_poc_box.yaml

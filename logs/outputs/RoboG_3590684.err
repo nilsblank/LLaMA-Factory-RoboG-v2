@@ -1,7 +1,0 @@
-GpuFreq=control_disabled
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-srun: got SIGCONT
-slurmstepd: error: *** STEP 3590684.0 ON hkn0819 CANCELLED AT 2025-10-22T13:15:52 ***
-W1022 13:15:52.538000 3722596 /hkfs/home/project/hk-project-sustainebot/bm3844/miniconda3/envs/roboG_train/lib/python3.12/site-packages/torch/distributed/elastic/agent/server/api.py:723] Received 15 death signal, shutting down workers
-slurmstepd: error: *** JOB 3590684 ON hkn0819 CANCELLED AT 2025-10-22T13:15:52 ***
-srun: forcing job termination

@@ -1021,8 +1021,73 @@
     "assistant_tag": "assistant"
   }
 },
+
+
+"roboG_ablation_single_frame_eval": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageablation_single_frame_eval.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
+"roboG_ablation_single_frame_train": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageablation_single_frame_train.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
+
 "roboG_stagepoc_grounding_only_video_eval": {
   "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_grounding_only_video_eval.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
+
+
+"roboG_stageablation_multi_frame_8_no_boxes_eval": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageablation_multi_frame_8_no_boxes_eval.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
+"roboG_stageablation_multi_frame_8_no_boxes_train": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageablation_multi_frame_8_no_boxes_train.jsonl",
   "formatting": "sharegpt",
   "columns": {
     "messages": "messages",
