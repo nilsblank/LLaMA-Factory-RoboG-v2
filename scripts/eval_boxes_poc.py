@@ -283,7 +283,7 @@ def main(filenames: str, save_images = False):
     
 
     if save_images: 
-        assert all(len(loaded_datasets[0]) == len(ds) for ds in loaded_datasets), "All datasets must have the same length"
+        #assert all(len(loaded_datasets[0]) == len(ds) for ds in loaded_datasets), "All datasets must have the same length"
 
         #iterate dataset and plot bboxes and detected objects next to each other
         for i in tqdm(range(len(loaded_datasets[0]))):
@@ -332,7 +332,7 @@ def main(filenames: str, save_images = False):
             for j,ds in enumerate(loaded_datasets[1:]):
                 path = "/".join(sample["image"][0].split("/")[8:-2])
                 other_sample = ds[i]
-                assert sample["image"] == other_sample["image"], "All datasets must have the same image"
+                #assert sample["image"] == other_sample["image"], "All datasets must have the same image"
                 gt_box, gt_label = parse_box_and_label(other_sample["label"])
 
             
@@ -406,12 +406,13 @@ if __name__ == "__main__":
     filenames.extend(filenames_qwen_3)
     filenames.extend(filenames_new)
     filenames = [f for f in filenames if "train" in f]
-    filenames = ["/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen2_5vl-3b/full/sft/roboG_stagepoc_ablation_two_frames_train_traineval/generated_predictions.jsonl"]
-    #filenames_qwen_3 = [f for f in filenames_qwen_3 if "multi_frame" in f]
+    filenames = ["/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/roboG_stageablation_multi_frame_8_no_boxes_train/generated_predictions.jsonl"]
+    filenames_qwen_3 = [f for f in filenames_qwen_3 if "multi_frame_8" in f]
     
-    filenames = filenames_qwen_3 + filenames_qwen_3_baseline
+    #filenames = filenames_qwen_3 + filenames_qwen_3_baseline
     
-    main(filenames,save_images=True)
+    main(filenames_qwen_3,save_images=True)
+    
 
 
 

@@ -261,6 +261,8 @@ class BoundingBoxEvaluator(BaseEvaluator):
         pred_list = []
         target_list = []
         dummy_label = 1  # Single class label
+
+
         
         for pred, target in zip(predictions, self.ground_truths):
             # Process prediction
@@ -274,7 +276,12 @@ class BoundingBoxEvaluator(BaseEvaluator):
                 boxes = torch.empty((0, 4))
 
 
+
             gt_boxes = target
+
+            if gt_boxes is None:
+                gt_boxes = []
+
             gt_boxes = torch.tensor(gt_boxes) if len(gt_boxes) > 0 else torch.empty((0, 4))
 
             if gt_boxes.numel() == 0 or not self.is_valid_box(gt_boxes[0]):
@@ -325,6 +332,11 @@ class BoundingBoxEvaluator(BaseEvaluator):
         iou_result = metric_iou.compute()
         # Combine results
         result.update(iou_result)
+
+        #fill 0 element tensors with 0.0
+        for k, v in result.items():
+            if isinstance(v, torch.Tensor) and v.numel() == 0:
+                result[k] = torch.tensor(0.0)
         
         return {k: v.item() for k, v in result.items()}
 

@@ -383,17 +383,28 @@ def main(filenames: str, save_images = False):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python eval_boxes_poc_from_config.py <config.yaml> [--save-images]")
-        print("Example: python eval_boxes_poc_from_config.py examples/train_full/qwen3vl/qwen3vl_roboG_poc_box_qwen_8_frames.yaml --save-images")
-        sys.exit(1)
+    import argparse
     
-    config_path = sys.argv[1]
-    save_images = "--save-images" in sys.argv or "-s" in sys.argv
+    parser = argparse.ArgumentParser(description="Evaluate bounding box predictions from config")
+    parser.add_argument("--config_path", type=str, required=True, help="Path to config YAML file")
+    parser.add_argument("--save-images", "-s", action="store_true", help="Save visualization images")
+    parser.add_argument("overrides", nargs="*", help="OmegaConf overrides (e.g., output_dir=/path/to/dir)")
+    
+    args = parser.parse_args()
+    
+    config_path = args.config_path
+    save_images = args.save_images
     
     # Load and resolve configuration from YAML file
     cfg = OmegaConf.load(config_path)
-    cfg = OmegaConf.to_container(cfg, resolve=True)  # Resolve ${} references
+    
+    # Apply OmegaConf CLI overrides (e.g., output_dir=/custom/path)
+    if args.overrides:
+        override_cfg = OmegaConf.from_cli(args.overrides)
+        cfg = OmegaConf.merge(cfg, override_cfg)
+    
+    # Resolve all ${} references after merging
+    cfg = OmegaConf.to_container(cfg, resolve=True)
     
     # Extract output_dir and dataset from config
     output_dir = cfg.get("output_dir")
