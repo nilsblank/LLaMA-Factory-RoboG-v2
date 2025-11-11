@@ -1,0 +1,5 @@
+{
+  "robovqa_Qwen3VL-4B": {
+    "error": "Expect input is a list of images, but got <class 'numpy.ndarray'>."
+  }
+}

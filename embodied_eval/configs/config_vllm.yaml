@@ -1,0 +1,23 @@
+# Example: Evaluation with vLLM for efficient batch inference
+# This config shows how to use vLLM for fast multi-GPU inference
+
+defaults:
+  - benchmarks:
+      - robovqa
+  - models:
+      - vllm
+
+# Output directory
+output_dir: ./eval_results_vllm
+
+# Evaluation settings
+save_predictions: true
+verbose: true
+
+# Batch size for vLLM (larger is more efficient)
+batch_size: 1024  # Process 1024 samples at once
+
+# Hydra settings
+hydra:
+  run:
+    dir: ${output_dir}/hydra_runs/${now:%Y-%m-%d_%H-%M-%S}

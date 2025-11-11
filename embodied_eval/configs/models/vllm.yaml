@@ -1,0 +1,39 @@
+# vLLM Model Configuration
+# This config tells run_eval.py to use vllm_infer for efficient batch inference
+# while still using model class methods for pre/post-processing
+
+name: vllm_model
+use_vllm: true  # IMPORTANT: tells run_eval.py to use vLLM engine
+
+# Model class for preprocessing/postprocessing (optional but recommended)
+# If provided, model.parse_output(), model.process_bbox(), etc. will be used
+_target_: embodied_eval.models.LlamaFactoryModel  # or OpenAIModel, custom model, etc.
+
+# Model paths (for vLLM inference)
+model_name_or_path: /path/to/model/checkpoint  # Or HuggingFace model ID
+adapter_name_or_path: null  # Optional: path to LoRA adapter
+template: default  # Chat template (default, llama3, qwen2_5_vl, etc.)
+
+# vLLM engine configuration
+cutoff_len: 2048
+max_new_tokens: 1024
+pipeline_parallel_size: 1  # Number of pipeline stages (<= num GPUs)
+vllm_config: {}  # Additional vLLM engine args (dict)
+
+# Generation parameters
+temperature: 0.95  # 0.0 for greedy decoding
+top_p: 0.7
+top_k: 50
+repetition_penalty: 1.0
+seed: null  # Set for reproducibility
+
+# Multimodal settings (for vision/video/audio models)
+image_max_pixels: 589824  # 768 * 768
+image_min_pixels: 1024    # 32 * 32
+video_fps: 2.0
+video_maxlen: 128
+
+# Processing settings
+skip_special_tokens: true
+
+# Note: batch_size is set in main config.yaml, not here

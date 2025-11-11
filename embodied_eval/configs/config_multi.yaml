@@ -1,0 +1,38 @@
+# Multi-Benchmark × Multi-Model Evaluation Config
+# 
+# This config demonstrates running multiple benchmarks with multiple models,
+# including both vLLM and regular models
+#
+# Usage:
+#   python -m embodied_eval.run_eval --config-name config_multi
+#
+# Override specific options:
+#   python -m embodied_eval.run_eval --config-name config_multi batch_size=2048
+
+defaults:
+  - benchmarks:
+      - robovqa
+      # Add more benchmarks here:
+      # - another_benchmark
+  - models:
+      - vllm  # Uses vLLM engine (fast!)
+      - openai  # Uses OpenAI API
+      # - llamafactory  # Uses LlamaFactory inference
+      # - mock  # For testing
+
+# Output configuration
+output_dir: ./eval_results_multi
+save_predictions: true
+save_results: true
+verbose: true
+
+# Batch size for vLLM inference
+batch_size: 1024
+
+# Hydra configuration
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}

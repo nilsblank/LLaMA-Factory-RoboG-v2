@@ -1,0 +1,16 @@
+# Core dependencies for embodied_eval framework
+omegaconf>=2.3.0
+numpy>=1.21.0
+pillow>=9.0.0
+tqdm>=4.62.0
+
+# Dataset loading
+tensorflow>=2.10.0  # For RoboVQA TFRecord support
+
+# Evaluation metrics
+sacrebleu>=2.0.0
+rouge-score>=0.1.2
+
+# Optional dependencies for advanced features
+# sentence-transformers>=2.2.0  # For semantic similarity in LabelEvaluator
+# joblib>=1.1.0  # For parallel processing in TaskInstructionEvaluator

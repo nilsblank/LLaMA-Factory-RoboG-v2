@@ -1,0 +1,25 @@
+# RoboVQA Benchmark Configuration
+# For RoboVQA dataset: https://github.com/google-deepmind/robovqa
+
+name: robovqa
+_target_: robovqa_benchmark.RoboVQABenchmark
+
+# Data directory containing TFRecord files
+data_dir: /home/hk-project-sustainebot/bm3844/datasets/datasets/benchmarks/robovqa/0.1.0/
+
+# Which split to evaluate on
+split: test  # Options: train, validation, test
+
+# Task selection (optional - if not specified, uses all tasks)
+# tasks:
+#   - describe_object_color
+#   - describe_object_shape
+#   - count_objects
+
+# Evaluation metrics
+metrics:
+  - bleu
+  - rouge-l
+
+# Optional: limit number of samples for quick testing
+max_samples: 100

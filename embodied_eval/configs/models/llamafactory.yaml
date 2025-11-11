@@ -1,0 +1,19 @@
+# LlamaFactory Model Configuration
+
+name: llamafactory_model
+_target_: models.LlamaFactoryModel
+
+# Model checkpoint path
+model_path: /path/to/model/checkpoint
+
+# Generation parameters
+generation_kwargs:
+  temperature: 0.7
+  max_tokens: 512
+  top_p: 0.9
+  do_sample: true
+
+# Model-specific settings
+use_smart_resize: true  # For Qwen2.5-VL models
+min_pixels: 256
+max_pixels: 1280

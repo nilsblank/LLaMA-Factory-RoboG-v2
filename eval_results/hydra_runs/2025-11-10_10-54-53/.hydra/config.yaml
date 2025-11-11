@@ -1,0 +1,25 @@
+benchmarks:
+  name: robovqa
+  _target_: robovqa_benchmark.RoboVQABenchmark
+  data_dir: /home/hk-project-sustainebot/bm3844/datasets/datasets/benchmarks/robovqa/tfrecord/val
+  split: val
+  metrics:
+  - bleu
+  - rouge-l
+models:
+  name: llamafactory_model
+  _target_: models.LlamaFactoryModel
+  model_path: /path/to/model/checkpoint
+  generation_kwargs:
+    temperature: 0.7
+    max_tokens: 512
+    top_p: 0.9
+    do_sample: true
+  use_smart_resize: true
+  min_pixels: 256
+  max_pixels: 1280
+output_dir: ./eval_results
+save_predictions: true
+save_results: true
+verbose: true
+batch_size: 1024
