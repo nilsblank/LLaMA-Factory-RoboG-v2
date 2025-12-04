@@ -292,7 +292,8 @@ def main(cfg: DictConfig):
             if bench_cfg is not None:  # Skip None entries
                 benchmark = instantiate_from_config(bench_cfg)
                 #save the benchmark as jsonl file in sharegpt format
-              
+
+                
                 benchmarks.append(benchmark)
                 print(f"Loaded benchmark: {benchmark.name} ({len(benchmark)} samples)")
     
@@ -399,6 +400,8 @@ def main(cfg: DictConfig):
             # Remove None values
             vllm_params = {k: v for k, v in vllm_params.items() if v is not None}
             
+
+            
             # Import and call vllm_infer with ALL benchmarks at once
             from vllm_infer import vllm_infer
             
@@ -410,10 +413,18 @@ def main(cfg: DictConfig):
                 save_results=True,
                 verbose=cfg.get('verbose', True),
                 batch_size=batch_size or 1024,
-                **vllm_params
+                **vllm_paramsImitation
             )
             
-            # bench_results is a dict: {benchmark_name: {predictions, results, ...}}
+            # Handle both single and multiple benchmark cases
+            # When there's 1 benchmark: bench_results is {predictions, results, ...}
+            # When there are multiple: bench_results is {benchmark_name: {predictions, results, ...}}
+            if len(benchmarks) == 1:
+                # Single benchmark case - wrap it in a dict
+                bench_name = benchmarks[0].name
+                bench_results = {bench_name: bench_results}
+            
+            # bench_results is now always a dict: {benchmark_name: {predictions, results, ...}}
             for bench_name, bench_result in bench_results.items():
                 pair_name = f"{bench_name}_{vllm_model['name']}"
                 all_results[pair_name] = bench_result['results']

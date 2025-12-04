@@ -22,4 +22,4 @@ metrics:
   - rouge-l
 
 # Optional: limit number of samples for quick testing
-max_samples: 100
+max_samples: 400

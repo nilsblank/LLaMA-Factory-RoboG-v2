@@ -89,7 +89,7 @@ def vllm_infer(
     save_predictions: bool = True,
     save_results: bool = True,
     verbose: bool = True,
-    force_eager = True
+    force_eager: bool = False
 ):
     """
     Perform batch generation using vLLM engine with benchmark framework.
@@ -114,67 +114,10 @@ def vllm_infer(
     # Handle multiple benchmarks (new way - efficient!)
     if benchmark_instances is not None:
         benchmarks = benchmark_instances if isinstance(benchmark_instances, list) else [benchmark_instances]
-        if verbose:
-            for bench in benchmarks:
-                print(f"   Using provided benchmark: {bench.name} ({len(bench)} samples)")
-    
-    # Single benchmark for backward compatibility
-    elif benchmark_instance is not None:
-        benchmarks = [benchmark_instance]
-        if verbose:
-            print(f"   Using provided benchmark: {benchmark_instance.name} ({len(benchmark_instance)} samples)")
-    
-    # Load from configs/names
     else:
-        # This part requires your custom benchmark registry
-        # Assuming embodied_eval.run_eval.BENCHMARK_REGISTRY exists
-        try:
-            from embodied_eval.run_eval import BENCHMARK_REGISTRY
-        except ImportError:
-            print("Warning: Could not import BENCHMARK_REGISTRY. Please ensure embodied_eval is installed.")
-            BENCHMARK_REGISTRY = {} # Placeholder
+        raise ValueError("Please provide benchmark_instances as a list of benchmark instances.")
 
-        # Determine which benchmarks to load
-        bench_specs = []
-        if benchmark_configs:
-            bench_specs = [{'type': 'config', 'value': cfg} for cfg in (benchmark_configs if isinstance(benchmark_configs, list) else [benchmark_configs])]
-        elif benchmark_names:
-            bench_specs = [{'type': 'name', 'value': name} for name in (benchmark_names if isinstance(benchmark_names, list) else [benchmark_names])]
-        else:
-            # Default to single benchmark
-            bench_specs = [{'type': 'name', 'value': benchmark_name}]
-        
-        # Load each benchmark
-        for spec in bench_specs:
-            if spec['type'] == 'config':
-                bench_cfg = OmegaConf.load(spec['value'])
-            else:
-                bench_cfg = OmegaConf.create({
-                    "name": spec['value'],
-                    "data_dir": benchmark_data_dir or f"/path/to/{spec['value']}/data",
-                    "split": benchmark_split,
-                    "metrics": ["bleu", "rouge-l"],
-                })
-            
-            # Override with CLI arguments
-            if benchmark_data_dir:
-                bench_cfg.data_dir = benchmark_data_dir
-            if max_samples:
-                bench_cfg.max_samples = max_samples
-            
-            # Get benchmark class
-            bench_name = bench_cfg.get('name', spec['value'])
-            if bench_name not in BENCHMARK_REGISTRY:
-                print(f"Benchmark '{bench_name}' not found. Available: {list(BENCHMARK_REGISTRY.keys())}")
-                print("Continuing without this benchmark...")
-                continue # Skip if benchmark not found
-            
-            benchmark_cls = BENCHMARK_REGISTRY[bench_name]
-            benchmark = benchmark_cls(bench_cfg)
-            benchmarks.append(benchmark)
-            
-            if verbose:
-                print(f"   Loaded benchmark: {benchmark.name} ({len(benchmark)} samples)")
+
     
     if not benchmarks:
         raise ValueError("No valid benchmarks were loaded!")
@@ -296,6 +239,7 @@ def vllm_infer(
         
         for sample in benchmark.samples:
             # Preprocess sample (benchmark preprocessing first)
+
             sample = benchmark.preprocess(sample)
             
             # Apply model-specific preprocessing if model instance provided
@@ -320,6 +264,8 @@ def vllm_infer(
             chat = benchmark.generate_prompt(sample, model_instance)
             all_chat_messages.append(chat)
         
+        
+
         if verbose:
             print(f"   Prepared {len(all_chat_messages)} chat prompts")
         
@@ -342,58 +288,14 @@ def vllm_infer(
             
             for j, (sample, chat) in enumerate(zip(batch_samples, batch_chats)):
                 
-                # 1. Tokenize using Hugging Face apply_chat_template
-                try:
-                    prompt_ids = tokenizer.apply_chat_template(
-                        chat,
-                        add_generation_prompt=True,
-                        tokenize=True
-                    )
-                    # Ensure it's a 1D list
-                    if not isinstance(prompt_ids, list):
-                        prompt_ids = prompt_ids.tolist()
-                    if prompt_ids and isinstance(prompt_ids[0], list):
-                        prompt_ids = prompt_ids[0]
-                
-                except Exception as e:
-                    print(f"Error applying chat template for sample: {e}")
-                    print(f"Chat messages: {chat}")
-                    continue  # Skip this problematic sample
+                # Use model's prepare_vllm_inputs_from_chat method if available
+                if model_instance is not None and hasattr(model_instance, 'prepare_vllm_inputs_from_chat'):
+                    vllm_input = model_instance.prepare_vllm_inputs_from_chat(chat, sample)
+                    vllm_inputs.append(vllm_input)
+                else:
+                    raise ValueError("Model instance with method 'prepare_vllm_inputs_from_chat' must be provided.")
 
-                # 2. Prepare multimodal data (pass raw data)
-                # vLLM's internal image processor will handle these
-                multi_modal_data = None
-                mm_data_dict = {}
-                
-                if sample.images is not None and len(sample.images) > 0:
-                    # Pass the raw list of images (PIL, paths, etc.)
-                    mm_data_dict["image"] = sample.images
-                
-                if sample.videos is not None and len(sample.videos) > 0:
-                    mm_data_dict["video"] = sample.videos
-                
-                if sample.audios is not None and len(sample.audios) > 0:
-                    mm_data_dict["audio"] = sample.audios
-                
-                if mm_data_dict:
-                    multi_modal_data = mm_data_dict
-
-                # 3. Prepare per-request processor kwargs (for fps, num_frames, etc.)
-                # This mirrors the Qwen repo's `processor.apply_chat_template(..., fps=4)`
-                per_request_mm_kwargs = {}
-                if (sample.videos is not None or sample.audios is not None) and sample.metadata:
-                    if "fps" in sample.metadata:
-                        per_request_mm_kwargs["fps"] = sample.metadata["fps"]
-                    if "num_frames" in sample.metadata:
-                        per_request_mm_kwargs["num_frames"] = sample.metadata["num_frames"]
-                    # Add any other per-request args Qwen might support
-                    # e.g., 'use_audio_in_video': True
-                
-                vllm_inputs.append({
-                    "prompt_token_ids": prompt_ids,
-                    "multi_modal_data": multi_modal_data,
-                    "mm_processor_kwargs": per_request_mm_kwargs or None # Pass kwargs, or None if empty
-                })
+                        
             
             # Generate batch
             if not vllm_inputs:

@@ -1,0 +1,46 @@
+{
+  "overall": {
+    "bleu": 15.395055826410822,
+    "rouge_l": 0.6703833869065358
+  },
+  "immediate_planning_with_context20:freeform": {
+    "bleu": 47.682624533845534,
+    "rouge_l": 0.6739928481325242,
+    "num_samples": 52
+  },
+  "affordance:discriminative:discrete": {
+    "bleu": 0.2614665636820774,
+    "rouge_l": 0.8453683221416676,
+    "num_samples": 76
+  },
+  "remaining5_planning_with_context20:freeform": {
+    "bleu": 30.16059231257911,
+    "rouge_l": 0.48400958888168083,
+    "num_samples": 37
+  },
+  "past_description:freeform": {
+    "bleu": 2.060108073409712,
+    "rouge_l": 0.3279717957695089,
+    "num_samples": 24
+  },
+  "planning:freeform": {
+    "bleu": 4.714894734872453,
+    "rouge_l": 0.5555568852443852,
+    "num_samples": 48
+  },
+  "success:discrete": {
+    "bleu": 0.0,
+    "rouge_l": 0.891566265060241,
+    "num_samples": 83
+  },
+  "affordance:generative:positive:freeform": {
+    "bleu": 15.362370781159395,
+    "rouge_l": 0.5411661214543053,
+    "num_samples": 42
+  },
+  "future_prediction:freeform": {
+    "bleu": 22.67079784534084,
+    "rouge_l": 0.517956544659331,
+    "num_samples": 38
+  }
+}

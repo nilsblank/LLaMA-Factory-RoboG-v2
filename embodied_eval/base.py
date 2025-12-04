@@ -16,8 +16,14 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+from PIL import Image
+
+import datasets
+
 
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
@@ -78,7 +84,9 @@ class BaseBenchmark(ABC):
         self.results: Dict[str, Any] = {}
         
         self._validate_config()
+        
         self._load_data()
+        #self.share_gpt_dataset = self.get_sharegpt_format()
     
     @abstractmethod
     def _validate_config(self) -> None:
@@ -122,9 +130,9 @@ class BaseBenchmark(ABC):
         
         conversation = []
         user_message = sample.question
-        if sample.images is not None:
-            for _ in sample.images:
-                user_message += f"\n{image_tag}"
+        image_prefix = image_tag = "<image>" * (len(sample.images) if sample.images is not None else 0)
+
+        user_message = image_prefix + sample.question
         conversation.append({"role": "user", "content": user_message})
         conversation.append({"role": "assistant", "content": sample.answer})
         
@@ -198,35 +206,136 @@ class BaseBenchmark(ABC):
     def __iter__(self):
         """Iterate over samples."""
         return iter(self.samples)
+    
+    
+    def get_sharegpt_path(self, output_path: Union[str, Path], model_name = None) -> Path:       
+        """
+        Get the path for ShareGPT formatted file.
+        
+        Args:
+            output_path: Base path to save ShareGPT formatted data
+            model_name: Optional model name to include in filename
+            """
+        if model_name is None:
+            model_name = "generic_model"
+        return Path(output_path) / self.name / f"{model_name}.jsonl"
+    
+    def share_gpt_exists(self, output_path: Union[str, Path], model_name = None) -> bool:
+        """
+        Check if ShareGPT formatted file exists.
+        
+        Args:
+            output_path: Path to check for ShareGPT formatted data
+        """
+        sharegpt_path = self.get_sharegpt_path(output_path, model_name)
+        return sharegpt_path.exists()
+    
+    def get_sharegpt_format(self) -> datasets.Dataset:
+        """
+        Get the benchmark samples in ShareGPT format as a HuggingFace Dataset.
+        """
+        
+        sharegpt_data = []
 
-    def save_sharegpt_format(self, output_path: Union[str, Path]) -> None:
+        image_tag = "<image>"
+
+        for index,sample in enumerate(self.samples):
+            messages = []
+            user_message = sample.question
+            images = []
+            if sample.images:
+                for img_idx, img in enumerate(sample.images):
+                    images.append(Image.fromarray(img))
+                image_prefix  = image_tag * len(sample.images)
+                user_message = image_prefix + user_message
+            messages.append({"role": "user", "content": user_message})
+            messages.append({"role": "assistant", "content": sample.answer})
+
+
+            conversation = {"messages": messages, "images": images, "metadata": sample.metadata}
+
+            sharegpt_data.append(conversation)
+        
+        return datasets.Dataset.from_list(sharegpt_data)
+        
+        
+    
+    
+    def save_sharegpt_format(self, dataset_info_path, output_path: Union[str, Path], image_output_dir, model_name = None,
+                             force_regenerate = False) -> None:
         """
         Save the benchmark samples in ShareGPT format and updates LLamaFactory dataset_info.json.
         
         Args:
             output_path: Path to save the ShareGPT formatted data
+            image_output_dir: Directory to save images
         """
         import json
 
-        output_path = Path(output_path)
+        output_path = self.get_sharegpt_path(output_path, model_name)
+        if output_path.exists():
+            print(f"ShareGPT file {output_path} already exists. Skipping save.")
+            return
         output_path.parent.mkdir(parents=True, exist_ok=True)
         sharegpt_data = []
 
         image_tag = "<image>"
+        
+        
+        
+        image_output_dir = Path(image_output_dir) / self.name
+        image_output_dir.mkdir(parents=True, exist_ok=True)
+        
 
-
-        for sample in self.samples:
-            conversation = []
+        for index,sample in enumerate(self.samples):
+            #image out dir for index is with 7 digit zero padded
+            image_save_dir = image_output_dir / f"{index:07d}"
+            image_save_dir.mkdir(parents=True, exist_ok=True)
+            messages = []
             user_message = sample.question
+            image_paths = []
             if sample.images:
-                for img in sample.images:
-                    #save the images 
-                    user_message += f"\n{image_tag}"
-            conversation.append({"role": "user", "content": user_message})
-            conversation.append({"role": "assistant", "content": sample.answer})
+                for img_idx, img in enumerate(sample.images):
+                    image_path = image_save_dir / f"image_{img_idx}.png"
+                    image_paths.append(str(image_path.relative_to(image_output_dir.parent)))
+                    if os.path.exists(image_path):
+                        continue
+                    im = Image.fromarray(img)
+                    im.save(image_path)
+                
+                image_prefix  = image_tag * len(sample.images)
+                user_message = image_prefix + user_message
+            messages.append({"role": "user", "content": user_message})
+            messages.append({"role": "assistant", "content": sample.answer})
+            
+            
+            conversation = {"messages": messages, "images": image_paths, "metadata": sample.metadata}
 
+            sharegpt_data.append(conversation)
+        with open(output_path, 'w') as f:
+            json.dump(sharegpt_data, f, indent=2)
 
-            sharegpt_data.append({"conversation": conversation, "metadata": sample.metadata})
+        with open(dataset_info_path, 'r') as f:
+            dataset_info = json.load(f)
+        dataset_info[self.name] = {
+            "file_name": str(output_path.resolve()),
+            "formatting": "sharegpt",
+            "columns": {
+                "messages": "messages",
+                "images": "images"
+            },
+            "tags": {
+                "role_tag": "role",
+                "content_tag": "content",
+                "user_tag": "user",
+                "assistant_tag": "assistant"
+            }
+        }
+        with open(dataset_info_path, 'w') as f:
+            json.dump(dataset_info, f, indent=2)
+            
+        logging.info(f"Saved ShareGPT formatted data to {output_path} and updated dataset_info.json.")
+        
 
 
 class BaseModel(ABC):
@@ -336,3 +445,27 @@ class BaseModel(ABC):
         """
         # Default: return as-is
         return output
+    
+    @abstractmethod
+    def prepare_vllm_inputs_from_chat(
+        self,
+        chat_messages: List[Dict[str, str]],
+        sample: 'Sample'
+    ) -> Dict[str, Any]:
+        """
+        Prepare vLLM inputs from chat messages and sample data.
+        
+        This method integrates with the benchmark's generate_prompt output
+        and prepares inputs in the format expected by vLLM.
+        
+        Args:
+            chat_messages: Chat messages from benchmark.generate_prompt()
+            sample: Sample object containing images, videos, metadata
+            
+        Returns:
+            Dictionary with:
+                - prompt_token_ids: Tokenized prompt (list of int)
+                - multi_modal_data: Dict with image/video data (or None)
+                - mm_processor_kwargs: Additional processor kwargs (or None)
+        """
+        pass
