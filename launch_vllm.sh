@@ -19,7 +19,8 @@
 # Activate the virtualenv / conda environment
 
 
-source ~/.bashrc
+source /home/hk-project-sustainebot/bm3844/miniconda3/etc/profile.d/conda.sh
+
 conda activate roboG_train
 
 export LD_LIBRARY_PATH=/home/hk-project-sustainebot/bm3844/miniconda3/envs/vlm/lib/python3.12/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
