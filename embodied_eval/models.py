@@ -356,14 +356,33 @@ class Qwen3VLModel(BaseModel):
                         "text": text_cleaned
                     })
             
+            # Check if text contains <video> tags for interleaving
+            video_tag = "<video>"
+
             # Add videos if they exist in the sample  
-            if sample.videos is not None and len(sample.videos) > 0:
-                for video in sample.videos:
-                    content.append({
-                        "type": "video", 
-                        "video": video
-                    })
-            
+            if video_tag in text and sample.videos is not None and len(sample.videos) > 0:
+
+                parts = text.split(video_tag)
+                video_idx = 0
+                
+                for i, part in enumerate(parts):
+                    # Add text part if not empty
+                    if part.strip():
+                        content.append({
+                            "type": "text",
+                            "text": part
+                        })
+                    
+                    # Add video after text part (except for the last part)
+                    if i < len(parts) - 1 and video_idx < len(sample.images):
+                        video = sample.images[video_idx]
+                        
+                        content.append({
+                            "type": "video",
+                            "image": video
+                        })
+                        video_idx += 1
+
             #only append user or system messages
             if msg["role"] == "user" or msg["role"] == "system":
                 messages_with_media.append({
@@ -389,9 +408,23 @@ class Qwen3VLModel(BaseModel):
             "mm_processor_kwargs": mm_processor_kwargs if mm_processor_kwargs else None
         }
 
-
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """Qwen 3 VL uses coordinates in range 0-1000 for bounding boxes by default."""
     
-    
+        if format == "xyxy":
+            width, height = original_size
+            x1 = bbox[0] / 1000 * width
+            y1 = bbox[1] / 1000 * height
+            x2 = bbox[2] / 1000 * width
+            y2 = bbox[3] / 1000 * height
+            return [x1, y1, x2, y2]
+        else:
+            raise NotImplementedError()
 
 
 class LlamaFactoryModel(BaseModel):

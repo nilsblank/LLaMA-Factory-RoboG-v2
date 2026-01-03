@@ -242,19 +242,20 @@ def vllm_infer(
 
             sample = benchmark.preprocess(sample)
             
-            # Apply model-specific preprocessing if model instance provided
-            if model_instance is not None:
-                # Process bboxes in metadata if present
-                if sample.metadata and 'bbox' in sample.metadata:
-                    bbox = sample.metadata['bbox']
-                    original_size = sample.metadata.get('original_size', (1000, 1000))
-                    target_size = sample.metadata.get('target_size', original_size)
-                    bbox_format = sample.metadata.get('bbox_format', 'xyxy')
+            # TODO move to preprocess and add model_instance arg? (Not needed for VStar)
+            # # Apply model-specific preprocessing if model instance provided
+            # if model_instance is not None:
+            #     # Process bboxes in metadata if present
+            #     if sample.metadata and 'bbox' in sample.metadata:
+            #         bbox = sample.metadata['bbox']
+            #         original_size = sample.metadata.get('original_size', (1000, 1000))
+            #         target_size = sample.metadata.get('target_size', original_size)
+            #         bbox_format = sample.metadata.get('bbox_format', 'xyxy')
                     
-                    processed_bbox = model_instance.process_bbox(
-                        bbox, original_size, target_size, bbox_format
-                    )
-                    sample.metadata['bbox_processed'] = processed_bbox
+            #         processed_bbox = model_instance.process_bbox(
+            #             bbox, original_size, target_size, bbox_format
+            #         )
+            #         sample.metadata['bbox_processed'] = processed_bbox
             
             all_samples.append(sample)
             
@@ -311,6 +312,9 @@ def vllm_infer(
                     printed_model_processing = True
                 preds = [model_instance.parse_output(pred) for pred in preds]
             
+            # Benchmark-specific post-processing, which can include e.g. denormalization of bboxes
+            preds = [benchmark.postprocess(pred, sample, model_instance) for sample, pred in zip(batch_samples, preds)]
+
             # Collect results
             all_predictions.extend(preds)
             all_ground_truths.extend([s.answer for s in batch_samples])

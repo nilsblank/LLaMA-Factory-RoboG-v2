@@ -111,7 +111,6 @@ class BaseBenchmark(ABC):
         """
         pass
     
-    
     def generate_prompt(self, sample: Sample, model: 'BaseModel') -> Union[str, Dict[str, str]]:
         """
         Generate a prompt for the given sample and model in sharegpt format.
@@ -138,6 +137,20 @@ class BaseBenchmark(ABC):
         
         return conversation
     
+    def postprocess(self, prediction: str, sample: Sample, model: 'BaseModel') -> Any:
+        """
+        Postprocess model prediction for a given sample.
+        
+        Args:
+            prediction: Raw model prediction
+            sample: Input sample
+            model: Model instance (for model-specific postprocessing, such as denormalization)
+
+        Returns:
+            Postprocessed prediction
+        """
+        return prediction
+        
     @abstractmethod
     def evaluate(
         self,
@@ -420,6 +433,26 @@ class BaseModel(ABC):
         # Default: no processing
         return bbox
     
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """
+        Denormalize bounding box coordinates to original image size.
+        
+        Args:
+            bbox: Normalized bounding box coordinates
+            original_size: (width, height) of original image
+            format: Bbox format ("xyxy", "xywh", "cxcywh")
+            
+        Returns:
+            Denormalized bounding box
+        """
+        # Default: no processing
+        return bbox
+
     def process_image(self, image: np.ndarray) -> np.ndarray:
         """
         Preprocess image for the model.
