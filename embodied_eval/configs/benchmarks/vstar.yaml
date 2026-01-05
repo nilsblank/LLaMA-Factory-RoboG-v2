@@ -1,0 +1,11 @@
+# V-STaR Benchmark Configuration
+# For V-STaR dataset: https://github.com/V-STaR-Bench/V-STaR/
+
+name: vstar
+_target_: vstar_benchmark.VStarBenchmark
+
+# Data directory
+data_dir: /hkfs/work/workspace/scratch/ulqho-robot_datasets/datasets/benchmarks/vstar/
+
+# Optional: limit number of samples for quick testing
+max_samples: 20

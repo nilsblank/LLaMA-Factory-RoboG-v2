@@ -2,7 +2,8 @@
 
 This module provides lightweight helpers for temporal and spatial IoU
 calculations and a `VStarBenchmark` class that implements the
-`BaseBenchmark` interface from `embodied_eval.base`.
+`BaseBenchmark` interface from `embodied_eval.base`. The data can be
+downloaded from https://huggingface.co/datasets/V-STaR-Bench/V-STaR.
 
 The implementation intentionally keeps evaluation simple and data-driven:
 - VQA scoring is a token-overlap similarity mapped to integer score 0-3
@@ -231,8 +232,14 @@ class VStarBenchmark(BaseBenchmark):
         with open(annotation_file, "r") as f:
             items = json.load(f)
 
+        # Limit sample number for debugging
+        max_samples = self.config.get('max_samples', None)
+
         # Each item may contain multiple question types, therefore split into multiple Samples
         for original_id, item in enumerate(items):
+            if max_samples is not None and original_id >= max_samples:
+                break
+
             # Attach the original item as metadata base
             base_meta = dict(item)
 

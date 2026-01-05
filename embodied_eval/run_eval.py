@@ -54,10 +54,12 @@ def register_model(name: str):
 
 # Import and register components
 #from . import robovqa_benchmark, models
-import robovqa_benchmark    
+import robovqa_benchmark 
+import vstar_benchmark   
 import models
 # Register benchmarks
 register_benchmark("robovqa")(robovqa_benchmark.RoboVQABenchmark)
+register_benchmark("vstar")(vstar_benchmark.VStarBenchmark)
 
 # Register models
 register_model("mock")(models.MockModel)
