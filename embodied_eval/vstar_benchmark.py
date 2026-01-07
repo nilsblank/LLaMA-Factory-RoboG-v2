@@ -247,7 +247,7 @@ class VStarBenchmark(BaseBenchmark):
             vid = item.get("vid")
             target_filename = f"{vid}.mp4"
             video_path = None
-            for root, _, files in (Path(self.config.get("data_dir")) / "vstar_videos").walk():
+            for root, _, files in (Path(self.config.get("data_dir")) / "videos").walk():
                 if target_filename in files:
                     video_path = root / target_filename
             if not video_path:
