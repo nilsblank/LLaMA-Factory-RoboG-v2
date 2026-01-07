@@ -415,7 +415,7 @@ def main(cfg: DictConfig):
                 save_results=True,
                 verbose=cfg.get('verbose', True),
                 batch_size=batch_size or 1024,
-                **vllm_paramsImitation
+                **vllm_params
             )
             
             # Handle both single and multiple benchmark cases

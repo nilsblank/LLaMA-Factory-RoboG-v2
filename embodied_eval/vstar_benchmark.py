@@ -247,9 +247,10 @@ class VStarBenchmark(BaseBenchmark):
             vid = item.get("vid")
             target_filename = f"{vid}.mp4"
             video_path = None
-            for root, _, files in (Path(self.config.get("data_dir")) / "videos").walk():
-                if target_filename in files:
-                    video_path = root / target_filename
+            for path in (Path(self.config.get("data_dir")) / "videos").rglob("*"):
+                if path.is_file() and path.name == target_filename:
+                    video_path = str(path)
+                    break  # Found it, so we can stop searching
             if not video_path:
                 raise ValueError(f"Video file not found for vid {vid}")
 
@@ -262,7 +263,7 @@ class VStarBenchmark(BaseBenchmark):
                     question=f"Answer the question about the video: {item['question']} \n (If the answer is a person, you don't need to identify the person.)",
                     answer=item.get("answer", ""),
                     videos=[video_path],
-                    metadata={**base_meta, "sample_id": original_id, "task_type": "vqa", question: item['question']},
+                    metadata={**base_meta, "sample_id": original_id, "task_type": "vqa", item['question']: item['question']},
                 )
                 self.samples.append(s)
 

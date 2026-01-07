@@ -3,6 +3,7 @@
 # to select multiple benchmarks and models for evaluation
 
 defaults:
+  - _self_
   - benchmarks:
       - vstar
   - models:
