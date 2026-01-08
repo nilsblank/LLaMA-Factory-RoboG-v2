@@ -16,6 +16,7 @@
 
 import random
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
@@ -299,26 +300,30 @@ class Qwen3VLModel(BaseModel):
             # Parse the text to find <image> tags and build content list
             text = msg.get("content", "")
             
-            # Check if text contains <image> tags for interleaving
+            # Split text by tags for interleaving
             image_tag = "<image>"
-            
-            if image_tag in text and sample.images is not None and len(sample.images) > 0:
-                # Interleaved mode: insert images at <image> tag locations
-                from PIL import Image
-                
-                parts = text.split(image_tag)
-                image_idx = 0
-                
-                for i, part in enumerate(parts):
-                    # Add text part if not empty
-                    if part.strip():
-                        content.append({
-                            "type": "text",
-                            "text": part
-                        })
-                    
-                    # Add image after text part (except for the last part)
-                    if i < len(parts) - 1 and image_idx < len(sample.images):
+            video_tag = "<video>"
+            tags_to_find = []
+            if sample.images is not None and len(sample.images) > 0:
+                tags_to_find.append(image_tag)
+            if sample.videos is not None and len(sample.videos) > 0:
+                tags_to_find.append(video_tag)
+            if tags_to_find:
+                # Create pattern: (<image>|<video>)
+                pattern = f"({'|'.join(tags_to_find)})"
+                parts = re.split(pattern, text)
+            else:
+                # No tags to process, treat the whole thing as a single part
+                parts = [text]
+
+            image_idx = 0
+            video_idx = 0
+            for part in parts:
+                if part == image_tag:
+                    from PIL import Image
+
+                    # Add image if available
+                    if image_idx < len(sample.images):
                         img = sample.images[image_idx]
                         # Convert numpy array to PIL if needed
                         if isinstance(img, np.ndarray):
@@ -331,59 +336,25 @@ class Qwen3VLModel(BaseModel):
                             "image": pil_img
                         })
                         image_idx += 1
-            else:
-                # Legacy mode: prepend all images at the start (original behavior)
-                # Add images if they exist in the sample
-                if sample.images is not None and len(sample.images) > 0 and image_tag in text:
-                    from PIL import Image
-                    for img in sample.images:
-                        # Convert numpy array to PIL if needed
-                        if isinstance(img, np.ndarray):
-                            pil_img = Image.fromarray(img.astype('uint8'))
-                        else:
-                            pil_img = img
+                elif part == video_tag:
+                    # Add video if available
+                    if video_idx < len(sample.videos):
+                        video = sample.videos[video_idx]
                         
                         content.append({
-                            "type": "image",
-                            "image": pil_img
+                            "type": "video",
+                            "video": video
                         })
-                
-                # Remove <image> tags from text and add text content
-                text_cleaned = text.replace(image_tag, "").strip()
-                if text_cleaned:
-                    content.append({
-                        "type": "text",
-                        "text": text_cleaned
-                    })
-            
-            # Check if text contains <video> tags for interleaving
-            video_tag = "<video>"
-
-            # Add videos if they exist in the sample  
-            if video_tag in text and sample.videos is not None and len(sample.videos) > 0:
-
-                parts = text.split(video_tag)
-                video_idx = 0
-                
-                for i, part in enumerate(parts):
+                        video_idx += 1
+                else:
                     # Add text part if not empty
                     if part.strip():
                         content.append({
                             "type": "text",
                             "text": part
                         })
-                    
-                    # Add video after text part (except for the last part)
-                    if i < len(parts) - 1 and video_idx < len(sample.images):
-                        video = sample.images[video_idx]
-                        
-                        content.append({
-                            "type": "video",
-                            "image": video
-                        })
-                        video_idx += 1
 
-            #only append user or system messages
+            # Only append user or system messages
             if msg["role"] == "user" or msg["role"] == "system":
                 messages_with_media.append({
                     "role": msg.get("role", "user"),
