@@ -9,3 +9,7 @@ data_dir: /hkfs/work/workspace/scratch/uemjv-roboG_datasets/V-STaR  # /hkfs/work
 
 # Optional: limit number of samples for quick testing
 max_samples: 20
+
+# Optional: select a different VQA scoring model for testing
+# If left out, defaults to Qwen/Qwen2.5-72B-Instruct
+vqa_score_model: Qwen/Qwen2.5-3B-Instruct

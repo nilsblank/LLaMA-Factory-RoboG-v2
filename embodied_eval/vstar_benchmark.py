@@ -136,8 +136,8 @@ def calculate_benchmark_metrics(results_df):
     results_dict = {}
 
     # VQA Metrics
-    vqa_df = results_df[results_df['task_type'] == "vqa"]
-    acc_vqa = len(vqa_df['score'] >= 2) / total_n if not vqa_df.empty else 0
+    vqa_df = results_df[results_df['task_type'] == "VQA"]
+    acc_vqa = sum(vqa_df['score'] >= 2) / total_n if not vqa_df.empty else 0
     vqa_scores = vqa_df[vqa_df['metric'] == 'qwen_score']['score']
     avg_all_vqa = vqa_scores.mean() if not vqa_scores.empty else 0
     valid_vqa_scores = vqa_df[(vqa_df['metric'] == 'qwen_score') & (vqa_df['valid'] == True)]['score']
@@ -309,6 +309,7 @@ class VStarBenchmark(BaseBenchmark):
                     videos=[video_path],
                     metadata={**base_meta, "sample_id": original_id, "task_type": "temporal_2"},
                 )
+                self.samples.append(s)
 
             # Spatial (Chain 2)
             if item.get("spatial_question_2"):
@@ -348,7 +349,7 @@ class VStarBenchmark(BaseBenchmark):
                 "content": video_prefix + sample.question,
             }, {
                 "role": "assistant",  # The models prepare_vllm_inputs_from_chat should remove this message
-                "content": sample.answer,
+                "content": str(sample.answer),
             },
         ]
         return conversation
@@ -474,7 +475,7 @@ class VStarBenchmark(BaseBenchmark):
             elif meta.get("task_type") == "spatial":
                 aps, mIoU = calculate_spatial_metrics(gt, pred)
                 for ap, threshold in zip(aps, [0.1, 0.3, 0.5, 0.7, 0.9]):
-                    rows.append(["Spatial", domain, duration, True, f"spatial_AP@{threshold}", ap])
+                    rows.append([sample_id, "Spatial", domain, duration, True, f"spatial_AP@{threshold}", ap])
                 rows.append([sample_id, "Spatial", domain, duration, True, "spatial_mIoU", mIoU])
             
             # Temporal 2
@@ -486,7 +487,7 @@ class VStarBenchmark(BaseBenchmark):
             elif meta.get("task_type") == "spatial_2":
                 aps, mIoU = calculate_spatial_metrics(gt, pred)
                 for ap, threshold in zip(aps, [0.1, 0.3, 0.5, 0.7, 0.9]):
-                    rows.append(["Spatial_2", domain, duration, True, f"spatial_AP@{threshold}", ap])
+                    rows.append([sample_id, "Spatial_2", domain, duration, True, f"spatial_AP@{threshold}", ap])
                 rows.append([sample_id, "Spatial_2", domain, duration, True, "spatial_mIoU", mIoU])
 
         # Aggregate results
@@ -512,7 +513,7 @@ class VStarBenchmark(BaseBenchmark):
         return results
     
     def _init_qwen2_5(self):
-        model_name = "Qwen/Qwen2.5-72B-Instruct"
+        model_name = self.config.get("vqa_score_model", "Qwen/Qwen2.5-72B-Instruct")
         self.eval_model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype="auto",
@@ -522,7 +523,7 @@ class VStarBenchmark(BaseBenchmark):
 
     def _qwen2_5_score(self, question, gt, candidate):
         # Load Qwen if it does not exist
-        if not self.eval_model:
+        if not getattr(self, 'eval_model', None):
             self._init_qwen2_5()
 
         # Let Qwen evaluate the answer
