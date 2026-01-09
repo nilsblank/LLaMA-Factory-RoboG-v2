@@ -5,7 +5,7 @@ name: vstar
 _target_: vstar_benchmark.VStarBenchmark
 
 # Data directory
-data_dir: /hkfs/work/workspace/scratch/uemjv-roboG_datasets/V-STaR  # /hkfs/work/workspace/scratch/ulqho-robot_datasets/datasets/benchmarks/V-STaR
+data_dir: /hkfs/work/workspace/scratch/uemjv-roboG_datasets/V-STaR
 
 # Optional: limit number of samples for quick testing
 max_samples: 20
