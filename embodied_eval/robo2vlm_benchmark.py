@@ -7,10 +7,11 @@ questions. The dataset can be doownloaded from
 https://huggingface.co/datasets/keplerccc/Robo2VLM-1.
 """
 
+import ast
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
-from datasets import load_from_disk
+from datasets import load_dataset
 import re
 import numpy as np
 from PIL import Image
@@ -18,6 +19,7 @@ from vllm import LLM, SamplingParams
 
 from base import BaseBenchmark, Sample
 
+CHOICE_LETTER_MAP = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E'}
 
 def choice_answer_clean(pred: str) -> str:
     pred = pred.strip("\n").rstrip(".").rstrip("/").strip(" ").lstrip(":")
@@ -36,11 +38,10 @@ def format_multiple_choice_question(question_text:str, choices:List[str]) -> str
     """Format question with multiple choice options."""
     # Format choices as A, B, C, D, E
     formatted_choices = ""
-    choice_letter_map = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E'}
     
     for i, choice in enumerate(choices):
-        if i < len(choice_letter_map):
-            formatted_choices += f" {choice_letter_map[i]}. {choice}"
+        if i < len(CHOICE_LETTER_MAP):
+            formatted_choices += f" {CHOICE_LETTER_MAP[i]}. {choice}"
     
     return f"{question_text}{formatted_choices}"
 
@@ -63,7 +64,7 @@ class Robo2VLMBenchmark(BaseBenchmark):
         # Load dataset
         dataset_path = self.config.get('data_dir')
         split = self.config.get('split', 'test')
-        dataset = load_from_disk(dataset_path)[split]
+        dataset = load_dataset(dataset_path, split=split, streaming=True)
 
         # Limit sample number for debugging
         max_samples = self.config.get('max_samples', None)
@@ -73,7 +74,7 @@ class Robo2VLMBenchmark(BaseBenchmark):
                 break
             
             # Prepare question
-            question = format_multiple_choice_question(sample["question"], sample["choices"])
+            question = format_multiple_choice_question(sample["question"], ast.literal_eval(sample["choices"]))
             question = f"Answer the following multiple choice question by selecting the letter (A, B, C, D, or E). ONLY output the correct option letter, i.e., A, B, C, D, E. {question}"
             
             # Load image
@@ -89,15 +90,14 @@ class Robo2VLMBenchmark(BaseBenchmark):
                 image = np.array(image)
             
             # Prepare answer
-            answer = sample["correct_answer"].upper()
+            answer = CHOICE_LETTER_MAP[sample["correct_answer"]].upper()
 
-            sample = Sample(
+            self.samples.append(Sample(
                 question=question,
                 answer=answer,
                 images=[image],
                 metadata={"id": sample["id"], "tag": sample.get("tag", "unknown")},
-            )
-            self.samples.append(sample)
+            ))
 
     def preprocess(self, sample: Sample) -> Sample:
         return sample
@@ -163,7 +163,7 @@ class Robo2VLMBenchmark(BaseBenchmark):
         
         # Process all outputs
         answer_text = outputs[0].outputs[0].text
-        extracted_answer = choice_answer_clean(answer_text)
+        extracted_answer = choice_answer_clean(answer_text).upper()
         
         return extracted_answer
 
@@ -208,6 +208,6 @@ class Robo2VLMBenchmark(BaseBenchmark):
             model="meta-llama/Llama-3.2-3B-Instruct",  # Using smaller model for extraction
             tensor_parallel_size=tensor_parallel_size,
             max_model_len=10240,  # Smaller context as we only need to extract answers
-            gpu_memory_utilization=0.2,
+            gpu_memory_utilization=0.3,
         )
         self.answer_extractor = extractor
