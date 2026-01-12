@@ -1,0 +1,36 @@
+# MotionBench Benchmark Configuration
+# Foundation Motion Understanding Benchmark based on video QA
+# Dataset: https://github.com/OpenGVLab/MotionBench
+
+name: motionbench
+_target_: motionbench_benchmark.MotionBenchBenchmark
+
+# Data directory - root path to MotionBench dataset
+# Download from: https://huggingface.co/datasets/zai-org/MotionBench
+data_dir: ${oc.env:MOTIONBENCH_DATA_DIR,./data/motionbench}
+
+# Path to video base directory (relative to data_dir)
+# Default: data_dir/public-dataset
+video_base_path: ${data_dir}/public-dataset
+
+# Path to metadata JSONL file containing video info and QA pairs
+# Default: data_dir/MotionBench/video_info.meta.jsonl
+metadata_path: ${data_dir}/MotionBench/video_info.meta.jsonl
+
+# Number of parallel workers for concurrent processing
+max_workers: 8
+
+# Cache directory for results and resumption
+cache_dir: ./motionbench_cache
+
+# Resume from cached results if available
+resume: true
+
+# Evaluation metrics to compute
+metrics:
+  - accuracy
+  - per_video_accuracy
+
+# Optional: limit number of samples for quick testing
+# Uncomment to enable
+# max_samples: 100

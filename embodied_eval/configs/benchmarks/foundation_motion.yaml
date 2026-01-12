@@ -1,0 +1,35 @@
+# FoundationMotion Benchmark Configuration
+# Hand Gesture and Motion Understanding Benchmark
+# Evaluates models on understanding hand gestures, motions, and human actions
+
+name: foundation_motion
+_target_: foundation_motion_benchmark.FoundationMotionBenchmark
+
+# Data directory - root path to FoundationMotion dataset
+data_dir: /home/hk-project-sustainebot/bm3844/datasets/datasets/benchmarks/foundationmotion/v2-dev
+
+# Task name - used to construct dataset paths
+# Directory structure: data_dir/{task}/videos and data_dir/{task}/qa_shuffled
+task: av_hands_eval
+
+# Path to video base directory
+# Default: data_dir/{task}/videos
+video_base_path: ${data_dir}/${task}/videos
+
+# Path to QA base directory
+# Default: data_dir/{task}/qa_shuffled
+qa_base_path: ${data_dir}/${task}/qa_shuffled
+
+# Number of parallel workers for concurrent video processing
+max_workers: 8
+
+# Cache directory for results and resumption
+cache_dir: /home/hk-project-sustainebot/bm3844/datasets/datasets/benchmarks/foundationmotion/v2-dev/cache
+
+# Resume from cached results if available
+resume: true
+
+# Evaluation metrics to compute
+metrics:
+  - accuracy
+  - per_video_accuracy

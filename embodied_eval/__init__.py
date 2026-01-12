@@ -18,16 +18,19 @@ Embodied AI Evaluation Framework
 A modular, extensible evaluation framework for embodied AI datasets.
 """
 
-from .base import BaseDataset, BaseEvaluator, BaseModel, Sample
+from .base import BaseDataset, BaseEvaluator, BaseModel, Sample, BaseBenchmark
 from .models import LlamaFactoryModel, MockModel
 from .robovqa_dataset import RoboVQADataset, Task, Tasks
 from .robovqa_evaluator import RoboVQAEvaluator
+from .motionbench_benchmark import MotionBenchBenchmark
+from .foundation_motion_benchmark import FoundationMotionBenchmark
 
 __all__ = [
     # Base classes
     "BaseDataset",
     "BaseModel",
     "BaseEvaluator",
+    "BaseBenchmark",
     "Sample",
     # Models
     "MockModel",
@@ -37,6 +40,10 @@ __all__ = [
     "RoboVQAEvaluator",
     "Task",
     "Tasks",
+    # MotionBench
+    "MotionBenchBenchmark",
+    # FoundationMotion
+    "FoundationMotionBenchmark",
 ]
 
 __version__ = "0.1.0"

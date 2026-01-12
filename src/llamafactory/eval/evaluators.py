@@ -749,7 +749,7 @@ class TaskInstructionEvaluator(BaseEvaluator):
         ground_truth_file: Optional[str] = None,
         ground_truths: Optional[List[str]] = None,
         name: Optional[str] = None,
-        model: str = "gpt-4.1-mini",
+        model: str = "gpt-5-mini",
         temperature: float = 0.0,
         n_jobs: int = 32
     ):
@@ -976,4 +976,507 @@ Are these instructions semantically equivalent? Respond in JSON format."""
             "num_total": len(equivalences),
             "num_errors": len(errors),
             "detailed_results": results
+        }
+
+
+class TemporalAccuracyEvaluator(BaseEvaluator):
+    """
+    Evaluator for temporal accuracy predictions from robot interaction videos.
+    
+    Parses predictions according to ACTION_LOCALIZATION_TEMPLATES_WITH_BBBOXES format:
+    - Identifies interaction phases (grasp, interact, release)
+    - Extracts start/end times in seconds
+    - Parses object labels and bounding boxes
+    - Evaluates temporal accuracy against ground truth
+    """
+    
+    def __init__(
+        self, 
+        ground_truth_file: Optional[str] = None, 
+        ground_truths: Optional[List[Dict[str, Any]]] = None,
+        name: Optional[str] = None,
+        time_tolerance: float = 0.5,
+        iou_threshold: float = 0.5,
+        phase_names: Optional[List[str]] = None
+    ):
+        """
+        Initialize the temporal accuracy evaluator.
+        
+        Args:
+            ground_truth_file: Path to ground truth file (one JSON per line)
+            ground_truths: Ground truth data (alternative to file)
+            name: Name for this evaluator
+            time_tolerance: Tolerance in seconds for temporal accuracy
+            iou_threshold: Intersection over Union threshold for spatial accuracy
+            phase_names: Expected phase names (default: ['grasp', 'interact', 'release'])
+        """
+        super().__init__(name=name or "TemporalAccuracy")
+        self.ground_truth_file = ground_truth_file
+        self.ground_truths = ground_truths
+        self.time_tolerance = time_tolerance
+        self.iou_threshold = iou_threshold
+        self.phase_names = phase_names or ['grasp', 'interact', 'release']
+        
+        self.load_data()
+    
+    def load_data(self):
+        """Load ground truth data if not provided directly."""
+        if self.ground_truths is None and self.ground_truth_file:
+            with open(self.ground_truth_file, 'r') as f:
+                self.ground_truths = [json.loads(line) for line in f]
+        
+        # Parse and validate ground truths
+        parsed = []
+        for gt in self.ground_truths:
+            phases = self.parse_interaction_phases(gt)
+            parsed.append(phases)
+        self.ground_truths = parsed
+    
+    @staticmethod
+    def parse_interaction_phases(text: str) -> Dict[str, Any]:
+        """
+        Parse interaction phases from text prediction or ground truth.
+        
+        Expected formats:
+        1. Dict with list: {"object": "name", "bbox": [...], "interaction_phases": [...]}
+        2. Dict with dict keys: {"object": "name", "bbox": [...], "interaction_phases": {"0.5 - 1.2": "grasp", ...}}
+        
+        Where interaction_phases can be:
+        - List of dicts: [{"phase": "grasp", "start_time": 0.5, "end_time": 1.2, ...}, ...]
+        - Dict with time ranges: {"0.5 - 1.2": "grasp", "1.2 - 3.5": "interact", ...}
+        
+        Args:
+            text: String containing prediction or ground truth
+            
+        Returns:
+            Dictionary with parsed interaction phases in standardized format
+        """
+        phases = {
+            "object": None,
+            "bbox": None,
+            "interaction_phases": []
+        }
+        
+        try:
+            # Try to extract JSON from markdown code blocks
+            pattern = r'```json\s*([\s\S]*?)```'
+            matches = re.findall(pattern, text)
+            json_str = matches[0] if matches else None
+            
+            if not json_str:
+                # Fallback: try to find JSON directly
+                json_match = re.search(r'\{[\s\S]*\}', text)
+                if json_match:
+                    json_str = json_match.group(0)
+            
+            if json_str:
+                data = json.loads(json_str)
+                
+                # Parse main object info
+                if isinstance(data, dict):
+                    phases["object"] = data.get("object", None)
+                    phases["bbox"] = data.get("bbox", None)
+                    
+                    # Parse interaction phases
+                    if "interaction_phases" in data:
+                        interaction_data = data["interaction_phases"]
+                        
+                        # Handle if interaction_phases is a JSON string
+                        if isinstance(interaction_data, str):
+                            interaction_data = json.loads(interaction_data)
+                        
+                        # Format 1: List of phase dicts
+                        if isinstance(interaction_data, list):
+                            for phase in interaction_data:
+                                parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(phase)
+                                if parsed_phase:
+                                    phases["interaction_phases"].append(parsed_phase)
+                        
+                        # Format 2: Dict with time ranges as keys
+                        # e.g., {"0.5 - 1.2": "grasp", "1.2 - 3.5": "interact"}
+                        elif isinstance(interaction_data, dict):
+                            for time_range, phase_name in interaction_data.items():
+                                parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(
+                                    (time_range, phase_name)
+                                )
+                                if parsed_phase:
+                                    phases["interaction_phases"].append(parsed_phase)
+                
+                # If data is a list directly (alternative format)
+                elif isinstance(data, list):
+                    for phase in data:
+                        parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(phase)
+                        if parsed_phase:
+                            phases["interaction_phases"].append(parsed_phase)
+        
+        except Exception as e:
+            logging.warning(f"Error parsing interaction phases: {e}")
+        
+        # Fallback: try to parse from <object> and <box> tags
+        if not phases["object"]:
+            obj_pattern = r'<object>(.*?)</object>'
+            obj_matches = re.findall(obj_pattern, text, re.DOTALL)
+            if obj_matches:
+                phases["object"] = obj_matches[0].strip()
+        
+        if not phases["bbox"]:
+            box_pattern = r'<box>(.*?)</box>'
+            box_matches = re.findall(box_pattern, text, re.DOTALL)
+            if box_matches:
+                try:
+                    phases["bbox"] = ast.literal_eval(box_matches[0].strip())
+                except Exception:
+                    pass
+        
+        return phases
+    
+    @staticmethod
+    def _parse_single_phase(phase_data: Union[Dict, str, Tuple[str, str]]) -> Optional[Dict[str, Any]]:
+        """
+        Parse a single interaction phase.
+        
+        Supports multiple formats:
+        1. Dict: {"phase": "grasp", "start_time": 0.5, "end_time": 1.2, ...}
+        2. Tuple/List: ("0.5 - 1.2", "grasp") where first element is time range, second is phase name
+        3. String JSON: JSON string representation
+        
+        Args:
+            phase_data: Phase data as dict, tuple, list, or string
+            
+        Returns:
+            Parsed phase dictionary with start_time, end_time, phase name, object, bbox
+        """
+        try:
+            if isinstance(phase_data, str):
+                # Try to parse as JSON first
+                try:
+                    phase_data = json.loads(phase_data)
+                except json.JSONDecodeError:
+                    # If not JSON, return None
+                    return None
+            
+            # Handle dict format (legacy)
+            if isinstance(phase_data, dict):
+                parsed = {
+                    "phase": phase_data.get("phase", "").lower(),
+                    "start_time": float(phase_data.get("start_time", 0.0)),
+                    "end_time": float(phase_data.get("end_time", 0.0)),
+                    "object": phase_data.get("object", None),
+                    "bbox": phase_data.get("bbox", None)
+                }
+                return parsed
+            
+            # Handle tuple/list format: (time_range, phase_name)
+            # e.g., ("0.5 - 1.2", "grasp")
+            if isinstance(phase_data, (list, tuple)) and len(phase_data) == 2:
+                time_range, phase_name = phase_data
+                
+                # Parse time range: "0.5 - 1.2" -> (0.5, 1.2)
+                start_time, end_time = TemporalAccuracyEvaluator._parse_time_range(time_range)
+                
+                parsed = {
+                    "phase": phase_name.lower().strip() if phase_name else "",
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "object": None,
+                    "bbox": None
+                }
+                return parsed
+            
+            return None
+        
+        except Exception as e:
+            logging.warning(f"Error parsing single phase: {e}")
+            return None
+    
+    @staticmethod
+    def _parse_time_range(time_range: str) -> Tuple[float, float]:
+        """
+        Parse time range string in format "0.5 - 1.2" or "0.5-1.2".
+        
+        Args:
+            time_range: Time range string
+            
+        Returns:
+            Tuple of (start_time, end_time)
+        """
+        try:
+            # Remove whitespace and split by '-'
+            parts = time_range.strip().split('-')
+            if len(parts) >= 2:
+                start_time = float(parts[0].strip())
+                end_time = float(parts[1].strip())
+                return start_time, end_time
+        except (ValueError, IndexError):
+            pass
+        
+        # Fallback: return 0, 0
+        return 0.0, 0.0
+    
+    @staticmethod
+    def calculate_temporal_iou(pred_phase: Dict[str, Any], gt_phase: Dict[str, Any]) -> float:
+        """
+        Calculate Intersection over Union for temporal intervals.
+        
+        Args:
+            pred_phase: Predicted phase with start_time and end_time
+            gt_phase: Ground truth phase with start_time and end_time
+            
+        Returns:
+            IoU score between 0 and 1
+        """
+        pred_start = pred_phase.get("start_time", 0.0)
+        pred_end = pred_phase.get("end_time", 0.0)
+        gt_start = gt_phase.get("start_time", 0.0)
+        gt_end = gt_phase.get("end_time", 0.0)
+        
+        # Calculate intersection
+        inter_start = max(pred_start, gt_start)
+        inter_end = min(pred_end, gt_end)
+        intersection = max(0, inter_end - inter_start)
+        
+        # Calculate union
+        union_start = min(pred_start, gt_start)
+        union_end = max(pred_end, gt_end)
+        union = max(union_end - union_start, 1e-6)
+        
+        iou = intersection / union
+        return iou
+    
+    @staticmethod
+    def calculate_spatial_iou(pred_bbox: Optional[List[float]], 
+                             gt_bbox: Optional[List[float]]) -> float:
+        """
+        Calculate Intersection over Union for bounding boxes.
+        
+        Args:
+            pred_bbox: Predicted bbox as [x1, y1, x2, y2]
+            gt_bbox: Ground truth bbox as [x1, y1, x2, y2]
+            
+        Returns:
+            IoU score between 0 and 1
+        """
+        if not pred_bbox or not gt_bbox:
+            return 0.0
+        
+        try:
+            # Extract coordinates
+            pred_x1, pred_y1, pred_x2, pred_y2 = pred_bbox
+            gt_x1, gt_y1, gt_x2, gt_y2 = gt_bbox
+            
+            # Calculate intersection
+            inter_x1 = max(pred_x1, gt_x1)
+            inter_y1 = max(pred_y1, gt_y1)
+            inter_x2 = min(pred_x2, gt_x2)
+            inter_y2 = min(pred_y2, gt_y2)
+            
+            inter_area = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
+            
+            # Calculate union
+            pred_area = (pred_x2 - pred_x1) * (pred_y2 - pred_y1)
+            gt_area = (gt_x2 - gt_x1) * (gt_y2 - gt_y1)
+            union_area = pred_area + gt_area - inter_area
+            
+            if union_area == 0:
+                return 0.0
+            
+            iou = inter_area / union_area
+            return iou
+        
+        except Exception as e:
+            logging.warning(f"Error calculating spatial IoU: {e}")
+            return 0.0
+    
+    def match_phases(
+        self, 
+        pred_phases: List[Dict[str, Any]], 
+        gt_phases: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Match predicted phases with ground truth phases using greedy assignment.
+        
+        Args:
+            pred_phases: Predicted interaction phases
+            gt_phases: Ground truth interaction phases
+            
+        Returns:
+            Dictionary with matched pairs and quality metrics
+        """
+        if not pred_phases or not gt_phases:
+            return {
+                "matches": [],
+                "unmatched_pred": list(range(len(pred_phases))),
+                "unmatched_gt": list(range(len(gt_phases)))
+            }
+        
+        # Calculate similarity matrix
+        similarity_matrix = np.zeros((len(pred_phases), len(gt_phases)))
+        
+        for i, pred_phase in enumerate(pred_phases):
+            for j, gt_phase in enumerate(gt_phases):
+                # Temporal IoU
+                temporal_iou = self.calculate_temporal_iou(pred_phase, gt_phase)
+                
+                # Spatial IoU
+                spatial_iou = self.calculate_spatial_iou(
+                    pred_phase.get("bbox"),
+                    gt_phase.get("bbox")
+                )
+                
+                # Phase match (exact match of phase name)
+                phase_match = 1.0 if pred_phase.get("phase") == gt_phase.get("phase") else 0.0
+                
+                # Combined score: weighted average
+                combined_score = (
+                    0.5 * temporal_iou + 
+                    0.3 * spatial_iou + 
+                    0.2 * phase_match
+                )
+                similarity_matrix[i, j] = combined_score
+        
+        # Greedy matching
+        matches = []
+        used_gt = set()
+        
+        # Sort by similarity score descending
+        flat_indices = np.argsort(-similarity_matrix.flatten())
+        
+        for flat_idx in flat_indices:
+            i, j = np.unravel_index(flat_idx, similarity_matrix.shape)
+            
+            if j not in used_gt and similarity_matrix[i, j] > 0:
+                matches.append({
+                    "pred_idx": int(i),
+                    "gt_idx": int(j),
+                    "score": float(similarity_matrix[i, j]),
+                    "temporal_iou": float(self.calculate_temporal_iou(
+                        pred_phases[i], gt_phases[j]
+                    )),
+                    "spatial_iou": float(self.calculate_spatial_iou(
+                        pred_phases[i].get("bbox"),
+                        gt_phases[j].get("bbox")
+                    )),
+                    "phase_match": 1.0 if pred_phases[i].get("phase") == gt_phases[j].get("phase") else 0.0
+                })
+                used_gt.add(j)
+        
+        unmatched_pred = [i for i in range(len(pred_phases)) if not any(m["pred_idx"] == i for m in matches)]
+        unmatched_gt = [j for j in range(len(gt_phases)) if j not in used_gt]
+        
+        return {
+            "matches": matches,
+            "unmatched_pred": unmatched_pred,
+            "unmatched_gt": unmatched_gt
+        }
+    
+    def evaluate(self, predictions: List[Union[str, Dict[str, Any]]]) -> Dict[str, Any]:
+        """
+        Evaluate temporal accuracy predictions against ground truth.
+        
+        Args:
+            predictions: List of prediction strings or dicts with 'text' key
+            
+        Returns:
+            Dictionary with comprehensive temporal accuracy metrics
+        """
+        if not self.ground_truths:
+            raise ValueError("No ground truth data available. Provide either ground_truths or ground_truth_file.")
+        
+        if len(predictions) != len(self.ground_truths):
+            raise ValueError(
+                f"Number of predictions ({len(predictions)}) doesn't match "
+                f"ground truths ({len(self.ground_truths)})"
+            )
+        
+        # Initialize metrics
+        all_matches = []
+        all_temporal_ious = []
+        all_spatial_ious = []
+        all_phase_matches = []
+        sample_results = []
+        
+        total_gt_phases = 0
+        total_pred_phases = 0
+        correctly_matched = 0
+        
+        # Evaluate each prediction-ground truth pair
+        for idx, (pred, gt) in enumerate(zip(predictions, self.ground_truths)):
+            # Extract text from prediction
+            pred_text = self.extract_text(pred)
+            
+            # Parse phases
+            pred_data = self.parse_interaction_phases(pred_text)
+            pred_phases = pred_data["interaction_phases"]
+            
+            gt_phases = gt["interaction_phases"] if isinstance(gt, dict) else gt
+            
+            # Match phases
+            matching = self.match_phases(pred_phases, gt_phases)
+            
+            # Calculate metrics for this sample
+            temporal_ious = [m["temporal_iou"] for m in matching["matches"]]
+            spatial_ious = [m["spatial_iou"] for m in matching["matches"]]
+            phase_matches = [m["phase_match"] for m in matching["matches"]]
+            
+            all_matches.extend(matching["matches"])
+            all_temporal_ious.extend(temporal_ious)
+            all_spatial_ious.extend(spatial_ious)
+            all_phase_matches.extend(phase_matches)
+            
+            total_gt_phases += len(gt_phases)
+            total_pred_phases += len(pred_phases)
+            correctly_matched += len(matching["matches"])
+            
+            # Count fully correct phases (temporal IoU + spatial IoU + phase match all threshold)
+            fully_correct = sum(
+                1 for m in matching["matches"]
+                if m["temporal_iou"] >= self.iou_threshold 
+                and m["spatial_iou"] >= self.iou_threshold
+                and m["phase_match"] == 1.0
+            )
+            
+            sample_results.append({
+                "sample_idx": idx,
+                "num_gt_phases": len(gt_phases),
+                "num_pred_phases": len(pred_phases),
+                "num_matched": len(matching["matches"]),
+                "num_fully_correct": fully_correct,
+                "unmatched_pred": matching["unmatched_pred"],
+                "unmatched_gt": matching["unmatched_gt"],
+                "matches": matching["matches"]
+            })
+        
+        # Calculate overall metrics
+        phase_recall = correctly_matched / total_gt_phases if total_gt_phases > 0 else 0.0
+        phase_precision = correctly_matched / total_pred_phases if total_pred_phases > 0 else 0.0
+        phase_f1 = (
+            2 * (phase_precision * phase_recall) / (phase_precision + phase_recall)
+            if (phase_precision + phase_recall) > 0 else 0.0
+        )
+        
+        mean_temporal_iou = np.mean(all_temporal_ious) if all_temporal_ious else 0.0
+        mean_spatial_iou = np.mean(all_spatial_ious) if all_spatial_ious else 0.0
+        mean_phase_accuracy = np.mean(all_phase_matches) if all_phase_matches else 0.0
+        
+        # Count fully correct predictions (all phases correct)
+        fully_correct_samples = sum(
+            1 for result in sample_results
+            if result["num_matched"] > 0 and 
+            result["num_fully_correct"] == result["num_gt_phases"]
+        )
+        
+        return {
+            "phase_recall": phase_recall,
+            "phase_precision": phase_precision,
+            "phase_f1": phase_f1,
+            "mean_temporal_iou": mean_temporal_iou,
+            "mean_spatial_iou": mean_spatial_iou,
+            "mean_phase_accuracy": mean_phase_accuracy,
+            "total_matched_phases": correctly_matched,
+            "total_gt_phases": total_gt_phases,
+            "total_pred_phases": total_pred_phases,
+            "fully_correct_samples": fully_correct_samples,
+            "total_samples": len(predictions),
+            "sample_accuracy": fully_correct_samples / len(predictions) if predictions else 0.0,
+            "sample_results": sample_results
         }

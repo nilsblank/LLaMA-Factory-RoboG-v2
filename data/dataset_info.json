@@ -1218,6 +1218,37 @@
     "assistant_tag": "assistant"
   }
 },
+"roboG_reasoning_train": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageroboG_reasoning_train.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
+"roboG_baseline": {
+  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stageroboG_baseline_train.jsonl",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "videos",
+    "images": "images"
+  },
+  "tags": {
+    "role_tag": "role",
+    "content_tag": "content",
+    "user_tag": "user",
+    "assistant_tag": "assistant"
+  }
+},
 
 "hd-epic-bbox_first_frame_eval": {
   "file_name": "/home/blank/data/LLAMA-factory/hd_epic_first_frame_eval.json",
