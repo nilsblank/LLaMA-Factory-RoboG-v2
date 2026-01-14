@@ -1,0 +1,17 @@
+# OpenAI API Model Configuration
+
+name: gemini_model
+_target_: embodied_eval.models.GoogleModel
+
+# Model name (e.g., gemini-3-pro-preview)
+model_path: gemini-3-pro-preview
+
+# API configuration
+api_key: ${oc.env:GEMINI_API_KEY}  # Read from environment variable
+
+# Generation parameters
+thinking_level: "low"  # Can be "low" or "high" for Gemini 3 Pro, and "minimal", "low", "medium", and "high" for Gemini 3 Flash. Note that the Gemini 2.5 series needs a different parameter: https://ai.google.dev/gemini-api/docs/thinking#set-budget
+generation_kwargs:
+  temperature: 0.7
+  output_token_limit: 512
+  top_p: 0.9

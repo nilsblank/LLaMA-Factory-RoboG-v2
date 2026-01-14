@@ -14,6 +14,7 @@
 
 """Example model wrappers for evaluation."""
 
+import io
 import random
 from pathlib import Path
 import re
@@ -297,7 +298,7 @@ class Qwen3VLModel(BaseModel):
         for msg in chat_messages:
             content = []
             
-            # Parse the text to find <image> tags and build content list
+            # Parse the text to find tags and build content list
             text = msg.get("content", "")
             
             # Split text by tags for interleaving
@@ -595,6 +596,33 @@ class OpenAIModel(BaseModel):
                 "OpenAI Python package not installed. Install with: pip install openai"
             )
     
+    def _encode_image(self, image_input):
+        """
+        Encodes an image from a file path, PIL Image, or Numpy array to a Base64 string.
+        
+        Args:
+            image_input: Union[str, PIL.Image.Image, np.ndarray]
+        """
+        import base64
+        from PIL import Image
+
+        # 1. Handle String (File Path)
+        if isinstance(image_input, str):
+            with open(image_input, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode('utf-8')
+
+        # 2. Handle Numpy Array
+        if isinstance(image_input, np.ndarray):
+            image_input = Image.fromarray(image_input.astype('uint8'))
+
+        # 3. Handle PIL Image
+        if isinstance(image_input, Image.Image):
+            buffered = io.BytesIO()            
+            image_input.save(buffered, format="PNG")
+            return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        raise ValueError(f"Unsupported image type: {type(image_input)}")
+
     def generate(
         self,
         prompt: Union[str, Dict[str, str]],
@@ -620,46 +648,74 @@ class OpenAIModel(BaseModel):
         gen_kwargs = {**self.generation_kwargs, **kwargs}
         
         # Build messages
-        if isinstance(prompt, dict):
-            messages = [prompt]
-        else:
+        if isinstance(prompt, str):
             messages = [{"role": "user", "content": prompt}]
+        elif isinstance(prompt, dict):
+            messages = [prompt]
+        elif isinstance(prompt, list):
+            messages = prompt
+        else:
+            raise NotImplementedError("Unsupported prompt format")
         
-        # Add images if provided (for vision models)
-        if images:
-            # Convert numpy arrays to base64
-            import base64
-            from io import BytesIO
-            from PIL import Image
-            
+        # OpenAI API only supports images right now
+        if videos is not None and len(videos) > 0:
+            raise NotImplementedError("OpenAI API does not support video inputs")
+        if audios is not None and len(audios) > 0:
+            raise NotImplementedError("OpenAI API does not support audio inputs")
+
+        # Add images
+        messages_with_media = []
+        
+        for msg in messages:
             content = []
-            content.append({"type": "text", "text": messages[0]["content"]})
             
-            for img in images:
-                # Convert numpy array to PIL Image
-                if isinstance(img, np.ndarray):
-                    pil_img = Image.fromarray(img.astype('uint8'))
+            # Parse the text to find tags and build content list
+            text = msg.get("content", "")
+            
+            # Split text by tags for interleaving
+            image_tag = "<image>"
+            if images is not None and len(images) > 0:
+                pattern = f"({image_tag})"
+                parts = re.split(pattern, text)
+            else:
+                # No tags to process, treat the whole thing as a single part
+                parts = [text]
+
+            image_idx = 0
+            for part in parts:
+                if part == image_tag:
+                    # Add image if available
+                    if image_idx < len(images):
+                        img = images[image_idx]
+                        # Convert to base64
+                        img_str = self._encode_image(img)
+                        
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_str}"
+                            }
+                        })
+                        image_idx += 1
                 else:
-                    pil_img = img
-                
-                # Convert to base64
-                buffered = BytesIO()
-                pil_img.save(buffered, format="PNG")
-                img_str = base64.b64encode(buffered.getvalue()).decode()
-                
-                content.append({
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{img_str}"
-                    }
+                    # Add text part if not empty
+                    if part.strip():
+                        content.append({
+                            "type": "text",
+                            "text": part
+                        })
+
+            # Only append user or system messages
+            if msg["role"] == "user" or msg["role"] == "system":
+                messages_with_media.append({
+                    "role": msg.get("role", "user"),
+                    "content": content
                 })
-            
-            messages[0]["content"] = content
         
         # Call OpenAI API
         response = self.client.chat.completions.create(
             model=self.model_path,  # e.g., "gpt-4o"
-            messages=messages,
+            messages=messages_with_media,
             **gen_kwargs
         )
         
@@ -685,4 +741,196 @@ class OpenAIModel(BaseModel):
             "multi_modal_data": None,
             "mm_processor_kwargs": None,
             "_note": "OpenAI models use API-based inference, not vLLM"
+        }
+
+
+class GoogleModel(BaseModel):
+    """
+    Wrapper for Google's API models (Gemini 3 Pro, etc.).
+    
+    Uses Google's genai interface.
+    """
+    
+    def __init__(self, cfg: Union[str, Path, DictConfig, Dict] = None):
+        """Initialize Google model wrapper."""
+        super().__init__(cfg)
+        
+        self.api_key = self.config.get('api_key', None)
+        self.use_chat_format = True
+        self.thinking_level = self.config.get('thinking_level', "low")
+        
+        if not self.api_key:
+            raise ValueError(
+                "api_key must be specified in config or set via OPENAI_API_KEY environment variable"
+            )
+        
+        # Initialize genai client
+        try:
+            from google import genai
+            self.client = genai.Client(api_key=self.api_key)
+        except ImportError:
+            raise ImportError(
+                "Google Python package not installed. Install with: pip install google-genai"
+            )
+    
+    def _encode_image(self, image_input):
+        """
+        Encodes an image from a file path, PIL Image, or Numpy array to bytes.
+        
+        Args:
+            image_input: Union[str, PIL.Image.Image, np.ndarray]
+        """
+        from PIL import Image
+
+        # 1. Handle String (File Path)
+        if isinstance(image_input, str):
+            with open(image_input, 'rb') as f:
+                return f.read()
+
+        # 2. Handle Numpy Array
+        if isinstance(image_input, np.ndarray):
+            image_input = Image.fromarray(image_input.astype('uint8'))
+
+        # 3. Handle PIL Image
+        if isinstance(image_input, Image.Image):
+            buffered = io.BytesIO()            
+            image_input.save(buffered, format="JPEG")
+            return buffered.getvalue()
+
+        raise ValueError(f"Unsupported image type: {type(image_input)}")
+
+
+    def generate(
+        self,
+        prompt: Union[str, Dict[str, str]],
+        images: Optional[List[np.ndarray]] = None,
+        videos: Optional[List[str]] = None,
+        audios: Optional[List[np.ndarray]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Generate response using genai API.
+        
+        Args:
+            prompt: Text prompt or chat format dict
+            images: Optional list of images as np.ndarray PIL.Image or file path
+            videos: Optional list of videos as file path
+            audios: Not implemented
+            **kwargs: Additional generation arguments
+            
+        Returns:
+            Generated text response
+        """
+        # Merge config generation_kwargs with passed kwargs
+        gen_kwargs = {**self.generation_kwargs, **kwargs}
+        
+        # Build messages
+        if isinstance(prompt, str):
+            messages = [{"role": "user", "content": prompt}]
+        elif isinstance(prompt, dict):
+            messages = [prompt]
+        elif isinstance(prompt, list):
+            messages = prompt
+        else:
+            raise NotImplementedError("Unsupported prompt format")
+        
+        # Audio is not implemented yet
+        if audios is not None and len(audios) > 0:
+            raise NotImplementedError("Supported but not implemented yet")
+
+        # Add images and videos
+        contents = []
+        system_instruction = ""
+        
+        for msg in messages:
+            if msg["role"] == "system":
+                text = msg.get("content", "")
+                system_instruction += text
+            elif msg["role"] == "user":
+                # Parse the text to find tags and build content list
+                text = msg.get("content", "")
+                
+                # Split text by tags for interleaving
+                image_tag = "<image>"
+                video_tag = "<video>"
+                tags_to_find = []
+                if images is not None and len(images) > 0:
+                    tags_to_find.append(image_tag)
+                if videos is not None and len(videos) > 0:
+                    tags_to_find.append(video_tag)
+                if tags_to_find:
+                    # Create pattern: (<image>|<video>)
+                    pattern = f"({'|'.join(tags_to_find)})"
+                    parts = re.split(pattern, text)
+                else:
+                    # No tags to process, treat the whole thing as a single part
+                    parts = [text]
+
+                image_idx = 0
+                video_idx = 0
+                for part in parts:
+                    if part == image_tag:
+                        # Add image if available
+                        if image_idx < len(images):
+                            img = images[image_idx]
+                            # Convert to bytes
+                            img_bytes = self._encode_image(img)
+                            
+                            contents.append(genai.types.Part.from_bytes(
+                                data=img_bytes,
+                                mime_type='image/jpeg',
+                            ),)
+                            image_idx += 1
+                    elif part == video_tag:
+                        # Add video if available
+                        if video_idx < len(videos):
+                            video = videos[video_idx]
+                            if not isinstance(video, str):
+                                raise ValueError(
+                                    f"Unsupported video type: {type(video)}"
+                                )
+                            video_file = self.client.files.upload(file=video)
+                            contents.append(video_file)
+                            video_idx += 1
+                    else:
+                        # Add text part if not empty
+                        if part.strip():
+                            contents.append(part)
+
+            else:  # Only collect user or system messages
+                continue
+
+        # Call OpenAI API
+        response = self.client.models.generate_content(
+            model=self.model_path,
+            contents=contents,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                thinkingConfig=genai.types.ThinkingConfig(thinking_level=self.thinking_level),
+                **gen_kwargs
+            )
+        )
+        
+        return response.text
+    
+    def prepare_vllm_inputs_from_chat(
+        self,
+        chat_messages: List[Dict[str, str]],
+        sample: Sample
+    ) -> Dict[str, Any]:
+        """
+        Prepare vLLM inputs for Google models.
+        
+        Note: Google models don't use vLLM, so this returns a placeholder.
+        This method exists to satisfy the abstract base class requirement.
+        """
+        # Google doesn't use vLLM, so return a simple structure
+        # that indicates this model doesn't support vLLM inference
+        text = " ".join([msg.get("content", "") for msg in chat_messages])
+        
+        return {
+            "prompt_token_ids": [],  # Google handles tokenization internally
+            "multi_modal_data": None,
+            "mm_processor_kwargs": None,
+            "_note": "Google models use API-based inference, not vLLM"
         }

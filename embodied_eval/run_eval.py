@@ -67,6 +67,7 @@ register_benchmark("robo2vlm")(robo2vlm_benchmark.Robo2VLMBenchmark)
 register_model("mock")(models.MockModel)
 register_model("llamafactory")(models.LlamaFactoryModel)
 register_model("openai")(models.OpenAIModel)
+register_model("gemini")(models.GoogleModel)
 
 
 def instantiate_from_config(cfg: DictConfig):
@@ -235,6 +236,9 @@ def run_single_evaluation(
             ground_truths.append(sample.answer)
             metadata_list.append(sample.metadata)
     
+    # Benchmark-specific post-processing, which can include e.g. denormalization of bboxes
+    predictions = [benchmark.postprocess(pred, sample, model) for sample, pred in zip(benchmark.samples, predictions)]
+
     # Save predictions if requested
     if save_predictions:
         pred_file = output_dir / f"{benchmark.name}_{model.name}_predictions.jsonl"
