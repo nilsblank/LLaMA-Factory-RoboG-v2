@@ -821,6 +821,8 @@ class GoogleModel(BaseModel):
         Returns:
             Generated text response
         """
+        from google.genai import types
+
         # Merge config generation_kwargs with passed kwargs
         gen_kwargs = {**self.generation_kwargs, **kwargs}
         
@@ -876,7 +878,7 @@ class GoogleModel(BaseModel):
                             # Convert to bytes
                             img_bytes = self._encode_image(img)
                             
-                            contents.append(genai.types.Part.from_bytes(
+                            contents.append(types.Part.from_bytes(
                                 data=img_bytes,
                                 mime_type='image/jpeg',
                             ),)
@@ -904,9 +906,9 @@ class GoogleModel(BaseModel):
         response = self.client.models.generate_content(
             model=self.model_path,
             contents=contents,
-            config=genai.types.GenerateContentConfig(
+            config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
-                thinkingConfig=genai.types.ThinkingConfig(thinking_level=self.thinking_level),
+                thinkingConfig=types.ThinkingConfig(thinking_level=self.thinking_level),
                 **gen_kwargs
             )
         )

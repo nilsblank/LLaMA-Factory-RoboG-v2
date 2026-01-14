@@ -1,16 +1,17 @@
 # OpenAI API Model Configuration
 
 name: openai_model
-_target_: embodied_eval.models.OpenAIModel
+_target_: models.OpenAIModel
 
-# Model name (e.g., gpt-4-vision-preview, gpt-4o)
-model_path: gpt-4o
+# Model name (e.g., gpt-4o, gpt-5-mini)
+model_name_or_path: gpt-4o
 
 # API configuration
 api_key: ${oc.env:OPENAI_API_KEY}  # Read from environment variable
 base_url: https://api.openai.com/v1  # Optional: for custom endpoints
 
 # Generation parameters
+use_vllm: false
 generation_kwargs:
   temperature: 0.7
   max_tokens: 512

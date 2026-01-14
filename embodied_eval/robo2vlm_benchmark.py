@@ -15,9 +15,13 @@ from datasets import load_dataset
 import re
 import numpy as np
 from PIL import Image
-from vllm import LLM, SamplingParams
+import torch
 
 from base import BaseBenchmark, Sample
+from llamafactory.extras.packages import is_vllm_available
+
+if is_vllm_available():
+    from vllm import LLM, SamplingParams
 
 CHOICE_LETTER_MAP = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E'}
 
@@ -203,11 +207,12 @@ class Robo2VLMBenchmark(BaseBenchmark):
 
         return results
     
-    def _init_answer_extractor(self, tensor_parallel_size=1):
+    def _init_answer_extractor(self, tensor_parallel_size=1, gpu_memory_utilization=0.3):
+        torch.cuda.init()  # Apparently, this is needed to prevent an error when vllm tries to init CUDA
         extractor = LLM(
             model="meta-llama/Llama-3.2-3B-Instruct",  # Using smaller model for extraction
             tensor_parallel_size=tensor_parallel_size,
             max_model_len=10240,  # Smaller context as we only need to extract answers
-            gpu_memory_utilization=0.3,
+            gpu_memory_utilization=gpu_memory_utilization,
         )
         self.answer_extractor = extractor

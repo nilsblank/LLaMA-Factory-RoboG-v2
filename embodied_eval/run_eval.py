@@ -403,6 +403,7 @@ def main(cfg: DictConfig):
                 'max_new_tokens': vllm_cfg.get('max_new_tokens', 1024),
                 'cutoff_len': vllm_cfg.get('cutoff_len', 2048),
                 'pipeline_parallel_size': vllm_cfg.get('pipeline_parallel_size', 1),
+                'gpu_memory_utilization': vllm_cfg.get('gpu_memory_utilization', 0.9),
             }
             
             # Remove None values

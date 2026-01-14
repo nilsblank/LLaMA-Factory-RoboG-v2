@@ -69,6 +69,7 @@ def vllm_infer(
     cutoff_len: int = 2048,
     max_new_tokens: int = 1024,
     pipeline_parallel_size: int = 1,
+    gpu_memory_utilization: float = 0.9,
     vllm_config: str = "{}",
     
     # Generation arguments
@@ -157,6 +158,7 @@ def vllm_infer(
         "max_model_len": cutoff_len + max_new_tokens,
         "tensor_parallel_size": (get_device_count() // pipeline_parallel_size) or 1,
         "pipeline_parallel_size": pipeline_parallel_size,
+        "gpu_memory_utilization": gpu_memory_utilization,
         "disable_log_stats": True,
         "enable_lora": model_args.adapter_name_or_path is not None,
     }
