@@ -12,7 +12,10 @@ base_url: https://api.openai.com/v1  # Optional: for custom endpoints
 
 # Generation parameters
 use_vllm: false
-generation_kwargs:
+max_attempts: 3  # Number of retry attempts for API calls
+# generation_kwargs:  # Use this for GPT-5-mini
+#   max_completion_tokens: 512
+generation_kwargs:  # Use this for GPT-4o
   temperature: 0.7
   max_tokens: 512
   top_p: 0.9

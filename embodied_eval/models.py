@@ -18,6 +18,7 @@ import io
 import random
 from pathlib import Path
 import re
+import time
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
@@ -581,6 +582,7 @@ class OpenAIModel(BaseModel):
         self.api_key = self.config.get('api_key', None)
         self.base_url = self.config.get('base_url', 'https://api.openai.com/v1')
         self.use_chat_format = True  # OpenAI always uses chat format
+        self.max_attempts = self.config.get('max_attempts', 3)
         
         if not self.api_key:
             raise ValueError(
@@ -622,6 +624,24 @@ class OpenAIModel(BaseModel):
             return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
         raise ValueError(f"Unsupported image type: {type(image_input)}")
+
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """GPT 5 uses coordinates in range 0-1000 for bounding boxes by default."""
+        print("GPT 5 should predict bounding boxes in the range of 0-1000. Make sure to test this!")  # TODO test and remove print
+        if format == "xyxy":
+            width, height = original_size
+            x1 = bbox[0] / 1000 * width
+            y1 = bbox[1] / 1000 * height
+            x2 = bbox[2] / 1000 * width
+            y2 = bbox[3] / 1000 * height
+            return [x1, y1, x2, y2]
+        else:
+            raise NotImplementedError()
 
     def generate(
         self,
@@ -713,11 +733,18 @@ class OpenAIModel(BaseModel):
                 })
         
         # Call OpenAI API
-        response = self.client.chat.completions.create(
-            model=self.model_path,  # e.g., "gpt-4o"
-            messages=messages_with_media,
-            **gen_kwargs
-        )
+        for attempt in range(self.max_attempts):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_path,
+                    messages=messages_with_media,
+                    **gen_kwargs
+                )
+                break  # If successful, break the loop
+            except Exception as e:
+                if attempt == self.max_attempts - 1:
+                    raise e # Re-raise error on the last attempt
+                time.sleep(2 ** attempt)
         
         return response.choices[0].message.content
     
@@ -758,6 +785,7 @@ class GoogleModel(BaseModel):
         self.api_key = self.config.get('api_key', None)
         self.use_chat_format = True
         self.thinking_level = self.config.get('thinking_level', "low")
+        self.max_attempts = self.config.get('max_attempts', 3)
         
         if not self.api_key:
             raise ValueError(
@@ -799,6 +827,24 @@ class GoogleModel(BaseModel):
 
         raise ValueError(f"Unsupported image type: {type(image_input)}")
 
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """Gemini 3 uses coordinates in range 0-1000 for bounding boxes by default."""
+        if "gemini-3" not in self.model_path:
+            print("Defaulting to denormalize from coordinate range 0-1000. Make sure to test this!")
+        if format == "xyxy":
+            width, height = original_size
+            x1 = bbox[0] / 1000 * width
+            y1 = bbox[1] / 1000 * height
+            x2 = bbox[2] / 1000 * width
+            y2 = bbox[3] / 1000 * height
+            return [x1, y1, x2, y2]
+        else:
+            raise NotImplementedError()
 
     def generate(
         self,
@@ -886,12 +932,24 @@ class GoogleModel(BaseModel):
                     elif part == video_tag:
                         # Add video if available
                         if video_idx < len(videos):
+                            # Upload video to Google cloud
                             video = videos[video_idx]
                             if not isinstance(video, str):
                                 raise ValueError(
                                     f"Unsupported video type: {type(video)}"
                                 )
                             video_file = self.client.files.upload(file=video)
+                            # Poll until upload is complete
+                            seconds_waited = 0
+                            while video_file.state.name == "PROCESSING":
+                                if seconds_waited > 30:
+                                    raise TimeoutError(
+                                        "Video upload timed out after 30 seconds"
+                                    )
+                                time.sleep(1)  # Wait 1 seconds before checking again
+                                seconds_waited += 1
+                                video_file = self.client.files.get(name=video_file.name)
+
                             contents.append(video_file)
                             video_idx += 1
                     else:
@@ -902,16 +960,23 @@ class GoogleModel(BaseModel):
             else:  # Only collect user or system messages
                 continue
 
-        # Call OpenAI API
-        response = self.client.models.generate_content(
-            model=self.model_path,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                thinkingConfig=types.ThinkingConfig(thinking_level=self.thinking_level),
-                **gen_kwargs
-            )
-        )
+        # Call Google API
+        for attempt in range(self.max_attempts):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_path,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        thinkingConfig=types.ThinkingConfig(thinking_level=self.thinking_level),
+                        **gen_kwargs
+                    )
+                )
+                break  # If successful, break the loop
+            except Exception as e:
+                if attempt == self.max_attempts - 1:
+                    raise e # Re-raise error on the last attempt
+                time.sleep(2 ** attempt)
         
         return response.text
     
