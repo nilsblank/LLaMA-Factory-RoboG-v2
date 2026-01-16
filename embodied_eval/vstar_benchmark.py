@@ -353,72 +353,112 @@ class VStarBenchmark(BaseBenchmark):
             },
         ]
         return conversation
+    
+    def _parse_timestamps(self, prediction: str) -> List[float]:
+        """
+        The original code simply parses timestamps with:
+        ```
+        match = re.findall(r"\b\d+(?:\.\d+)?\b", prediction)
+        processed_pred = [float(match[0]), float(match[1])] if len(match) == 2 else []
+        ```
+        However, this does not allow for timestamp formats such as HH:MM:SS or MM:SS.
+        It also directly fails if a model did output more than two timestamps, which is
+        not strictly forbidden in the prompts. This method simply selects the first two
+        timestamps in such cases.
+        """
+        # Find all patterns that look like HH:MM:SS, MM:SS, or SS.ss
+        time_pattern = r"\b(?:\d+:)?(?:\d+:)?\d+(?:\.\d+)?\b"
+        matches = re.findall(time_pattern, prediction)
+        
+        def to_seconds(t_str):
+            # Split by colon and reverse so index 0 is always seconds
+            parts = t_str.split(':')
+            parts.reverse()
+            
+            seconds = 0.0
+            multipliers = [1, 60, 3600] # seconds, minutes, hours
+            
+            for i, part in enumerate(parts):
+                if i < len(multipliers):
+                    seconds += float(part) * multipliers[i]
+            return seconds
+
+        # Convert all found matches to seconds
+        processed_pred = [to_seconds(m) for m in matches]
+        
+        # Return the first two timestamps found (start and end)
+        return processed_pred[:2] if len(processed_pred) >= 2 else []
+    
+    def _parse_bboxes(self, prediction: str) -> Optional[Dict[int, List[int|float]]]:
+        # Match Markdown JSON
+        match = re.search(r'```json\s*\n(\[.*?\]|\{.*?\})\s*\n```', prediction, re.DOTALL)
+        # If there is no Markdown wrapper, then try to match the JSON format directly
+        if not match:
+            match = re.search(r'(\[[\s\S]*\]|\{[\s\S]*\})', prediction, re.DOTALL)
+        # Return None if still no match found
+        if not match:
+            return None
+
+        # Parse bounding boxes
+        bounding_boxes_str = match.group(1).strip()
+        # Replace single quotes with double quotes to conform to the JSON specification
+        bounding_boxes_str = bounding_boxes_str.replace("'", '"')
+        try:
+            # Convert strings to dictionary or list format
+            bounding_boxes = json.loads(bounding_boxes_str)
+            # If it's a list and contains a dictionary inside, expand it to a single dictionary
+            if isinstance(bounding_boxes, list) and all(isinstance(item, dict) for item in bounding_boxes):
+                combined_dict = {}
+                for item in bounding_boxes:
+                    combined_dict.update(item)
+                bounding_boxes = combined_dict
+            # Determine if the extracted JSON is a dictionary or a list.
+            if isinstance(bounding_boxes, list):
+                return {str(box[0]): box[1] for box in bounding_boxes}
+            elif isinstance(bounding_boxes, dict):
+                return {key: value for key, value in bounding_boxes.items()}
+        except Exception as e:
+            # Try to fix format issues
+            # Counting left and right brackets
+            open_square = bounding_boxes_str.count('[')
+            close_square = bounding_boxes_str.count(']')
+            open_curly = bounding_boxes_str.count('{')
+            close_curly = bounding_boxes_str.count('}')
+
+            # Complete the square brackets
+            if open_square > close_square:
+                bounding_boxes_str += ']' * (open_square - close_square)
+            elif close_square > open_square:
+                bounding_boxes_str = '[' * (close_square - open_square) + bounding_boxes_str
+
+            # Complete the curly brackets
+            if open_curly > close_curly:
+                bounding_boxes_str += '}' * (open_curly - close_curly)
+            elif close_curly > open_curly:
+                bounding_boxes_str = '{' * (close_curly - open_curly) + bounding_boxes_str
+
+            try:
+                bounding_boxes = json.loads(bounding_boxes_str)
+                if isinstance(bounding_boxes, list):
+                    return [box for box in bounding_boxes]
+                elif isinstance(bounding_boxes, dict):
+                    return {key: value for key, value in bounding_boxes.items()}
+            except Exception as e:
+                print(f"Failed after fixing: {e}\nExtracted JSON: {bounding_boxes_str}")
+                return None
 
     def postprocess(self, prediction, sample, model):
         """Extract timestamps or denormalized bounding boxes from the model prediction."""
         # Extract timestamps
         if sample.metadata.get("task_type") == "temporal" or sample.metadata.get("task_type") == "temporal_2":
-            match = re.findall(r"\b\d+(?:\.\d+)?\b", prediction)
-            processed_pred = [float(match[0]), float(match[1])] if len(match) == 2 else []
+            # Parse text
+            processed_pred = self._parse_timestamps(prediction)
         # Extact bounding boxes
         elif sample.metadata.get("task_type") == "spatial" or sample.metadata.get("task_type") == "spatial_2":
-            # Match Markdown JSON
-            match = re.search(r'```json\s*\n(\[.*?\]|\{.*?\})\s*\n```', prediction, re.DOTALL)
-            # If there is no Markdown wrapper, then try to match the JSON format directly
-            if not match:
-                match = re.search(r'(\[[\s\S]*\]|\{[\s\S]*\})', prediction, re.DOTALL)
-            # Return None if still no match found
-            if not match:
+            # Parse text
+            processed_pred = self._parse_bboxes(prediction)
+            if processed_pred is None:
                 return None
-
-            # Parse bounding boxes
-            bounding_boxes_str = match.group(1).strip()
-            # Replace single quotes with double quotes to conform to the JSON specification
-            bounding_boxes_str = bounding_boxes_str.replace("'", '"')
-            try:
-                # Convert strings to dictionary or list format
-                bounding_boxes = json.loads(bounding_boxes_str)
-                # If it's a list and contains a dictionary inside, expand it to a single dictionary
-                if isinstance(bounding_boxes, list) and all(isinstance(item, dict) for item in bounding_boxes):
-                    combined_dict = {}
-                    for item in bounding_boxes:
-                        combined_dict.update(item)
-                    bounding_boxes = combined_dict
-                # Determine if the extracted JSON is a dictionary or a list.
-                if isinstance(bounding_boxes, list):
-                    processed_pred = {str(box[0]): box[1] for box in bounding_boxes}
-                elif isinstance(bounding_boxes, dict):
-                    processed_pred = {key: value for key, value in bounding_boxes.items()}
-            except Exception as e:
-                # Try to fix format issues
-                # Counting left and right brackets
-                open_square = bounding_boxes_str.count('[')
-                close_square = bounding_boxes_str.count(']')
-                open_curly = bounding_boxes_str.count('{')
-                close_curly = bounding_boxes_str.count('}')
-
-                # Complete the square brackets
-                if open_square > close_square:
-                    bounding_boxes_str += ']' * (open_square - close_square)
-                elif close_square > open_square:
-                    bounding_boxes_str = '[' * (close_square - open_square) + bounding_boxes_str
-
-                # Complete the curly brackets
-                if open_curly > close_curly:
-                    bounding_boxes_str += '}' * (open_curly - close_curly)
-                elif close_curly > open_curly:
-                    bounding_boxes_str = '{' * (close_curly - open_curly) + bounding_boxes_str
-
-                try:
-                    bounding_boxes = json.loads(bounding_boxes_str)
-                    if isinstance(bounding_boxes, list):
-                        processed_pred = [box for box in bounding_boxes]
-                    elif isinstance(bounding_boxes, dict):
-                        processed_pred = {key: value for key, value in bounding_boxes.items()}
-                except Exception as e:
-                    print(f"Failed after fixing: {e}\nExtracted JSON: {bounding_boxes_str}")
-                    return None
-
             # Denormalize bounding boxes
             original_size = sample.metadata['width'], sample.metadata['height']
             for key, bbox in processed_pred.items():
