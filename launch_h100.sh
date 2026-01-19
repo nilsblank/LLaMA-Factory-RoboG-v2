@@ -6,7 +6,7 @@
 
 # Cluster Settings
 #SBATCH -c 32  # Number of cores per task
-#SBATCH -t 6:00:00 ## 1-00:30:00 # 06:00:00 # 1-00:30:00 # 2-00:00:00
+#SBATCH -t 14:00:00 ## 1-00:30:00 # 06:00:00 # 1-00:30:00 # 2-00:00:00
 #SBATCH --gres=gpu:4
 
 

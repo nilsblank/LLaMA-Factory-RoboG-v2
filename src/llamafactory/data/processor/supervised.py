@@ -90,21 +90,37 @@ class SupervisedDatasetProcessor(DatasetProcessor):
         # for multiturn examples, we only mask the prompt part in each prompt-response pair.
         model_inputs = defaultdict(list)
         for i in range(len(examples["_prompt"])):
+            # logger.warning_rank0(
+            #     f"Processing example: {i} / {len(examples['_prompt'])}"
+            # )
             if len(examples["_prompt"][i]) % 2 != 1 or len(examples["_response"][i]) != 1:
                 logger.warning_rank0(
                     "Dropped invalid example: {}".format(examples["_prompt"][i] + examples["_response"][i])
                 )
                 continue
-
-            input_ids, labels = self._encode_data_example(
-                prompt=examples["_prompt"][i],
-                response=examples["_response"][i],
-                system=examples["_system"][i],
-                tools=examples["_tools"][i],
-                images=examples["_images"][i] or [],
-                videos=examples["_videos"][i] or [],
-                audios=examples["_audios"][i] or [],
-            )
+            try:
+                if examples["_videos"][i] and len(examples["_videos"][i]) > 0:
+                    logger.warning_rank0(
+                        "Processing example: {}".format(examples["_videos"][i])
+                    )
+                # logger.warning_rank0(
+                #     "Processing example: {}".format(examples["_images"][i] or [])
+                # )
+                input_ids, labels = self._encode_data_example(
+                    prompt=examples["_prompt"][i],
+                    response=examples["_response"][i],
+                    system=examples["_system"][i],
+                    tools=examples["_tools"][i],
+                    images=examples["_images"][i] or [],
+                    videos=examples["_videos"][i] or [],
+                    audios=examples["_audios"][i] or [],
+                )
+            except Exception as e:
+                logger.warning_rank0(
+                    f"Dropped invalid example due to error {e}: "
+                    f"{examples['_prompt'][i] + examples['_response'][i]}"
+                )
+                continue
             model_inputs["input_ids"].append(input_ids)
             model_inputs["attention_mask"].append([1] * len(input_ids))
             model_inputs["labels"].append(labels)
@@ -138,16 +154,23 @@ class PackedSupervisedDatasetProcessor(SupervisedDatasetProcessor):
                     "Dropped invalid example: {}".format(examples["_prompt"][i] + examples["_response"][i])
                 )
                 continue
+            try:
+                input_ids, labels = self._encode_data_example(
+                    prompt=examples["_prompt"][i],
+                    response=examples["_response"][i],
+                    system=examples["_system"][i],
+                    tools=examples["_tools"][i],
+                    images=examples["_images"][i] or [],
+                    videos=examples["_videos"][i] or [],
+                    audios=examples["_audios"][i] or [],
+                )
+            except Exception as e:
+                logger.warning_rank0(
+                    f"Dropped invalid example due to error {e}: "
+                    f"{examples['_prompt'][i] + examples['_response'][i]}"
+                )
+                continue
 
-            input_ids, labels = self._encode_data_example(
-                prompt=examples["_prompt"][i],
-                response=examples["_response"][i],
-                system=examples["_system"][i],
-                tools=examples["_tools"][i],
-                images=examples["_images"][i] or [],
-                videos=examples["_videos"][i] or [],
-                audios=examples["_audios"][i] or [],
-            )
             length = len(input_ids)
             if length > self.data_args.cutoff_len:
                 logger.warning_rank0(f"Dropped lengthy example with length {length} > {self.data_args.cutoff_len}.")

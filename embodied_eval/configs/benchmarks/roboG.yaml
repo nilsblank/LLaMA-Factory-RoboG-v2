@@ -1,0 +1,9 @@
+
+name: roboG
+_target_: roboG_benchmark.RoboGBenchmark
+
+# List of annotation files (jsonl)
+annotation_files: 
+  - /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/oxe_robo_set/grc_validated/roboG_stageroboG_eval_eval.jsonl
+
+

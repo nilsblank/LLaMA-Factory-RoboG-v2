@@ -1,0 +1,39 @@
+
+
+_target_: models.Qwen3VLModel  # or OpenAIModel, custom model, etc.
+name: Qwen3VL-4B_roboG
+model_name_or_path: /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/roboG_reasoning_train/checkpoint-7717  # Or HuggingFace model ID
+
+
+use_vllm: true  # IMPORTANT: tells run_eval.py to use vLLM engine
+
+
+image_max_pixels: 65536 #262144
+video_max_pixels: 16384
+
+
+# Model paths (for vLLM inference)
+adapter_name_or_path: null  # Optional: path to LoRA adapter
+template: qwen3_vl_nothink  # Chat template (default, llama3, qwen2_5_vl, etc.)
+
+# vLLM engine configuration
+cutoff_len: 16384
+max_new_tokens: 4096
+pipeline_parallel_size: 1  # Number of pipeline stages (<= num GPUs)
+vllm_config: {}  # Additional vLLM engine args (dict)
+
+# Generation parameters
+temperature: 0.95  # 0.0 for greedy decoding
+top_p: 0.7
+top_k: 50
+repetition_penalty: 1.0
+seed: null  # Set for reproducibility
+
+# Multimodal settings (for vision/video/audio models)
+video_fps: 2.0
+video_maxlen: 128
+
+# Processing settings
+skip_special_tokens: true
+
+# Note: batch_size is set in main config.yaml, not here

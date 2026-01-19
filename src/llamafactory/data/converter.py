@@ -214,6 +214,15 @@ class SharegptDatasetConverter(DatasetConverter):
         else:  # normal example
             prompt = aligned_messages[:-1]
             response = aligned_messages[-1:]
+        
+
+        # if self.dataset_attr.images and not self.dataset_attr.images in example:
+        #     #empty list
+        #     example[self.dataset_attr.images] = []
+        # if self.dataset_attr.videos and not self.dataset_attr.videos in example:
+        #     example[self.dataset_attr.videos] = []
+        # if self.dataset_attr.audios and not self.dataset_attr.audios in example:
+        #     example[self.dataset_attr.audios] = []
 
         output = {
             "_prompt": prompt,

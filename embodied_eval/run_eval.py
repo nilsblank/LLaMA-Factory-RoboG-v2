@@ -22,7 +22,7 @@ import hydra
 import torch
 
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from tqdm import tqdm
 
 from base import BaseBenchmark, BaseModel
@@ -55,6 +55,7 @@ def register_model(name: str):
 # Import and register components
 #from . import robovqa_benchmark, models
 import robovqa_benchmark    
+import roboG_benchmark
 import models
 # Register benchmarks
 register_benchmark("robovqa")(robovqa_benchmark.RoboVQABenchmark)
@@ -264,7 +265,7 @@ def run_single_evaluation(
     return results
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="config")
+@hydra.main(version_base=None, config_path="configs", config_name="config_roboG")
 def main(cfg: DictConfig):
     """
     Main evaluation pipeline using Hydra config.
@@ -285,10 +286,22 @@ def main(cfg: DictConfig):
     # Instantiate benchmarks
     benchmarks = []
     if 'benchmarks' in cfg:
-        if isinstance(cfg.benchmarks, DictConfig):
-            #make it a list
-            cfg.benchmarks = [cfg.benchmarks]
-        for bench_cfg in cfg.benchmarks:
+        bench_list = []
+        if isinstance(cfg.benchmarks, ListConfig):
+            bench_list = cfg.benchmarks
+        elif isinstance(cfg.benchmarks, DictConfig):
+            if "_target_" in cfg.benchmarks:
+                bench_list = [cfg.benchmarks]
+            else:
+                # Assuming map of configs (e.g. from defaults list with @)
+                bench_list = list(cfg.benchmarks.values())
+        elif isinstance(cfg.benchmarks, list):
+             bench_list = cfg.benchmarks
+        else:
+             # Fallback
+             bench_list = [cfg.benchmarks]
+
+        for bench_cfg in bench_list:
             if bench_cfg is not None:  # Skip None entries
                 benchmark = instantiate_from_config(bench_cfg)
                 #save the benchmark as jsonl file in sharegpt format
@@ -306,9 +319,20 @@ def main(cfg: DictConfig):
     vllm_models = []  # Track which models should use vLLM
     
     if 'models' in cfg:
-        if isinstance(cfg.models, DictConfig):
-            cfg.models = [cfg.models]
-        for model_cfg in cfg.models:
+        models_configs = []
+        if isinstance(cfg.models, ListConfig):
+            models_configs = cfg.models
+        elif isinstance(cfg.models, DictConfig):
+            if "_target_" in cfg.models:
+                models_configs = [cfg.models]
+            else:
+                 models_configs = list(cfg.models.values())
+        elif isinstance(cfg.models, list):
+            models_configs = cfg.models
+        else:
+             models_configs = [cfg.models]
+
+        for model_cfg in models_configs:
             if model_cfg is None:  # Skip None entries
                 continue
             
@@ -393,7 +417,7 @@ def main(cfg: DictConfig):
                 'top_p': vllm_cfg.get('top_p', 0.7),
                 'top_k': vllm_cfg.get('top_k', 50),
                 'max_new_tokens': vllm_cfg.get('max_new_tokens', 1024),
-                'cutoff_len': vllm_cfg.get('cutoff_len', 2048),
+                'cutoff_len': vllm_cfg.get('cutoff_len', 16384),
                 'pipeline_parallel_size': vllm_cfg.get('pipeline_parallel_size', 1),
             }
             
@@ -413,7 +437,7 @@ def main(cfg: DictConfig):
                 save_results=True,
                 verbose=cfg.get('verbose', True),
                 batch_size=batch_size or 1024,
-                **vllm_paramsImitation
+                **vllm_params
             )
             
             # Handle both single and multiple benchmark cases

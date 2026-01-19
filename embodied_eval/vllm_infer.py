@@ -150,13 +150,18 @@ def vllm_infer(
     template_obj = get_template_and_fix_tokenizer(tokenizer, data_args)
     
     # Build vLLM engine args
+    #infer with bf16
+    infer_dtype = "bfloat16"
     engine_args = {
         "model": model_args.model_name_or_path,
         "trust_remote_code": True,
-        "dtype": model_args.infer_dtype,
+        "dtype": infer_dtype,
         "max_model_len": cutoff_len + max_new_tokens,
         "tensor_parallel_size": (get_device_count() // pipeline_parallel_size) or 1,
         "pipeline_parallel_size": pipeline_parallel_size,
+        "gpu_memory_utilization": 0.8,
+        "max_num_seqs": 256,
+        "max_num_batched_tokens": 4096,
         "disable_log_stats": True,
         "enable_lora": model_args.adapter_name_or_path is not None,
     }
@@ -190,14 +195,7 @@ def vllm_infer(
         engine_args.update(model_args.vllm_config)
     
     # Initialize LLM
-    llm = LLM(**engine_args)
-    
-    if verbose:
-        print(f"   Model: {model_name_or_path}")
-        print(f"   Tensor parallel size: {engine_args['tensor_parallel_size']}")
-        print(f"   Pipeline parallel size: {engine_args['pipeline_parallel_size']}")
-        if 'mm_processor_kwargs' in engine_args:
-             print(f"   Global MM Processor Kwargs: {engine_args['mm_processor_kwargs']}")
+
     
     # ==================== Prepare Sampling Params ====================
     sampling_params = SamplingParams(
@@ -210,6 +208,8 @@ def vllm_infer(
         skip_special_tokens=skip_special_tokens,
         seed=seed,
     )
+    
+    llm = None
     
     # LoRA request
     if model_args.adapter_name_or_path is not None:
@@ -280,6 +280,63 @@ def vllm_infer(
         # Flag to print model processing message once
         printed_model_processing = False
         
+        model_name = Path(model_name_or_path).name
+
+        model_name = model_instance.config.name if model_instance is not None else model_name
+
+        bench_save_name = f"{benchmark.name}_{model_name}_predictions.jsonl"
+        
+        pred_file = Path(output_dir) / bench_save_name
+        
+        
+        
+        #check if exists, then load from file
+        if pred_file.exists():
+            if verbose:
+                print(f"   Predictions file already exists: {pred_file}")
+                print(f"   Loading existing predictions...")
+            with open(pred_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    item = json.loads(line)
+                    all_predictions.append(item["prediction"])
+                    all_ground_truths.append(item["ground_truth"])
+                    all_metadata.append(item.get("metadata", {}))
+            
+            for m_idx, meta in enumerate(all_metadata):
+                #check if image_paths in meta, if not overwrite meta from benchmark samples
+                if "image_paths" not in meta or not meta["image_paths"]:
+                    sample_meta = benchmark.samples[m_idx].metadata
+                    if "image_paths" in sample_meta:
+                        all_metadata[m_idx]["image_paths"] = sample_meta["image_paths"]
+            
+            if verbose:
+                print(f"   Loaded {len(all_predictions)} existing predictions.")
+            # Skip to evaluation
+            results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata)
+            if save_results:
+                results_file = Path(output_dir) / bench_save_name.replace("_predictions.jsonl", "_results.json")
+                benchmark.save_results(results_file)
+                if verbose:
+                    print(f"   Saved results to: {results_file}")
+            benchmark.print_summary()
+            all_benchmark_results[benchmark.name] = {
+                "predictions": all_predictions,
+                "ground_truths": all_ground_truths,
+                "metadata": all_metadata,
+                "results": results
+            }
+            continue
+        
+        if llm is None:
+            llm = LLM(**engine_args)
+    
+        if verbose:
+            print(f"   Model: {model_name_or_path}")
+            print(f"   Tensor parallel size: {engine_args['tensor_parallel_size']}")
+            print(f"   Pipeline parallel size: {engine_args['pipeline_parallel_size']}")
+            if 'mm_processor_kwargs' in engine_args:
+                print(f"   Global MM Processor Kwargs: {engine_args['mm_processor_kwargs']}")
+            
         # Process in batches
         for i in tqdm(range(0, len(all_samples), batch_size), desc="Processing batches", disable=not verbose):
             vllm_inputs = []
@@ -331,6 +388,9 @@ def vllm_infer(
         
         # Auto-generate save name if not provided
         model_name = Path(model_name_or_path).name
+
+        model_name = model_instance.config.name if model_instance is not None else model_name
+
         bench_save_name = f"{benchmark.name}_{model_name}_predictions.jsonl"
         
         # Save predictions

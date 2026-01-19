@@ -1,0 +1,27 @@
+# Main Evaluation Pipeline Configuration
+# This top-level config uses Hydra's defaults list pattern
+# to select multiple benchmarks and models for evaluation
+
+defaults:
+  - benchmarks@benchmarks.0: roboG
+  - models@models.0: Qwen3VL_4B_roboG
+  # - models@models.1: Qwen3VL_4B_roboG_baseline
+  # - models/openai  # Uncomment to add OpenAI model
+  # - models/vllm    # Uncomment to use vLLM for efficient batch inference
+  # - benchmarks/another_benchmark  # Add more benchmarks as needed
+
+# Output directory for results
+output_dir: ./eval_results_grc
+
+# Hydra working directory
+hydra:
+  run:
+    dir: ${output_dir}/hydra_runs/${now:%Y-%m-%d_%H-%M-%S}
+  
+# Evaluation settings
+save_predictions: true  # Save model predictions to JSONL
+save_results: true  # Save evaluation metrics to JSON
+verbose: true  # Print detailed progress
+
+# Batch processing settings
+batch_size: 1024  # Batch size for models with batch generation (e.g., vLLM)

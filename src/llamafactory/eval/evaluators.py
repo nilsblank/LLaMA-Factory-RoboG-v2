@@ -15,8 +15,8 @@ from typing import List, Dict, Any, Union, Optional, Tuple
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
-from llamafactory.extras import logging
-
+import logging
+logging.basicConfig(level=logging.INFO)
 try:
     from sentence_transformers import SentenceTransformer, util
     use_sentence_transformers = True
@@ -39,7 +39,7 @@ import os
 SECRET_KEY = os.getenv("OPENAI_API_KEY", "test")
 
 
-
+key = SECRET_KEY
 def query_parallel_gpt(prompt, temperature=0.7, model="gpt-4o-mini"):
 
 
@@ -63,12 +63,19 @@ def query_parallel_gpt(prompt, temperature=0.7, model="gpt-4o-mini"):
     success = False
     while n_retries > 0 and not success:
         try:
-            chat_completion = client.chat.completions.create(
+            if base_url is None:
+                chat_completion = client.chat.completions.create(
                 messages=messages,
                 model=model,
-                temperature=temperature,
                 #extra_body={'repetition_penalty': 1.07},
-            )
+                )
+            else:
+                chat_completion = client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    temperature=temperature,
+                    #extra_body={'repetition_penalty': 1.07},
+                )
             success = True
         except Exception as e:
             logging.error(f"Error in LLM query: {e}")
@@ -189,6 +196,8 @@ class BoundingBoxEvaluator(BaseEvaluator):
                     box = item["bbox_2d"]
                     if len(box) == 4:
                         boxes.append(box)
+                    elif len(box) == 1 and len(box[0]) == 4:
+                        boxes.append(box[0])
         except Exception as e:
             #fallback, try to parse from bbox_2d
             pattern = r'bbox_2d"\s*:\s*\[(.*?)\]'
@@ -785,7 +794,13 @@ class TaskInstructionEvaluator(BaseEvaluator):
         matches = re.findall(pattern, text, re.DOTALL)
         if matches:
             return matches[0].strip()
-        
+
+        #check for task: instruction
+        pattern = r'task: (.*)'
+        matches = re.findall(pattern, text, re.DOTALL)
+        if matches:
+            return matches[0].strip()
+
         # Fallback: take last non-empty line
         lines = text.strip().split('\n')
         for line in reversed(lines):
@@ -826,9 +841,11 @@ Your job is to determine if two task instructions describe the same task, even i
 
 Consider instructions equivalent if they:
 - Describe the same actions and goals
-- Involve the same objects or entities
+- Involve the same objects or entities, can be paraphrased or less specific (blue object vs blueberry, counter and table)...
 - Have the same intended outcome
 - May differ in phrasing, word order, or level of detail but convey the same meaning
+- One instruction may be a more detailed elaboration of the other, such as initial or target location
+- Colors may be described differently but refer to the same color (e.g., "red" vs "pink") or can be missing
 
 Respond with ONLY a JSON object in this exact format:
 {"equivalent": true/false, "confidence": 0.0-1.0, "reason": "brief explanation"}"""
@@ -1080,27 +1097,29 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
                     # Parse interaction phases
                     if "interaction_phases" in data:
                         interaction_data = data["interaction_phases"]
+                    else:
+                        interaction_data = data
                         
-                        # Handle if interaction_phases is a JSON string
-                        if isinstance(interaction_data, str):
-                            interaction_data = json.loads(interaction_data)
-                        
-                        # Format 1: List of phase dicts
-                        if isinstance(interaction_data, list):
-                            for phase in interaction_data:
-                                parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(phase)
-                                if parsed_phase:
-                                    phases["interaction_phases"].append(parsed_phase)
-                        
-                        # Format 2: Dict with time ranges as keys
-                        # e.g., {"0.5 - 1.2": "grasp", "1.2 - 3.5": "interact"}
-                        elif isinstance(interaction_data, dict):
-                            for time_range, phase_name in interaction_data.items():
-                                parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(
-                                    (time_range, phase_name)
-                                )
-                                if parsed_phase:
-                                    phases["interaction_phases"].append(parsed_phase)
+                    # Handle if interaction_phases is a JSON string
+                    if isinstance(interaction_data, str):
+                        interaction_data = json.loads(interaction_data)
+                    
+                    # Format 1: List of phase dicts
+                    if isinstance(interaction_data, list):
+                        for phase in interaction_data:
+                            parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(phase)
+                            if parsed_phase:
+                                phases["interaction_phases"].append(parsed_phase)
+                    
+                    # Format 2: Dict with time ranges as keys
+                    # e.g., {"0.5 - 1.2": "grasp", "1.2 - 3.5": "interact"}
+                    elif isinstance(interaction_data, dict):
+                        for time_range, phase_name in interaction_data.items():
+                            parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(
+                                (time_range, phase_name)
+                            )
+                            if parsed_phase:
+                                phases["interaction_phases"].append(parsed_phase)
                 
                 # If data is a list directly (alternative format)
                 elif isinstance(data, list):

@@ -158,6 +158,22 @@ class BaseBenchmark(ABC):
         """
         pass
     
+    
+    def prettify_results(self, task_dict) -> Dict[str, Any]:
+        """
+        Create a prettified version of the results
+        
+        Returns:
+            Prettified results dictionary
+        """
+        pretty_results = {}
+        for key, value in task_dict.items():
+            if isinstance(value, (float, int, str)):
+                pretty_results[key] = value
+            elif isinstance(value, dict) and len(value) <=5:
+                pretty_results[key] = value
+        return pretty_results
+    
     def save_results(self, output_path: Union[str, Path]) -> None:
         """
         Save evaluation results to file.
@@ -170,8 +186,18 @@ class BaseBenchmark(ABC):
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
+        #create a copy of results to avoid modifying original
+        #subsample pretty dict, only keep entries with non list scalars and dicts with less than 5 keys
+        pretty_results = {}
+        for task, value in self.results.items():
+            pretty_results[task] = self.prettify_results(value)
+        
         with open(output_path, 'w') as f:
             json.dump(self.results, f, indent=2)
+        # Also save pretty version
+        pretty_output_path = output_path.parent / f"{output_path.stem}_pretty{output_path.suffix}"
+        with open(pretty_output_path, 'w') as f:
+            json.dump(pretty_results, f, indent=2)
     
     def print_summary(self) -> None:
         """Print a summary of evaluation results."""

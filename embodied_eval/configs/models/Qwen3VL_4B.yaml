@@ -17,7 +17,7 @@ adapter_name_or_path: null  # Optional: path to LoRA adapter
 template: qwen3_vl_nothink  # Chat template (default, llama3, qwen2_5_vl, etc.)
 
 # vLLM engine configuration
-cutoff_len: 2048
+cutoff_len: 16384
 max_new_tokens: 1024
 pipeline_parallel_size: 1  # Number of pipeline stages (<= num GPUs)
 vllm_config: {}  # Additional vLLM engine args (dict)

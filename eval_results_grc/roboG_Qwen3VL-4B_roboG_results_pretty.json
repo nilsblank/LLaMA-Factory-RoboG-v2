@@ -1,0 +1,101 @@
+{
+  "overall": {},
+  "task_detection": {
+    "accuracy": 0.20610687022900764,
+    "mean_confidence": 0.9374809160305345,
+    "weighted_accuracy": 0.19320610687022902,
+    "num_equivalent": 27,
+    "num_total": 131,
+    "num_errors": 0,
+    "num_samples": 131
+  },
+  "action_localization": {
+    "phase_recall": 0.9415041782729805,
+    "phase_precision": 1.0180722891566265,
+    "phase_f1": 0.9782923299565847,
+    "mean_temporal_iou": 0.5550909055078995,
+    "mean_spatial_iou": 0.0,
+    "mean_phase_accuracy": 0.9023668639053254,
+    "total_matched_phases": 338,
+    "total_gt_phases": 359,
+    "total_pred_phases": 332,
+    "fully_correct_samples": 0,
+    "total_samples": 131,
+    "sample_accuracy": 0.0,
+    "num_samples": 131
+  },
+  "target_location": {
+    "map": 0.01418188028037548,
+    "map_50": 0.03821434825658798,
+    "map_75": 0.006693715695291758,
+    "map_small": 0.0,
+    "map_medium": 0.011504014953970909,
+    "map_large": 0.07521133869886398,
+    "mar_1": 0.09652174264192581,
+    "mar_10": 0.09652174264192581,
+    "mar_100": 0.09652174264192581,
+    "mar_small": 0.0,
+    "mar_medium": 0.06533333659172058,
+    "mar_large": 0.2137930989265442,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.19817285239696503,
+    "num_samples": 115
+  },
+  "poc_grounding_only_video": {
+    "num_samples": 131
+  },
+  "Initial Location": {
+    "map": 0.11147388815879822,
+    "map_50": 0.2533275783061981,
+    "map_75": 0.09053298085927963,
+    "map_small": 0.0,
+    "map_medium": 0.0405399352312088,
+    "map_large": 0.18635040521621704,
+    "mar_1": 0.25725191831588745,
+    "mar_10": 0.25725191831588745,
+    "mar_100": 0.25725191831588745,
+    "mar_small": 0.0,
+    "mar_medium": 0.11562500149011612,
+    "mar_large": 0.4046153724193573,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.4296136200428009
+  },
+  "Interacted Object": {
+    "accuracy": 0.648854961832061,
+    "precision": 1.0,
+    "recall": 0.648854961832061,
+    "f1_score": 0.7870370370370371
+  },
+  "object_detection": {
+    "map": 0.09391184896230698,
+    "map_50": 0.24037836492061615,
+    "map_75": 0.05028098076581955,
+    "map_small": 0.0,
+    "map_medium": 0.02871197648346424,
+    "map_large": 0.17563213407993317,
+    "mar_1": 0.25,
+    "mar_10": 0.25,
+    "mar_100": 0.25,
+    "mar_small": 0.0,
+    "mar_medium": 0.09841269999742508,
+    "mar_large": 0.4095238149166107,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.4306998550891876,
+    "num_samples": 128
+  },
+  "roboG_reasoning_eval": {
+    "accuracy": 0.4122137404580153,
+    "mean_confidence": 0.9263358778625955,
+    "weighted_accuracy": 0.3836641221374046,
+    "num_equivalent": 54,
+    "num_total": 131,
+    "num_errors": 0,
+    "num_samples": 131
+  }
+}

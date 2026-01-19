@@ -32,7 +32,8 @@ dataloader_num_workers: 4
 ### output
 output_dir: saves/qwen3_5vl-4b/full/sft/${dataset}
 logging_steps: 10
-save_steps: 400
+save_strategy: epoch
+#save_steps: 400
 plot_loss: true
 overwrite_output_dir: true
 save_only_model: false
@@ -69,6 +70,6 @@ do_eval: true
 per_device_eval_batch_size: 8
 eval_strategy: steps
 eval_steps: 100
-eval_dataset: roboG_stagepoc_ablation_multi_frame_8_eval
+eval_dataset: roboG_baseline_eval
 #predict_with_generate: true
 #do_predict: true

@@ -14,26 +14,22 @@
 
 """RoboVQA benchmark implementation (dataset + evaluator merged)."""
 
+import json
+import logging
 import re
 from tqdm import tqdm
 from collections import defaultdict
 from pathlib import Path
+from PIL import Image, ImageDraw
 from typing import Any, Dict, List, Optional, Union
 
+from llamafactory.eval.evaluators import BoundingBoxEvaluator,LabelEvaluator, TaskInstructionEvaluator,TemporalAccuracyEvaluator
 
-import tensorflow_datasets as tfds
+
 
 import numpy as np
 import os
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
-import tensorflow as tf
-
-# Hide any physical GPUs from TF
-tf.config.set_visible_devices([], "GPU")
-# Also ensure logical GPUs list is empty
-if tf.config.list_physical_devices("GPU"):
-    tf.config.set_visible_devices([], "GPU")
 
 
 from sacrebleu.metrics import BLEU
@@ -41,160 +37,6 @@ from rouge_score import rouge_scorer
 
 from base import BaseBenchmark, BaseModel, Sample
 #import BaseBenchmark, BaseModel, Sample
-
-
-class Task:
-    """A class for handling tags and splits in a given task (adapted from RoboVQA)."""
-    
-    # Tags for default splitting, based on who is talking.
-    PRED_STARTS = ['Robot:', 'Thought:', 'Action:']
-    NOPRED_STARTS = ['User:', 'System:']
-    
-    # Tags surrounding all blocks needing to be predicted by the model.
-    PRED_START = '<PRED>'
-    PRED_END = '</PRED>'
-    
-    # Tags surrounding only binary answers, typically 'yes' and 'no'.
-    PRED_ANSWER_BINARY_START = '<PRED:ANSWER:BINARY>'
-    PRED_ANSWER_BINARY_END = '</PRED:ANSWER:BINARY>'
-    
-    # Tags surrounding all discrete answers coming from a limited set of classes.
-    PRED_ANSWER_DISCRETE_START = '<PRED:ANSWER:DISCRETE>'
-    PRED_ANSWER_DISCRETE_END = '</PRED:ANSWER:DISCRETE>'
-    
-    # Tags surrounding things that constitute an answer to a question.
-    PRED_ANSWER_START = '<PRED:ANSWER'
-    PRED_ANSWER_END = '</PRED:ANSWER'
-    
-    # Tags that have any sort of short-content value
-    PRED_ALL_START = '<PRED:'
-    PRED_ALL_END = '</PRED:'
-    
-    TAGS_RE = r'(</*\w[:\w]*>)'
-    
-    def __init__(self, text: str):
-        """Initialize task with text."""
-        self.text = text
-    
-    def get_splits(self, split_type: str = 'A:') -> List[tuple]:
-        """
-        Returns a list of (source, target) split pairs.
-        
-        Args:
-            split_type: Type of split to perform
-            
-        Returns:
-            List of (question, answer) tuples
-        """
-        if split_type == 'A:':
-            return self.get_splits_from_tags(start_tags=['A:'], end_tags=[])
-        elif split_type == 'answer':
-            return self.get_splits_from_tags(
-                start_tags=[self.PRED_ANSWER_START], 
-                end_tags=[self.PRED_ANSWER_END]
-            )
-        else:
-            raise ValueError(f'Unknown split type: {split_type}')
-    
-    def get_splits_from_tags(
-        self, 
-        start_tags: List[str], 
-        end_tags: List[str]
-    ) -> List[tuple]:
-        """Returns a list of (source, target) split pairs given start/end tags."""
-        split_positions = []
-        position = 0
-        
-        while position < len(self.text):
-            # Find the next start tag given current position.
-            start_position = self.find_next_tag(position, start_tags)
-            if start_position is None:
-                break
-            
-            # Then find the first end tag after this start tag.
-            end_position = self.find_next_tag(start_position, end_tags)
-            if end_position is None:
-                end_position = len(self.text)
-            
-            split_positions.append((start_position, end_position))
-            position = end_position + 1
-        
-        # For every split point create a (source, target) pair.
-        splits = []
-        for start_pos, end_pos in split_positions:
-            source = self.text[:start_pos]
-            target = self.text[start_pos:end_pos]
-            splits.append((source, target))
-        
-        return splits
-    
-    def find_next_tag(self, position: int, tags: List[str]) -> Optional[int]:
-        """Finds the position of the next tag in the list after the given position."""
-        if not tags:
-            return None
-        
-        next_positions = []
-        for tag in tags:
-            pos = self.text.find(tag, position)
-            if pos >= 0:
-                next_positions.append(pos)
-        
-        return min(next_positions) if next_positions else None
-
-
-class Tasks:
-    """A class for parsing tasks from text (adapted from RoboVQA)."""
-    
-    @staticmethod
-    def text_to_dict(text: str) -> Dict[str, Any]:
-        """
-        Convert task text into structured dict.
-        
-        Args:
-            text: Raw task text from TFRecord
-            
-        Returns:
-            Dict with 'question', 'answer', and 'task_type' keys
-        """
-        task = Task(text)
-        splits = task.get_splits('A:')
-        
-        if not splits:
-            # Fallback: treat entire text as question
-            return {
-                'question': text.strip(),
-                'answer': '',
-                'task_type': 'unknown'
-            }
-        
-        # Take first split
-        question, answer = splits[0]
-        
-        # Clean up question (remove tags)
-        question = re.sub(Task.TAGS_RE, '', question).strip()
-        
-        # Extract answer from tags
-        answer_match = re.search(
-            f'{re.escape(Task.PRED_ANSWER_START)}.*?>(.*?){re.escape(Task.PRED_ANSWER_END)}',
-            answer
-        )
-        if answer_match:
-            answer = answer_match.group(1).strip()
-        else:
-            answer = re.sub(Task.TAGS_RE, '', answer).strip()
-        
-        # Determine task type from tags
-        task_type = 'open'
-        if Task.PRED_ANSWER_BINARY_START in text:
-            task_type = 'binary'
-        elif Task.PRED_ANSWER_DISCRETE_START in text:
-            task_type = 'discrete'
-        
-        return {
-            'question': question,
-            'answer': answer,
-            'task_type': task_type
-        }
 
 
 class RoboGBenchmark(BaseBenchmark):
@@ -212,21 +54,11 @@ class RoboGBenchmark(BaseBenchmark):
     """
     
     def _validate_config(self) -> None:
-        """Validate RoboVQA-specific config."""
-        required = ['data_dir']
-        for key in required:
-            if key not in self.config:
-                raise ValueError(f"Missing required config key: {key}")
-        
-        # Set defaults
-        if 'split' not in self.config:
-            self.config.split = 'validation'
-        if 'metrics' not in self.config:
-            self.config.metrics = ['bleu', 'rouge-l']
+        pass
     
     def _load_data(self) -> None:
+        
         """Load RoboVQA dataset from TFRecord files."""
-        split = self.config.split
         # tfrecord_pattern = str(self.data_dir / f"{split}*.tfrecord*")
         
         # # Find TFRecord files
@@ -240,63 +72,64 @@ class RoboGBenchmark(BaseBenchmark):
         
         # Create dataset
         #raw_dataset = tf.data.TFRecordDataset(tfrecord_files)
-        episodes = tfds.builder_from_directory(self.data_dir).as_dataset(split=split)
         
-        # Parse examples
-        max_samples = self.config.get('max_samples', None)
-        count = 0
+        annotation_files = self.config.annotation_files
         
-        for episode in tqdm(episodes, desc="Loading RoboVQA data"):
-
-
-
-            if max_samples and count >= max_samples:
-                break
-
-            task_type = episode['task_type'].numpy().decode('utf-8')
+        all_annotations = []
+        for annotation_file in annotation_files:
+            #read jsonl lines
+            with open(annotation_file, 'r') as f:
+                for line in f:
+                    all_annotations.append(json.loads(line))
+        
+        
+        for annotation in tqdm(all_annotations, desc="Loading RoboG benchmark"):
+            task_type = annotation["meta"]['task_type']
             
-            #example = tf.train.SequenceExample()
-            #example.ParseFromString(raw_record.numpy())
+            question = annotation["messages"][0]["content"]
+            answer = annotation["messages"][1]["content"]
+            images = [Image.open(img_path) for img_path in annotation.get("images", [])]
+            #convert to array
+            images = [np.array(img) for img in images]
+            videos = annotation.get("videos", [])
+            if "roboG_reasoning" in task_type:
+                s = 1
+            sample = Sample(
+                question=question,
+                answer=answer,
+                images=images,
+                videos=videos,
+                metadata={'task_type': task_type,
+                "image_paths": [str(img_path) for img_path in annotation.get("images", [])],
+                "video_paths": [str(vid_path) for vid_path in annotation.get("videos", [])]
+                }
+            )
             
-
-            for step in episode['steps']:
-                question = step["observation"]["raw_text_question"].numpy().decode('utf-8')
-                answer = step["observation"]["raw_text_answer"].numpy().decode('utf-8')
-                images = step["observation"]['images'].numpy()
-                sample = Sample(
-                    question=question,
-                    answer=answer,
-                    images=images,
-                    metadata={'task_type': task_type}
-                )
-                self.samples.append(sample)
-                count += 1
-            continue
+            
+            if task_type == "object_detection":
                 
+                #parse bbox and plot for sanity check
+                #pass
+                # boxes = BoundingBoxEvaluator.parse_bbox_from_text(sample.answer)
+                    
 
 
-            # # Extract task text
-            # task_text = example.features.feature['text'].bytes_list.value[0].decode('utf-8')
+                # img = Image.open(annotation.get("images", [])[0])
+
+                # #unnorm box (from range 0 - 1000 to img width height)
+                # img_width, img_height = img.size
+                # boxes = [(int(x * img_width / 1000), int(y * img_height / 1000), int(w * img_width / 1000), int(h * img_height / 1000)) for (x, y, w, h) in boxes]
+
+                # draw = ImageDraw.Draw(img)
+                # for box in boxes:
+                #     draw.rectangle(box, outline="red", width=2)
+                # img.show()
+                pass
+
             
-            # # Parse into Q&A
-            # parsed = Tasks.text_to_dict(task_text)
-            
-            # # Filter by task if specified
-            # if 'tasks' in self.config:
-            #     # Extract task name from question (usually first few words)
-            #     task_name = parsed.get('task_type', 'unknown')
-            #     if task_name not in self.config.tasks:
-            #         continue
-            
-            # # Create sample
-            # sample = Sample(
-            #     question=parsed['question'],
-            #     answer=parsed['answer'],
-            #     metadata={'task_type': parsed['task_type']}
-            # )
-            
-            # self.samples.append(sample)
-            # count += 1
+
+            self.samples.append(sample)
+
         
         print(f"Loaded {len(self.samples)} samples.")
     
@@ -305,26 +138,37 @@ class RoboGBenchmark(BaseBenchmark):
         # RoboVQA is text-only, no image preprocessing needed
         return sample
     
-    # def generate_prompt(self, sample: Sample, model: BaseModel) -> Union[str, Dict[str, str]]:
-    #     """
-    #     Generate prompt for RoboVQA question.
+    
+    
+    def generate_prompt(self, sample: Sample, model: 'BaseModel') -> Union[str, Dict[str, str]]:
+        """
+        Generate a prompt for the given sample and model in sharegpt format.
+
         
-    #     Args:
-    #         sample: Sample containing question
-    #         model: Model instance (for model-specific formatting)
+        Args:
+            sample: Input sample
+            model: Model instance (for model-specific prompt formatting)
             
-    #     Returns:
-    #         Formatted prompt (string or chat format dict)
-    #     """
-    #     # Check if model expects chat format (OpenAI-style)
-    #     if hasattr(model, 'use_chat_format') and model.use_chat_format:
-    #         return {
-    #             'role': 'user',
-    #             'content': sample.question
-    #         }
+        Returns:
+            Formatted prompt string or dict for chat format
+        """
         
-    #     # Default: simple string prompt
-    #     return sample.question
+
+        image_tag = "<image>"
+        
+        conversation = []
+        user_message = sample.question
+        
+        if "qwen3vl" not in model.config.name.lower():
+            #remove all <digit.digit seconds> tags
+            user_message = re.sub(r"<\d+\.\d+ seconds?>", "", user_message)
+        
+                
+        conversation.append({"role": "user", "content": user_message})
+        conversation.append({"role": "assistant", "content": sample.answer})
+        
+        return conversation
+
     
     def evaluate(
         self,
@@ -355,53 +199,100 @@ class RoboGBenchmark(BaseBenchmark):
         # Convert to strings
         predictions = [str(p) for p in predictions]
         ground_truths = [str(gt) for gt in ground_truths]
-        
-        # Compute BLEU if requested
-        if 'bleu' in self.config.metrics:
-            bleu = BLEU()
-            bleu_score = bleu.corpus_score(predictions, [ground_truths])
-            results['overall']['bleu'] = bleu_score.score
-        
-        # Compute ROUGE-L if requested
-        if 'rouge-l' in self.config.metrics or 'rouge_l' in self.config.metrics:
-            scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-            rouge_scores = []
-            for pred, gt in zip(predictions, ground_truths):
-                score = scorer.score(gt, pred)
-                rouge_scores.append(score['rougeL'].fmeasure)
-            results['overall']['rouge_l'] = np.mean(rouge_scores)
+
         
         # Compute task-type-specific metrics if metadata provided
-        if metadata:
-            task_types = defaultdict(lambda: {'predictions': [], 'ground_truths': []})
+
+        task_types = defaultdict(lambda: {'predictions': [], 'ground_truths': [], 'metadata': []})
+
+        for pred, gt, meta in zip(predictions, ground_truths, metadata):
+            task_type = meta.get('task_type', 'unknown')
+            task_types[task_type]['predictions'].append(pred)
+            task_types[task_type]['ground_truths'].append(gt)
+            task_types[task_type]['metadata'].append(meta)
+
+        # Compute metrics per task type
+        all_task_types = []
+        all_data = []
+        for task_type, data in task_types.items():
+            all_task_types.append(task_type)
+            all_data.append(data)
+
+        for task_type, data in task_types.items():
+            results[task_type] = {}
             
-            for pred, gt, meta in zip(predictions, ground_truths, metadata):
-                task_type = meta.get('task_type', 'unknown')
-                task_types[task_type]['predictions'].append(pred)
-                task_types[task_type]['ground_truths'].append(gt)
+            #use different eval strategy based on task type
+            if "poc_grounding_only_video" in task_type:
+                #two types: label and object name
+                label_evaluator = LabelEvaluator(ground_truths=data['ground_truths'])
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                label_results = label_evaluator.evaluate(data['predictions'])
+                bbox_results = bbox_evaluator.evaluate(data['predictions'])
+                
+                results["Initial Location"] = bbox_results
+                results["Interacted Object"] = label_results
+            elif "object_detection" in task_type:
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                bbox_results = bbox_evaluator.evaluate(data['predictions'])
+                results[task_type] = bbox_results
+
+
+                
+
+                # #plot boxes on image
+                # plt_idx = 81
+                # sample = data["ground_truths"][plt_idx]
+                # sample_image = data["metadata"][plt_idx]["image_paths"][0]
+                # prediction = data["predictions"][plt_idx]
+
+                # #parse bbox
+                # boxes = BoundingBoxEvaluator.parse_bbox_from_text(sample)
+                # boxes_pred = BoundingBoxEvaluator.parse_bbox_from_text(prediction)
+
+
+                # img = Image.open(sample_image)
+
+                # #unnorm box (from range 0 - 1000 to img width height)
+                # img_width, img_height = img.size
+                # boxes = [(int(x * img_width / 1000), int(y * img_height / 1000), int(w * img_width / 1000), int(h * img_height / 1000)) for (x, y, w, h) in boxes]
+                # boxes_pred = [(int(x * img_width / 1000), int(y * img_height / 1000), int(w * img_width / 1000), int(h * img_height / 1000)) for (x, y, w, h) in boxes_pred]
+
+                # draw = ImageDraw.Draw(img)
+                # for box in boxes:
+                #     draw.rectangle(box, outline="red", width=2)
+                # #draw predicted boxes
+                # for box in boxes_pred:
+                #     draw.rectangle(box, outline="blue", width=2)
+                # img.save("z.png")
+
+            elif "target_location" in task_type:
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                bbox_results = bbox_evaluator.evaluate(data['predictions'])
+                results[task_type] = bbox_results
+            elif "roboG_reasoning" in task_type or "task_detection" in task_type:
+                
+                if "task_detection" in task_type:
+                    continue
+                #format: <task>Put the yellow object on the bottom left burner.</task>. extract task
+                instruction_evaluator = TaskInstructionEvaluator(ground_truths=data['ground_truths'])
+                #parse tasks from predictions
+                instruction_results = instruction_evaluator.evaluate(data['predictions'])
+                results[task_type] = instruction_results
             
-            # Compute metrics per task type
-            for task_type, data in task_types.items():
-                results[task_type] = {}
-                
-                if 'bleu' in self.config.metrics:
-                    bleu = BLEU()
-                    bleu_score = bleu.corpus_score(
-                        data['predictions'], 
-                        [data['ground_truths']]
-                    )
-                    results[task_type]['bleu'] = bleu_score.score
-                
-                if 'rouge-l' in self.config.metrics or 'rouge_l' in self.config.metrics:
-                    scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-                    rouge_scores = []
-                    for pred, gt in zip(data['predictions'], data['ground_truths']):
-                        score = scorer.score(gt, pred)
-                        rouge_scores.append(score['rougeL'].fmeasure)
-                    results[task_type]['rouge_l'] = np.mean(rouge_scores)
-                
-                results[task_type]['num_samples'] = len(data['predictions'])
-        
+            
+            elif "action_localization" in task_type:
+                action_evaluator = TemporalAccuracyEvaluator(ground_truths=data['ground_truths'])
+                action_results = action_evaluator.evaluate(data['predictions'])
+                results[task_type] = action_results
+
+            else:
+                logging.warning(f"Unknown task type: {task_type}")
+                results[task_type] = {"error": "Unknown task type"}
+
+            
+            results[task_type]['num_samples'] = len(data['predictions'])
+
+
         # Store results
         self.results = results
         

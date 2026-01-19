@@ -5,14 +5,14 @@
 #SBATCH -J RoboG
 
 # Cluster Settings
-#SBATCH -c 32  # Number of cores per task
-#SBATCH -t 3:00:00 ## 1-00:30:00 # 06:00:00 # 1-00:30:00 # 2-00:00:00
-#SBATCH --gres=gpu:1
+#SBATCH -c 128  # Number of cores per task
+#SBATCH -t 8:00:00 ## 1-00:30:00 # 06:00:00 # 1-00:30:00 # 2-00:00:00
+#SBATCH --gres=gpu:4
 
 
 # Define the paths for storing output and error files
-#SBATCH --output=/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/logs/outputs/%x_%j.out
-#SBATCH --error=/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/logs/outputs/%x_%j.err
+#SBATCH --output=/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/logs/outputs/%x_%j.out
+#SBATCH --error=/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/logs/outputs/%x_%j.err
 
 
 # -------------------------------
@@ -26,12 +26,12 @@ conda activate roboG_train
 export LD_LIBRARY_PATH=/home/hk-project-sustainebot/bm3844/miniconda3/envs/vlm/lib/python3.12/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
 export TORCH_USE_CUDA_DSA=1
 # NNODES=1
-# NODE_RANK=0
+# NODE_RANK=0queue
 # PORT=29500
 # MASTER_ADDR=127.0.0.1
 #CUDA_VISIBLE_DEVICES=0,1,2,3  
 
-export PYTHONPATH=/home/hk-project-sustainebot/bm3844/code/LLaMA-FactoryRoboG/src:$PYTHONPATH
+export PYTHONPATH=/home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/src:$PYTHONPATH
 #srun llamafactory-cli train examples/train_full/qwen2vl_NILS_full_droid.yaml
 #srun python src/llamafactory/cli.py train examples/train_full/qwen2_5vl_roboG_test.yaml
 #srun python -m llamafactory.cli train examples/train_full/qwen2_5vl_roboG.yaml
@@ -51,5 +51,17 @@ fi
 echo "Using config: $YAML_FILE"
 
 srun python -m llamafactory.cli train "$YAML_FILE"
+
+
+
+
+srun python scripts/vllm_infer_from_cfg.py \
+    --config_path "$YAML_FILE" $OVERRIDE_ARGS
+
+
+#run evaluation
+            
+srun python scripts/eval_boxes_poc_from_config.py \
+    --config_path "$YAML_FILE" $OVERRIDE_ARGS
 
 #srun python -m llamafactory.cli train examples/train_full/qwen2_5vl_roboG_poc_box.yaml
