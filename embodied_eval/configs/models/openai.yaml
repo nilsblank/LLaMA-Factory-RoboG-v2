@@ -11,6 +11,7 @@ api_key: ${oc.env:OPENAI_API_KEY}  # Read from environment variable
 base_url: https://api.openai.com/v1  # Optional: for custom endpoints
 
 # Generation parameters
+number_video_frames: 16  # Number of video frames to sample and encode
 use_vllm: false
 max_attempts: 3  # Number of retry attempts for API calls
 # generation_kwargs:  # Use this for GPT-5-mini

@@ -583,6 +583,7 @@ class OpenAIModel(BaseModel):
         self.base_url = self.config.get('base_url', 'https://api.openai.com/v1')
         self.use_chat_format = True  # OpenAI always uses chat format
         self.max_attempts = self.config.get('max_attempts', 3)
+        self.number_video_frames = self.config.get('number_video_frames', 16)
         
         if not self.api_key:
             raise ValueError(
@@ -624,6 +625,44 @@ class OpenAIModel(BaseModel):
             return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
         raise ValueError(f"Unsupported image type: {type(image_input)}")
+    
+    def _encode_video(video_input):
+        """
+        Encodes a video from a file path to a list of Base64-encoded frames.
+
+        Args:
+            video_input: str, path to video file
+
+        Returns:
+            List[str]: Base64-encoded frames
+        """
+        import base64
+        import cv2
+
+        if not isinstance(video_input, str):
+            raise ValueError(f"Expected video file path as string, got {type(video_input)}")
+
+        video = cv2.VideoCapture(video_input)
+        if not video.isOpened():
+            raise ValueError(f"Failed to open video file: {video_input}")
+
+        base64_frames = []
+
+        while True:
+            success, frame = video.read()
+            if not success:
+                break
+
+            # Encode frame
+            ret, buffer = cv2.imencode(".png", frame)
+            if not ret:
+                continue  # Skip problematic frames
+
+            # Convert to Base64 string
+            base64_frames.append(base64.b64encode(buffer).decode("utf-8"))
+
+        video.release()
+        return base64_frames
 
     def denormalize_bbox(
         self,
@@ -647,7 +686,7 @@ class OpenAIModel(BaseModel):
         self,
         prompt: Union[str, Dict[str, str]],
         images: Optional[List[np.ndarray]] = None,
-        videos: Optional[List[np.ndarray]] = None,
+        videos: Optional[List[str]] = None,
         audios: Optional[List[np.ndarray]] = None,
         **kwargs
     ) -> str:
@@ -656,8 +695,8 @@ class OpenAIModel(BaseModel):
         
         Args:
             prompt: Text prompt or chat format dict
-            images: Optional list of images (for vision models)
-            videos: Not supported by OpenAI API
+            images: Optional list of images
+            videos: Optional list of videos as file path
             audios: Not supported by OpenAI API
             **kwargs: Additional generation arguments
             
@@ -678,8 +717,6 @@ class OpenAIModel(BaseModel):
             raise NotImplementedError("Unsupported prompt format")
         
         # OpenAI API only supports images right now
-        if videos is not None and len(videos) > 0:
-            raise NotImplementedError("OpenAI API does not support video inputs")
         if audios is not None and len(audios) > 0:
             raise NotImplementedError("OpenAI API does not support audio inputs")
 
@@ -694,14 +731,22 @@ class OpenAIModel(BaseModel):
             
             # Split text by tags for interleaving
             image_tag = "<image>"
+            video_tag = "<video>"
+            tags_to_find = []
             if images is not None and len(images) > 0:
-                pattern = f"({image_tag})"
+                tags_to_find.append(image_tag)
+            if videos is not None and len(videos) > 0:
+                tags_to_find.append(video_tag)
+            if tags_to_find:
+                # Create pattern: (<image>|<video>)
+                pattern = f"({'|'.join(tags_to_find)})"
                 parts = re.split(pattern, text)
             else:
                 # No tags to process, treat the whole thing as a single part
                 parts = [text]
 
             image_idx = 0
+            video_idx = 0
             for part in parts:
                 if part == image_tag:
                     # Add image if available
@@ -717,6 +762,23 @@ class OpenAIModel(BaseModel):
                             }
                         })
                         image_idx += 1
+                elif part == video_tag:
+                    # Add video if available
+                    if video_idx < len(videos):
+                        video = videos[video_idx]
+                        # Convert to list of base64
+                        video_str = self._encode_video(video)
+                        # Sample fix amount of images
+                        if len(video_str) > self.number_video_frames:
+                            video_str = [video_str[i] for i in np.linspace(0, len(video_str)-1, self.number_video_frames, dtype=int)]
+
+                        content.extend([{
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_str}"
+                            }
+                        } for img_str in video_str])
+                        video_idx += 1
                 else:
                     # Add text part if not empty
                     if part.strip():
