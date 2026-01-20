@@ -1,0 +1,19 @@
+# OpenAI API Model Configuration
+
+name: gemini_model
+_target_: models.GoogleModel
+
+# Model name (e.g., gemini-3-pro-preview, gemini-3-flash-preview, gemini-3-pro-image-preview)
+model_name_or_path: gemini-3-pro-preview
+
+# API configuration
+api_key: ${oc.env:GEMINI_API_KEY}  # Read from environment variable
+
+# Generation parameters
+use_vllm: false
+thinking_level: "low"  # Can be "low" or "high" for Gemini 3 Pro, and "minimal", "low", "medium", and "high" for Gemini 3 Flash. Note that the Gemini 2.5 series needs a different parameter: https://ai.google.dev/gemini-api/docs/thinking#set-budget
+max_attempts: 3  # Number of retry attempts for API calls
+generation_kwargs:
+  temperature: 1.0  # Recommended to set to 1
+  max_output_tokens: 10000  # Increase if some outputs are empty, reasoning can take many tokens
+  top_p: 0.9

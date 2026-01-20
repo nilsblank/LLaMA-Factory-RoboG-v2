@@ -54,16 +54,22 @@ def register_model(name: str):
 
 # Import and register components
 #from . import robovqa_benchmark, models
-import robovqa_benchmark    
+import robovqa_benchmark
 import roboG_benchmark
+import vstar_benchmark
+import robo2vlm_benchmark
 import models
 # Register benchmarks
 register_benchmark("robovqa")(robovqa_benchmark.RoboVQABenchmark)
+register_benchmark("robog")(roboG_benchmark.RoboGBenchmark)
+register_benchmark("vstar")(vstar_benchmark.VStarBenchmark)
+register_benchmark("robo2vlm")(robo2vlm_benchmark.Robo2VLMBenchmark)
 
 # Register models
 register_model("mock")(models.MockModel)
 register_model("llamafactory")(models.LlamaFactoryModel)
 register_model("openai")(models.OpenAIModel)
+register_model("gemini")(models.GoogleModel)
 
 
 def instantiate_from_config(cfg: DictConfig):
@@ -232,6 +238,9 @@ def run_single_evaluation(
             ground_truths.append(sample.answer)
             metadata_list.append(sample.metadata)
     
+    # Benchmark-specific post-processing, which can include e.g. denormalization of bboxes
+    predictions = [benchmark.postprocess(pred, sample, model) for sample, pred in zip(benchmark.samples, predictions)]
+
     # Save predictions if requested
     if save_predictions:
         pred_file = output_dir / f"{benchmark.name}_{model.name}_predictions.jsonl"
@@ -419,6 +428,7 @@ def main(cfg: DictConfig):
                 'max_new_tokens': vllm_cfg.get('max_new_tokens', 1024),
                 'cutoff_len': vllm_cfg.get('cutoff_len', 16384),
                 'pipeline_parallel_size': vllm_cfg.get('pipeline_parallel_size', 1),
+                'gpu_memory_utilization': vllm_cfg.get('gpu_memory_utilization', 0.9),
             }
             
             # Remove None values

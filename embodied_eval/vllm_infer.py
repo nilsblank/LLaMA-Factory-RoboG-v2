@@ -69,6 +69,7 @@ def vllm_infer(
     cutoff_len: int = 2048,
     max_new_tokens: int = 1024,
     pipeline_parallel_size: int = 1,
+    gpu_memory_utilization: float = 0.9,
     vllm_config: str = "{}",
     
     # Generation arguments
@@ -159,7 +160,7 @@ def vllm_infer(
         "max_model_len": cutoff_len + max_new_tokens,
         "tensor_parallel_size": (get_device_count() // pipeline_parallel_size) or 1,
         "pipeline_parallel_size": pipeline_parallel_size,
-        "gpu_memory_utilization": 0.8,
+        "gpu_memory_utilization": gpu_memory_utilization,
         "max_num_seqs": 256,
         "max_num_batched_tokens": 4096,
         "disable_log_stats": True,
@@ -242,19 +243,20 @@ def vllm_infer(
 
             sample = benchmark.preprocess(sample)
             
-            # Apply model-specific preprocessing if model instance provided
-            if model_instance is not None:
-                # Process bboxes in metadata if present
-                if sample.metadata and 'bbox' in sample.metadata:
-                    bbox = sample.metadata['bbox']
-                    original_size = sample.metadata.get('original_size', (1000, 1000))
-                    target_size = sample.metadata.get('target_size', original_size)
-                    bbox_format = sample.metadata.get('bbox_format', 'xyxy')
+            # TODO move to preprocess and add model_instance arg? (Not needed for VStar)
+            # # Apply model-specific preprocessing if model instance provided
+            # if model_instance is not None:
+            #     # Process bboxes in metadata if present
+            #     if sample.metadata and 'bbox' in sample.metadata:
+            #         bbox = sample.metadata['bbox']
+            #         original_size = sample.metadata.get('original_size', (1000, 1000))
+            #         target_size = sample.metadata.get('target_size', original_size)
+            #         bbox_format = sample.metadata.get('bbox_format', 'xyxy')
                     
-                    processed_bbox = model_instance.process_bbox(
-                        bbox, original_size, target_size, bbox_format
-                    )
-                    sample.metadata['bbox_processed'] = processed_bbox
+            #         processed_bbox = model_instance.process_bbox(
+            #             bbox, original_size, target_size, bbox_format
+            #         )
+            #         sample.metadata['bbox_processed'] = processed_bbox
             
             all_samples.append(sample)
             
@@ -368,6 +370,9 @@ def vllm_infer(
                     printed_model_processing = True
                 preds = [model_instance.parse_output(pred) for pred in preds]
             
+            # Benchmark-specific post-processing, which can include e.g. denormalization of bboxes
+            preds = [benchmark.postprocess(pred, sample, model_instance) for sample, pred in zip(batch_samples, preds)]
+
             # Collect results
             all_predictions.extend(preds)
             all_ground_truths.extend([s.answer for s in batch_samples])
