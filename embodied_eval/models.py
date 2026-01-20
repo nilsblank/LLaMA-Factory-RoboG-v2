@@ -292,24 +292,31 @@ class Qwen3VLModel(BaseModel):
                 - multi_modal_data: Dict with image/video data
                 - mm_processor_kwargs: Additional processor kwargs
         """
+        # Determine which tags to look for
+        image_tag = "<image>"
+        video_tag = "<video>"
+        tags_to_find = []
+        if sample.images is not None and len(sample.images) > 0:
+            tags_to_find.append(image_tag)
+        if sample.videos is not None and len(sample.videos) > 0:
+            tags_to_find.append(video_tag)
+
         # Convert sample images/videos to the format expected by process_vision_info
         # We need to build messages with proper content structure
         messages_with_media = []
+        image_idx = 0
+        video_idx = 0
         
         for msg in chat_messages:
+            if msg["role"] != "user" and msg["role"] != "system":
+                continue  # Skip other roles
+
             content = []
             
             # Parse the text to find tags and build content list
             text = msg.get("content", "")
             
             # Split text by tags for interleaving
-            image_tag = "<image>"
-            video_tag = "<video>"
-            tags_to_find = []
-            if sample.images is not None and len(sample.images) > 0:
-                tags_to_find.append(image_tag)
-            if sample.videos is not None and len(sample.videos) > 0:
-                tags_to_find.append(video_tag)
             if tags_to_find:
                 # Create pattern: (<image>|<video>)
                 pattern = f"({'|'.join(tags_to_find)})"
@@ -318,8 +325,6 @@ class Qwen3VLModel(BaseModel):
                 # No tags to process, treat the whole thing as a single part
                 parts = [text]
 
-            image_idx = 0
-            video_idx = 0
             for part in parts:
                 if part == image_tag:
                     from PIL import Image
@@ -356,12 +361,10 @@ class Qwen3VLModel(BaseModel):
                             "text": part
                         })
 
-            # Only append user or system messages
-            if msg["role"] == "user" or msg["role"] == "system":
-                messages_with_media.append({
-                    "role": msg.get("role", "user"),
-                    "content": content
-                })
+            messages_with_media.append({
+                "role": msg.get("role", "user"),
+                "content": content
+            })
 
         # Use prepare_inputs_for_vllm to process
         vllm_inputs = self.prepare_inputs_for_vllm(messages_with_media)
@@ -581,6 +584,7 @@ class OpenAIModel(BaseModel):
         
         self.api_key = self.config.get('api_key', None)
         self.base_url = self.config.get('base_url', 'https://api.openai.com/v1')
+        self.system_prompt = "When returning bounding boxes, use normalized image coordinates in the range 0.0 to 1.0, formatted as (x_min, y_min, x_max, y_max), where (0,0) is the top-left and (1,1) is the bottom-right of the image."
         self.use_chat_format = True  # OpenAI always uses chat format
         self.max_attempts = self.config.get('max_attempts', 3)
         self.number_video_frames = self.config.get('number_video_frames', 16)
@@ -626,9 +630,10 @@ class OpenAIModel(BaseModel):
 
         raise ValueError(f"Unsupported image type: {type(image_input)}")
     
-    def _encode_video(video_input):
+    def _encode_video(self, video_input):
         """
-        Encodes a video from a file path to a list of Base64-encoded frames.
+        Encodes a video from a file path to a list of Base64-encoded frames,
+        downsampling to self.number_video_frames if needed.
 
         Args:
             video_input: str, path to video file
@@ -646,23 +651,28 @@ class OpenAIModel(BaseModel):
         if not video.isOpened():
             raise ValueError(f"Failed to open video file: {video_input}")
 
-        base64_frames = []
+        total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total_frames == 0:
+            video.release()
+            return []
 
-        while True:
+        # Frames to keep
+        frame_indices = set(np.linspace(0, total_frames - 1, min(self.number_video_frames, total_frames), dtype=int))
+
+        frames = []
+        for idx in range(total_frames):
             success, frame = video.read()
             if not success:
                 break
-
-            # Encode frame
-            ret, buffer = cv2.imencode(".png", frame)
-            if not ret:
-                continue  # Skip problematic frames
-
-            # Convert to Base64 string
-            base64_frames.append(base64.b64encode(buffer).decode("utf-8"))
+            if idx in frame_indices:
+                ret, buffer = cv2.imencode(".png", frame)
+                if ret:
+                    frames.append(base64.b64encode(buffer).decode("utf-8"))
+            if len(frames) == len(frame_indices):
+                break
 
         video.release()
-        return base64_frames
+        return frames
 
     def denormalize_bbox(
         self,
@@ -670,14 +680,15 @@ class OpenAIModel(BaseModel):
         original_size: tuple,
         format: str = "xyxy"
     ) -> List[float]:
-        """GPT 5 uses coordinates in range 0-1000 for bounding boxes by default."""
-        print("GPT 5 should predict bounding boxes in the range of 0-1000. Make sure to test this!")  # TODO test and remove print
+        """
+        By default the system prompt tells the models to use normalized coordinates from 0.0 to 1.0 for bounding boxes.
+        """
         if format == "xyxy":
             width, height = original_size
-            x1 = bbox[0] / 1000 * width
-            y1 = bbox[1] / 1000 * height
-            x2 = bbox[2] / 1000 * width
-            y2 = bbox[3] / 1000 * height
+            x1 = bbox[0] * width
+            y1 = bbox[1] * height
+            x2 = bbox[2] * width
+            y2 = bbox[3] * height
             return [x1, y1, x2, y2]
         else:
             raise NotImplementedError()
@@ -720,23 +731,30 @@ class OpenAIModel(BaseModel):
         if audios is not None and len(audios) > 0:
             raise NotImplementedError("OpenAI API does not support audio inputs")
 
-        # Add images
+        # Determine which tags to look for
+        image_tag = "<image>"
+        video_tag = "<video>"
+        tags_to_find = []
+        if images is not None and len(images) > 0:
+            tags_to_find.append(image_tag)
+        if videos is not None and len(videos) > 0:
+            tags_to_find.append(video_tag)
+
+        # Add images and videos
         messages_with_media = []
+        image_idx = 0
+        video_idx = 0
         
         for msg in messages:
+            if msg["role"] != "user" and msg["role"] != "system":
+                continue  # Skip other roles
+
             content = []
             
             # Parse the text to find tags and build content list
             text = msg.get("content", "")
             
             # Split text by tags for interleaving
-            image_tag = "<image>"
-            video_tag = "<video>"
-            tags_to_find = []
-            if images is not None and len(images) > 0:
-                tags_to_find.append(image_tag)
-            if videos is not None and len(videos) > 0:
-                tags_to_find.append(video_tag)
             if tags_to_find:
                 # Create pattern: (<image>|<video>)
                 pattern = f"({'|'.join(tags_to_find)})"
@@ -745,8 +763,6 @@ class OpenAIModel(BaseModel):
                 # No tags to process, treat the whole thing as a single part
                 parts = [text]
 
-            image_idx = 0
-            video_idx = 0
             for part in parts:
                 if part == image_tag:
                     # Add image if available
@@ -787,12 +803,17 @@ class OpenAIModel(BaseModel):
                             "text": part
                         })
 
-            # Only append user or system messages
-            if msg["role"] == "user" or msg["role"] == "system":
-                messages_with_media.append({
-                    "role": msg.get("role", "user"),
-                    "content": content
+            # Append the model's own system prompt to clarify bbox coordinates
+            if msg["role"] == "system":
+                content.append({
+                    "type": "text",
+                    "text": self.system_prompt
                 })
+
+            messages_with_media.append({
+                "role": msg.get("role", "user"),
+                "content": content
+            })
         
         # Call OpenAI API
         for attempt in range(self.max_attempts):
@@ -845,6 +866,7 @@ class GoogleModel(BaseModel):
         super().__init__(cfg)
         
         self.api_key = self.config.get('api_key', None)
+        self.system_prompt = "When returning bounding boxes, use normalized image coordinates in the range 0 to 1000, formatted as (x_min, y_min, x_max, y_max), where (0,0) is the top-left and (1000,1000) is the bottom-right of the image."
         self.use_chat_format = True
         self.thinking_level = self.config.get('thinking_level', "low")
         self.max_attempts = self.config.get('max_attempts', 3)
@@ -895,9 +917,10 @@ class GoogleModel(BaseModel):
         original_size: tuple,
         format: str = "xyxy"
     ) -> List[float]:
-        """Gemini 3 uses coordinates in range 0-1000 for bounding boxes by default."""
-        if "gemini-3" not in self.model_path:
-            print("Defaulting to denormalize from coordinate range 0-1000. Make sure to test this!")
+        """
+        By default the system prompt tells the models to use normalized coordinates from 0 to 1000 for bounding boxes.
+        This should match the training setup of the Gemini 3 models.
+        """
         if format == "xyxy":
             width, height = original_size
             x1 = bbox[0] / 1000 * width
@@ -948,9 +971,20 @@ class GoogleModel(BaseModel):
         if audios is not None and len(audios) > 0:
             raise NotImplementedError("Supported but not implemented yet")
 
+        # Determine which tags to look for
+        image_tag = "<image>"
+        video_tag = "<video>"
+        tags_to_find = []
+        if images is not None and len(images) > 0:
+            tags_to_find.append(image_tag)
+        if videos is not None and len(videos) > 0:
+            tags_to_find.append(video_tag)
+
         # Add images and videos
         contents = []
         system_instruction = ""
+        image_idx = 0
+        video_idx = 0
         
         for msg in messages:
             if msg["role"] == "system":
@@ -961,13 +995,6 @@ class GoogleModel(BaseModel):
                 text = msg.get("content", "")
                 
                 # Split text by tags for interleaving
-                image_tag = "<image>"
-                video_tag = "<video>"
-                tags_to_find = []
-                if images is not None and len(images) > 0:
-                    tags_to_find.append(image_tag)
-                if videos is not None and len(videos) > 0:
-                    tags_to_find.append(video_tag)
                 if tags_to_find:
                     # Create pattern: (<image>|<video>)
                     pattern = f"({'|'.join(tags_to_find)})"
@@ -976,8 +1003,6 @@ class GoogleModel(BaseModel):
                     # No tags to process, treat the whole thing as a single part
                     parts = [text]
 
-                image_idx = 0
-                video_idx = 0
                 for part in parts:
                     if part == image_tag:
                         # Add image if available
@@ -1029,7 +1054,7 @@ class GoogleModel(BaseModel):
                     model=self.model_path,
                     contents=contents,
                     config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
+                        system_instruction=system_instruction + self.system_prompt,
                         thinkingConfig=types.ThinkingConfig(thinking_level=self.thinking_level),
                         **gen_kwargs
                     )
