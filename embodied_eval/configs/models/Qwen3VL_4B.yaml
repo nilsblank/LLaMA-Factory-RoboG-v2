@@ -20,6 +20,7 @@ template: qwen3_vl_nothink  # Chat template (default, llama3, qwen2_5_vl, etc.)
 cutoff_len: 16384
 max_new_tokens: 1024
 pipeline_parallel_size: 1  # Number of pipeline stages (<= num GPUs)
+gpu_memory_utilization: 0.6  # Percent of reserved GPU memory, not set to 0.9 since some benchmarks also have to load models for scoring
 vllm_config: {}  # Additional vLLM engine args (dict)
 
 # Generation parameters

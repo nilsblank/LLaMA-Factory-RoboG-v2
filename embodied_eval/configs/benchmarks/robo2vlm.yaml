@@ -1,0 +1,12 @@
+# V-STaR Benchmark Configuration
+# For V-STaR dataset: https://github.com/V-STaR-Bench/V-STaR/
+
+name: robo2vlm
+_target_: robo2vlm_benchmark.Robo2VLMBenchmark
+
+# Data directory
+data_dir: /hkfs/work/workspace/scratch/uemjv-roboG_datasets/Robo2VLM
+split: test
+
+# Optional: limit number of samples for quick testing
+max_samples: 20
