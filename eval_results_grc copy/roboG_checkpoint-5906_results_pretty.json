@@ -1,0 +1,92 @@
+{
+  "overall": {},
+  "task_detection": {
+    "accuracy": 0.5114503816793893,
+    "mean_confidence": 0.9410687022900763,
+    "weighted_accuracy": 0.4904580152671756,
+    "num_equivalent": 67,
+    "num_total": 131,
+    "num_errors": 0,
+    "num_samples": 131
+  },
+  "action_localization": {
+    "phase_recall": 0.7994428969359332,
+    "phase_precision": 0.7592592592592593,
+    "phase_f1": 0.7788331071913162,
+    "mean_temporal_iou": 0.33675358446313325,
+    "mean_spatial_iou": 0.0,
+    "mean_phase_accuracy": 0.006968641114982578,
+    "total_matched_phases": 287,
+    "total_gt_phases": 359,
+    "total_pred_phases": 378,
+    "fully_correct_samples": 0,
+    "total_samples": 131,
+    "sample_accuracy": 0.0,
+    "num_samples": 131
+  },
+  "target_location": {
+    "map": 0.0,
+    "map_50": 0.0,
+    "map_75": 0.0,
+    "map_small": 0.0,
+    "map_medium": 0.0,
+    "map_large": 0.0,
+    "mar_1": 0.0,
+    "mar_10": 0.0,
+    "mar_100": 0.0,
+    "mar_small": 0.0,
+    "mar_medium": 0.0,
+    "mar_large": 0.0,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.0008172155357897282,
+    "num_samples": 115
+  },
+  "poc_grounding_only_video": {
+    "num_samples": 131
+  },
+  "Initial Location": {
+    "map": 0.0012024278985336423,
+    "map_50": 0.0050774309784173965,
+    "map_75": 0.0,
+    "map_small": 0.0,
+    "map_medium": 0.004375053104013205,
+    "map_large": 0.0002256635925732553,
+    "mar_1": 0.010687022469937801,
+    "mar_10": 0.010687022469937801,
+    "mar_100": 0.010687022469937801,
+    "mar_small": 0.0,
+    "mar_medium": 0.01718750037252903,
+    "mar_large": 0.004615384619683027,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.06892736256122589
+  },
+  "Interacted Object": {
+    "accuracy": 0.030534351145038167,
+    "precision": 1.0,
+    "recall": 0.030534351145038167,
+    "f1_score": 0.05925925925925926
+  },
+  "object_detection": {
+    "map": 0.14019614458084106,
+    "map_50": 0.2720714807510376,
+    "map_75": 0.12860257923603058,
+    "map_small": 0.35346534848213196,
+    "map_medium": 0.20105376839637756,
+    "map_large": 0.11161123961210251,
+    "mar_1": 0.3255814015865326,
+    "mar_10": 0.3255814015865326,
+    "mar_100": 0.3255814015865326,
+    "mar_small": 0.3499999940395355,
+    "mar_medium": 0.33281248807907104,
+    "mar_large": 0.3174603283405304,
+    "map_per_class": -1.0,
+    "mar_100_per_class": -1.0,
+    "classes": 1,
+    "iou": 0.4541076421737671,
+    "num_samples": 129
+  }
+}

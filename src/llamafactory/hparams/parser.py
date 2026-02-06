@@ -79,7 +79,10 @@ def _parse_args(
 ) -> tuple[Any]:
     args = read_args(args)
     if isinstance(args, dict):
-        return parser.parse_dict(args, allow_extra_keys=allow_extra_keys)
+        
+        args_parsed = parser.parse_dict(args, allow_extra_keys=allow_extra_keys)
+
+        return args_parsed
 
     (*parsed_args, unknown_args) = parser.parse_args_into_dataclasses(args=args, return_remaining_strings=True)
 

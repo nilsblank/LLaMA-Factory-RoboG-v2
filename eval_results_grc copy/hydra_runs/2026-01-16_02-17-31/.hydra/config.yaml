@@ -1,0 +1,31 @@
+benchmarks:
+  name: roboG
+  _target_: roboG_benchmark.RoboGBenchmark
+  annotation_files:
+  - /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/oxe_robo_set/grc_validated_wrong/roboG_stageroboG_eval_eval.jsonl
+models:
+  _target_: models.Qwen3VLModel
+  name: Qwen3VL-4B
+  model_name_or_path: /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/roboG_reasoning_train/checkpoint-7717
+  use_vllm: true
+  image_max_pixels: 65536
+  video_max_pixels: 16384
+  adapter_name_or_path: null
+  template: qwen3_vl_nothink
+  cutoff_len: 16384
+  max_new_tokens: 4096
+  pipeline_parallel_size: 1
+  vllm_config: {}
+  temperature: 0.95
+  top_p: 0.7
+  top_k: 50
+  repetition_penalty: 1.0
+  seed: null
+  video_fps: 2.0
+  video_maxlen: 128
+  skip_special_tokens: true
+output_dir: ./eval_results_grc
+save_predictions: true
+save_results: true
+verbose: true
+batch_size: 1024

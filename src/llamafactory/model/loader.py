@@ -15,6 +15,9 @@
 import os
 from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
+
+from dataclasses import fields
+
 import torch
 from transformers import (
     AutoConfig,
@@ -30,6 +33,11 @@ from trl import AutoModelForCausalLMWithValueHead
 
 from ..extras import logging
 from ..extras.misc import count_parameters, skip_check_imports, try_download_model_from_other_hub
+
+from ..custom_models import Qwen3VLForConditionalGenerationTimechat
+
+
+
 from .adapter import init_adapter
 from .model_utils.liger_kernel import apply_liger_kernel
 from .model_utils.misc import register_autoclass
@@ -128,6 +136,14 @@ def load_config(model_args: "ModelArguments") -> "PretrainedConfig":
     return AutoConfig.from_pretrained(model_args.model_name_or_path, **init_kwargs)
 
 
+
+
+def load_custom_pretrained_model_cls(custom_model_name, model_args):
+    if "Qwen3VLForConditionalGenerationTimechat" in custom_model_name:
+        from ..custom_models.qwen_3_vl_query_timechat import Qwen3VLForConditionalGenerationTimechat
+        return Qwen3VLForConditionalGenerationTimechat
+
+
 def load_model(
     tokenizer: "PreTrainedTokenizer",
     model_args: "ModelArguments",
@@ -153,8 +169,12 @@ def load_model(
         init_kwargs["config"] = config
         init_kwargs["pretrained_model_name_or_path"] = model_args.model_name_or_path
 
+
         if model_args.mixture_of_depths == "load":
             model = load_mod_pretrained_model(**init_kwargs)
+        elif "custom_model_architecture" in [f.name for f in fields(model_args)] and model_args.custom_model_architecture is not None:
+            load_cls = load_custom_pretrained_model_cls(model_args.custom_model_architecture, model_args)
+            model = load_cls.from_pretrained(**init_kwargs)
         else:
             if type(config) in AutoModelForImageTextToText._model_mapping.keys():  # image-text
                 load_class = AutoModelForImageTextToText

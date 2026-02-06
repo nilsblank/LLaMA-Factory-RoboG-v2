@@ -505,6 +505,11 @@ class ModelArguments(
         metadata={"help": "Whether use block diag attention or not, derived from `neat_packing`. Do not specify it."},
     )
 
+    custom_model_architecture: Optional[str] = field(
+        default=None,
+        metadata={"help": "Custom model architecture to use."}
+    )
+
     def __post_init__(self):
         BaseModelArguments.__post_init__(self)
         ProcessorArguments.__post_init__(self)

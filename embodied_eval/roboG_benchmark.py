@@ -272,7 +272,7 @@ class RoboGBenchmark(BaseBenchmark):
             elif "roboG_reasoning" in task_type or "task_detection" in task_type:
                 
                 if "task_detection" in task_type:
-                    continue
+                    pass
                 #format: <task>Put the yellow object on the bottom left burner.</task>. extract task
                 instruction_evaluator = TaskInstructionEvaluator(ground_truths=data['ground_truths'])
                 #parse tasks from predictions

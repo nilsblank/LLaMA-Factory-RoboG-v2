@@ -5,7 +5,7 @@
 defaults:
   - benchmarks@benchmarks.0: roboG
   - models@models.0: Qwen3VL_4B_roboG
-  # - models@models.1: Qwen3VL_4B_roboG_baseline
+  - models@models.1: Qwen3VL_4B_roboG_baseline
   # - models/openai  # Uncomment to add OpenAI model
   # - models/vllm    # Uncomment to use vLLM for efficient batch inference
   # - benchmarks/another_benchmark  # Add more benchmarks as needed

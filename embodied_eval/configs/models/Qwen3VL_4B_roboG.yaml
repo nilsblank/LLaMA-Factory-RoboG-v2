@@ -2,7 +2,7 @@
 
 _target_: models.Qwen3VLModel  # or OpenAIModel, custom model, etc.
 name: Qwen3VL-4B_roboG
-model_name_or_path: /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/roboG_reasoning_train/checkpoint-7717  # Or HuggingFace model ID
+model_name_or_path: /home/hk-project-sustainebot/bm3844/code/LLaMA-Factory-RoboG-v2/saves/qwen3_5vl-4b/full/sft/roboG_reasoning_train/checkpoint-7843  # Or HuggingFace model ID
 
 
 use_vllm: true  # IMPORTANT: tells run_eval.py to use vLLM engine
