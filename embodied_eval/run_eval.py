@@ -61,9 +61,6 @@ import robo2vlm_benchmark
 import models
 # Register benchmarks
 register_benchmark("robovqa")(robovqa_benchmark.RoboVQABenchmark)
-register_benchmark("robog")(roboG_benchmark.RoboGBenchmark)
-register_benchmark("vstar")(vstar_benchmark.VStarBenchmark)
-register_benchmark("robo2vlm")(robo2vlm_benchmark.Robo2VLMBenchmark)
 
 # Register models
 register_model("mock")(models.MockModel)
