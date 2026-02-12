@@ -1007,7 +1007,7 @@
 },
 
 "roboG_stagepoc_grounding_only_video_train": {
-  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_grounding_only_video_train.jsonl",
+  "file_name": "/data/robogrounder/bridge/roboG_stagepoc_grounding_only_video_train.jsonl",
   "formatting": "sharegpt",
   "columns": {
     "messages": "messages",

@@ -19,7 +19,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Any, Callable, List, Optional, Union
+import math
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -57,99 +58,777 @@ class BaseModelOutputWithDeepstackFeatures(BaseModelOutputWithPooling):
     deepstack_features: list[torch.FloatTensor] | None = None
 
 
-# class QueryResampler(nn.Module):
-#     """
-#     Perceiver-style resampler.
-#     - Input:  x  [B, L, D]  (visual tokens)
-#     - Output: q  [B, Q, D]  (compressed query tokens)
+class RandomInit(nn.Module):
+    """Sampled random initialization for all slots."""
 
-#     Optionally does a second pass where x attends to q (broadcast), returning x' [B, L, D].
-#     """
-#     def __init__(
-#         self,
-#         dim: int,
-#         num_queries: int = 32,
-#         num_layers: int = 2,
-#         num_heads: int = 8,
-#         mlp_ratio: float = 4.0,
-#         dropout: float = 0.0,
-#         do_broadcast: bool = False,
-#     ):
-#         super().__init__()
-#         self.num_queries = num_queries
-#         self.do_broadcast = do_broadcast
+    def __init__(self, n_slots: int, dim: int, initial_std: Optional[float] = None):
+        #TODO - add INIT Option for mean per slot and one std
+        super().__init__()
+        self.n_slots = n_slots
+        self.dim = dim
+        self.mean = nn.Parameter(torch.zeros(1, 1, dim))
+        if initial_std is None:
+            self.initial_std = dim**-0.5
+        else:
+            self.initial_std = initial_std
+        self.log_std = nn.Parameter(torch.log(torch.ones(1, 1, dim) * self.initial_std))
 
-#         # Learnable queries (shared across samples)
-#         self.queries = nn.Parameter(torch.randn(num_queries, dim) * 0.02)
+    @torch.no_grad()
+    def reset_parameters(self):
+        # Only run when not meta
+        if self.mean.is_meta or self.log_std.is_meta:
+            return
+        self.mean.zero_()
+        self.log_std.fill_(math.log(self.initial_std))
 
-#         self.q_norms = nn.ModuleList([nn.LayerNorm(dim) for _ in range(num_layers)])
-#         self.x_norms = nn.ModuleList([nn.LayerNorm(dim) for _ in range(num_layers)])
 
-#         self.cross_attn = nn.ModuleList([
-#             nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-#             for _ in range(num_layers)
-#         ])
+    def forward(self, batch_size: int, device: torch.device, dtype: torch.dtype):
+        noise = torch.randn(batch_size, self.n_slots, self.dim, device=device, dtype=dtype)
+        mean = self.mean.to(device=device, dtype=dtype)
+        std = self.log_std.exp().to(device=device, dtype=dtype)
+        return mean + noise * std
+    
 
-#         self.ffn = nn.ModuleList([
-#             nn.Sequential(
-#                 nn.LayerNorm(dim),
-#                 nn.Linear(dim, int(dim * mlp_ratio)),
-#                 nn.GELU(),
-#                 nn.Dropout(dropout),
-#                 nn.Linear(int(dim * mlp_ratio), dim),
-#                 nn.Dropout(dropout),
-#             )
-#             for _ in range(num_layers)
-#         ])
 
-#         if do_broadcast:
-#             self.broadcast_attn = nn.ModuleList([
-#                 nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, dropout=dropout, batch_first=True)
-#                 for _ in range(num_layers)
-#             ])
-#             self.broadcast_ffn = nn.ModuleList([
-#                 nn.Sequential(
-#                     nn.LayerNorm(dim),
-#                     nn.Linear(dim, int(dim * mlp_ratio)),
-#                     nn.GELU(),
-#                     nn.Dropout(dropout),
-#                     nn.Linear(int(dim * mlp_ratio), dim),
-#                     nn.Dropout(dropout),
-#                 )
-#                 for _ in range(num_layers)
-#             ])
 
-#     def forward(self, x: torch.Tensor, x_key_padding_mask: Optional[torch.Tensor] = None):
-#         """
-#         x_key_padding_mask: [B, L] with True for PAD positions (standard MHA semantics).
-#         Returns:
-#           q: [B, Q, D]
-#           (optionally) x_out: [B, L, D] if do_broadcast=True
-#         """
-#         B, L, D = x.shape
-#         q = self.queries.unsqueeze(0).expand(B, -1, -1)  # [B, Q, D]
+class FixedLearnedInit(nn.Module):
+    """Learned initialization with a fixed number of slots."""
 
-#         for i in range(len(self.cross_attn)):
-#             # Cross-attn: queries attend to visual tokens
-#             q_in = self.q_norms[i](q)
-#             x_in = self.x_norms[i](x)
-#             attn_out, _ = self.cross_attn[i](
-#                 query=q_in, key=x_in, value=x_in,
-#                 key_padding_mask=x_key_padding_mask
-#             )
-#             q = q + attn_out
-#             q = q + self.ffn[i](q)
+    def __init__(
+        self, n_slots: int, dim: int, initial_std: Optional[float] = None, frozen: bool = False
+    ):
+        super().__init__()
+        self.n_slots = n_slots
+        self.dim = dim
+        if initial_std is None:
+            initial_std = dim**-0.5
+        self.slots = nn.Parameter(torch.randn(1, n_slots, dim) * initial_std)
+        if frozen:
+            self.slots.requires_grad_(False)
 
-#             if self.do_broadcast:
-#                 # Broadcast: visual tokens attend to queries (optional)
-#                 x_attn, _ = self.broadcast_attn[i](
-#                     query=self.x_norms[i](x), key=q, value=q,
-#                     key_padding_mask=None
-#                 )
-#                 x = x + x_attn
-#                 x = x + self.broadcast_ffn[i](x)
+    def forward(self, batch_size: int, device: torch.device, dtype: torch.dtype):
+        return self.slots.to(device=device, dtype=dtype).expand(batch_size, -1, -1)
 
-#         return (q, x) if self.do_broadcast else q
+
+class MotionAwareSlotAttention(nn.Module):
+    """
+    Slot attention biased toward moving regions with temporal carry-over.
+
+    Key design:
+      - Use more INTERNAL slots than you finally expose.
+      - Track by carrying slots across frames (init frame 0 from mu/sigma, others from previous).
+      - Return motion_score per slot for downstream role pooling.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        slot_dim: int,
+        num_slots_internal: int = 8,
+        num_iterations: int = 3,
+        motion_weight: float = 0.5,
+        num_heads_temporal: int = 8,
+        eps: float = 1e-8,
+        init_type: str = "random",  # "random" or "fixed"
+        init_frozen: bool = False,  # Only for fixed init
+    ):
+        super().__init__()
+        self.slot_dim = slot_dim
+        self.num_slots_internal = num_slots_internal
+        self.num_iterations = num_iterations
+        self.motion_weight = motion_weight
+        self.scale = slot_dim ** -0.5
+        self.eps = eps
+        self.init_type = init_type
+
+        # Slot initialization: random or fixed learned
+        if init_type == "random":
+            self.slots = RandomInit(num_slots_internal, slot_dim)
+            s = 1
+        elif init_type == "fixed":
+            self.slots = FixedLearnedInit(num_slots_internal, slot_dim, frozen=init_frozen)
+        else:
+            raise ValueError(f"Unknown init_type: {init_type}. Must be 'random' or 'fixed'.")
+
+        # Input projection & norm
+        self.input_proj = nn.Linear(input_dim, slot_dim)
+        self.input_norm = nn.LayerNorm(slot_dim)
+
+        # Motion encoding (in input space -> slot space)
+        self.motion_proj = nn.Sequential(
+            nn.Linear(input_dim, slot_dim),
+            nn.ReLU(),
+            nn.Linear(slot_dim, slot_dim),
+        )
+
+        # Slot attention projections
+        self.to_q = nn.Linear(slot_dim, slot_dim, bias=False)
+        self.to_k = nn.Linear(slot_dim, slot_dim, bias=False)
+        self.to_v = nn.Linear(slot_dim, slot_dim, bias=False)
+
+        self.slot_norm = nn.LayerNorm(slot_dim)
+
+        self.gru = nn.GRUCell(slot_dim, slot_dim)
+        self.mlp = nn.Sequential(
+            nn.LayerNorm(slot_dim),
+            nn.Linear(slot_dim, slot_dim * 2),
+            nn.GELU(),
+            nn.Linear(slot_dim * 2, slot_dim),
+        )
+
+        # Optional temporal smoothing/aggregation of per-frame slots
+        self.temporal_attn = nn.MultiheadAttention(slot_dim, num_heads_temporal, batch_first=True)
+        self.temporal_norm = nn.LayerNorm(slot_dim)
+
+    def compute_motion(self, features: torch.Tensor) -> torch.Tensor:
+        """Compute motion signal between consecutive frames."""
+        # features: (B, T, N, D)
+        motion = features[:, 1:] - features[:, :-1]        # (B, T-1, N, D)
+        motion = F.pad(motion, (0, 0, 0, 0, 0, 1))         # (B, T, N, D)
+        return motion
+
+    def init_slots(self, B: int, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+        slots = self.slots(B, device=device, dtype=dtype)
+        
+        # Safety check for NaN values
+        if torch.isnan(slots).any() or torch.isinf(slots).any():
+            print(f"Warning: NaN/Inf detected in initialized slots ({self.init_type}), using fallback")
+            slots = torch.randn(B, self.num_slots_internal, self.slot_dim, device=device, dtype=dtype) * 0.02
+        
+        return slots
+
+    def forward(
+        self,
+        visual_features: torch.Tensor,                 # (B, T, N, input_dim)
+        attention_mask: Optional[torch.Tensor] = None  # (B, T, N) True=real, False=pad
+    ) -> Dict[str, torch.Tensor]:
+        B, T, N, Din = visual_features.shape
+        device = visual_features.device
+        dtype = visual_features.dtype
+
+        # Project inputs into slot space
+        feats = self.input_norm(self.input_proj(visual_features))      # (B, T, N, H)
+
+        # Motion bias
+        motion_raw = self.compute_motion(visual_features)              # (B, T, N, Din)
+        motion_feats = self.motion_proj(motion_raw)                    # (B, T, N, H)
+        feats = feats + self.motion_weight * motion_feats
+
+        # Initialize slots only once (t=0), then carry forward
+        slots = self.init_slots(B, device=device, dtype=dtype)         # (B, K, H)
+
+        all_slots = []
+        all_attn = []
+
+        for t in range(T):
+            x = feats[:, t]  # (B, N, H)
+
+            # key padding mask for this frame: True means IGNORE
+            key_padding_mask = None
+            if attention_mask is not None:
+                # attention_mask True=real -> key_padding_mask True=pad
+                key_padding_mask = ~attention_mask[:, t]  # (B, N)
+
+            # Skip fully masked frames to avoid NaN
+            if key_padding_mask is not None and key_padding_mask.all():
+                # All tokens are padding, keep slots unchanged
+                all_slots.append(slots)
+                all_attn.append(torch.zeros(B, self.num_slots_internal, N, device=device, dtype=dtype))
+                continue
+
+            frame_slots = slots
+            attn = None
+
+            for _ in range(self.num_iterations):
+                s = self.slot_norm(frame_slots)
+                q = self.to_q(s)          # (B, K, H)
+                k = self.to_k(x)          # (B, N, H)
+                v = self.to_v(x)          # (B, N, H)
+
+                logits = torch.einsum("bkh,bnh->bkn", q, k) * self.scale  # (B, K, N)
+
+                if key_padding_mask is not None:
+                    # mask padded tokens as -inf before softmax
+                    logits = logits.masked_fill(key_padding_mask.unsqueeze(1), float("-inf"))
+                    # Replace -inf rows with large negative value to avoid NaN in softmax
+                    # This handles per-batch cases where some samples have all padding
+                    all_masked = key_padding_mask.all(dim=1)  # (B,)
+                    if all_masked.any():
+                        # For samples with all padding, use uniform attention
+                        logits[all_masked] = 0.0
+
+                # competition over slots (for each token)
+                attn = F.softmax(logits, dim=1)  # (B, K, N)
+
+                # normalize per-slot over tokens for weighted mean
+                denom = attn.sum(dim=-1, keepdim=True).clamp_min(self.eps)  # (B, K, 1)
+                attn_norm = attn / denom
+
+                updates = torch.einsum("bkn,bnh->bkh", attn_norm, v)  # (B, K, H)
+
+                frame_slots = self.gru(
+                    updates.reshape(B * self.num_slots_internal, self.slot_dim),
+                    frame_slots.reshape(B * self.num_slots_internal, self.slot_dim),
+                ).view(B, self.num_slots_internal, self.slot_dim)
+
+                frame_slots = frame_slots + self.mlp(frame_slots)
+
+            all_slots.append(frame_slots)
+            all_attn.append(attn)
+
+            # temporal carry: use current frame slots as next init
+            slots = frame_slots
+
+        slots_per_frame = torch.stack(all_slots, dim=1)  # (B, T, K, H)
+        attn_per_frame = torch.stack(all_attn, dim=1)    # (B, T, K, N)
+
+        # Compute motion score per slot (helps select manipulated objects later)
+        # Use motion magnitude in slot space, weighted by slot attention over tokens.
+        motion_mag = motion_feats.norm(dim=-1)  # (B, T, N)
+
+        if attention_mask is not None:
+            motion_mag = motion_mag * attention_mask.float()  # zero out padded
+
+        # attn_per_frame: (B,T,K,N)
+        num = (attn_per_frame * motion_mag.unsqueeze(2)).sum(dim=(1, 3))          # (B,K)
+        den = attn_per_frame.sum(dim=(1, 3)).clamp_min(self.eps)                  # (B,K)
+        motion_score = num / den                                                  # (B,K)
+
+        # Temporal aggregation: smooth slot tracks then pool
+        slots_flat = slots_per_frame.permute(0, 2, 1, 3).reshape(B * self.num_slots_internal, T, self.slot_dim)
+        slots_temporal, _ = self.temporal_attn(slots_flat, slots_flat, slots_flat)
+        slots_temporal = self.temporal_norm(slots_temporal + slots_flat)
+
+        # Mean pool for now (you can swap to attention pooling later)
+        slots_agg = slots_temporal.mean(dim=1).view(B, self.num_slots_internal, self.slot_dim)
+
+        return {
+            "slots_internal": slots_agg,            # (B, K, H)
+            "slots_internal_per_frame": slots_per_frame,  # (B, T, K, H)
+            "attention": attn_per_frame,            # (B, T, K, N)
+            "motion_score": motion_score,           # (B, K)
+        }
+    
+
+class LearnableQuery(nn.Module):
+    """A single learnable query token."""
+    def __init__(self, hidden_dim: int):
+        super().__init__()
+        self.query = nn.Parameter(torch.randn(1, 1, hidden_dim) * 0.02)
+
+    def forward(self, batch_size: int, device: torch.device) -> torch.Tensor:
+        return self.query.expand(batch_size, -1, -1).to(device)
+    
+
+# -----------------------------
+# Slot Role Pooling (differentiable compression)
+# -----------------------------
+class SlotRolePooler(nn.Module):
+    """
+    Compress many INTERNAL slots -> a small set of role tokens:
+      - robot token (1)
+      - object tokens (M)
+      - background token (optional)
+
+    This avoids argmax and supports multiple manipulated objects.
+    """
+
+    def __init__(self, hidden_dim: int, num_object_tokens: int = 2, use_background_token: bool = False):
+        super().__init__()
+        self.num_object_tokens = num_object_tokens
+        self.use_background_token = use_background_token
+
+        # Learned selectors to pick multiple object tracks from internal slots
+        self.object_selectors = nn.Parameter(torch.randn(1, num_object_tokens, hidden_dim) * 0.02)
+
+        # Optional background selector
+        if use_background_token:
+            self.bg_selector = nn.Parameter(torch.randn(1, 1, hidden_dim) * 0.02)
+        else:
+            self.bg_selector = None
+
+    def _attn_pool(self, selectors: torch.Tensor, slots: torch.Tensor, slot_bias: Optional[torch.Tensor] = None):
+        """
+        selectors: (B, M, H)
+        slots: (B, K, H)
+        slot_bias: (B, K) additive bias (e.g. log objectness)
+        returns:
+          pooled: (B, M, H)
+          weights: (B, M, K)
+        """
+        # dot product
+        logits = torch.einsum("bmh,bkh->bmk", selectors, slots) / math.sqrt(slots.size(-1))
+        if slot_bias is not None:
+            logits = logits + slot_bias.unsqueeze(1)
+        weights = torch.softmax(logits, dim=-1)  # over K
+        pooled = torch.einsum("bmk,bkh->bmh", weights, slots)
+        return pooled, weights
+
+    def forward(
+        self,
+        slots: torch.Tensor,               # (B, K, H)
+        slot_class_logits: torch.Tensor,   # (B, K, 3) -> [robot, object, background]
+        motion_score: torch.Tensor,        # (B, K)
+        motion_temp: float = 1.0,
+    ) -> Dict[str, torch.Tensor]:
+        B, K, H = slots.shape
+        probs = slot_class_logits.softmax(dim=-1)
+        robot_p = probs[..., 0]  # (B,K)
+        obj_p = probs[..., 1]    # (B,K)
+        bg_p = probs[..., 2]     # (B,K)
+
+        # Robot token: weighted average by robot probability
+        robot_w = robot_p / (robot_p.sum(dim=-1, keepdim=True).clamp_min(1e-8))
+        robot_token = torch.einsum("bk,bkh->bh", robot_w, slots).unsqueeze(1)  # (B,1,H)
+
+        # Object tokens: selectors attend to slots with bias toward objectness + motion
+        # Use log-bias to encourage selecting object-like moving slots.
+        bias = torch.log(obj_p.clamp_min(1e-6)) + (motion_score / motion_temp)
+        obj_selectors = self.object_selectors.expand(B, -1, -1)  # (B,M,H)
+        object_tokens, object_weights = self._attn_pool(obj_selectors, slots, slot_bias=bias)
+
+        out = {
+            "robot_token": robot_token,               # (B,1,H)
+            "object_tokens": object_tokens,           # (B,M,H)
+            "object_slot_weights": object_weights,    # (B,M,K)
+            "robot_slot_weights": robot_w,            # (B,K)
+            "obj_prob": obj_p,
+            "robot_prob": robot_p,
+            "bg_prob": bg_p,
+        }
+
+        if self.use_background_token:
+            bg_bias = torch.log(bg_p.clamp_min(1e-6))
+            bg_selectors = self.bg_selector.expand(B, -1, -1)
+            bg_token, bg_weights = self._attn_pool(bg_selectors, slots, slot_bias=bg_bias)
+            out["background_token"] = bg_token
+            out["background_slot_weights"] = bg_weights
+
+        return out
+
+
+# -----------------------------
+# Stage 2: Relation Query Encoder (queries attend to memory)
+# -----------------------------
+class RelationQueryLayer(nn.Module):
+    """Single layer for relation query processing with optional slot + context coordination."""
+
+    def __init__(self, hidden_dim: int, visual_dim: int, num_heads: int):
+        super().__init__()
+
+        # Joint self-attn between queries + context + slots
+        self.self_attn = nn.MultiheadAttention(hidden_dim, num_heads, batch_first=True)
+        self.self_norm = nn.LayerNorm(hidden_dim)
+
+        # Cross-attn to memory (visual tokens and/or per-frame slots)
+        self.mem_attn = nn.MultiheadAttention(hidden_dim, num_heads, batch_first=True)
+        self.mem_norm = nn.LayerNorm(hidden_dim)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim * 4),
+            nn.GELU(),
+            nn.Linear(hidden_dim * 4, hidden_dim),
+        )
+        self.ffn_norm = nn.LayerNorm(hidden_dim)
+
+        # Project memory tokens to hidden_dim
+        self.mem_proj = nn.Linear(visual_dim, hidden_dim) if visual_dim != hidden_dim else nn.Identity()
+
+    def forward(
+        self,
+        queries: torch.Tensor,               # (B, Q, H)
+        slots: torch.Tensor,                 # (B, K, H)
+        context: Optional[torch.Tensor],     # (B, C, H)  e.g. robot/object tokens
+        memory: torch.Tensor,                # (B, M, D_mem)
+        memory_key_padding_mask: Optional[torch.Tensor] = None,  # (B, M) True=pad
+    ) -> torch.Tensor:
+        # 1) self-attn between queries + context + slots (coordination)
+        if context is None:
+            combined = torch.cat([queries, slots], dim=1)
+            q_len = queries.size(1)
+        else:
+            combined = torch.cat([queries, context, slots], dim=1)
+            q_len = queries.size(1)
+
+        x = self.self_norm(combined)
+        self_out, _ = self.self_attn(x, x, x)
+        combined = combined + self_out
+
+        # split back
+        queries = combined[:, :q_len, :]
+
+        # 2) cross-attn to memory
+        mem = self.mem_proj(memory)
+        qn = self.mem_norm(queries)
+        attn_out, _ = self.mem_attn(qn, mem, mem, key_padding_mask=memory_key_padding_mask)
+        queries = queries + attn_out
+
+        # 3) ffn
+        queries = queries + self.ffn(self.ffn_norm(queries))
+        return queries
+
+
+class RelationQueryEncoder(nn.Module):
+    """
+    Encodes relation queries by attending to memory built from:
+      - visual tokens (flattened T*N) and/or
+      - per-frame slots (flattened T*K)
+    """
+
+    def __init__(
+        self,
+        hidden_dim: int,
+        visual_dim: int,
+        num_heads: int = 8,
+        num_layers: int = 2,
+        temporal_pooling: str = "concat",     # 'concat' or 'mean'
+        memory_mode: str = "tokens+slots",    # 'tokens', 'slots', 'tokens+slots'
+    ):
+        super().__init__()
+        assert memory_mode in {"tokens", "slots", "tokens+slots"}
+        self.temporal_pooling = temporal_pooling
+        self.memory_mode = memory_mode
+
+        self.layers = nn.ModuleList([
+            RelationQueryLayer(hidden_dim, visual_dim, num_heads)
+            for _ in range(num_layers)
+        ])
+
+        # If we include slots as memory too, they are already in hidden_dim.
+        # We'll concatenate them as additional "memory tokens" in hidden_dim space,
+        # so memory_dim becomes visual_dim for the visual part and hidden_dim for slots part.
+        # To keep the layer simple, we'll project everything to visual_dim before mem_proj OR
+        # just unify memory to visual_dim using a projector. We'll do unify-to-visual_dim.
+        self.slot_mem_proj = nn.Linear(hidden_dim, visual_dim) if hidden_dim != visual_dim else nn.Identity()
+
+    def build_memory(
+        self,
+        visual_features: torch.Tensor,                    # (B, T, N, Dv)
+        slots_per_frame: Optional[torch.Tensor],          # (B, T, K, H)
+        attention_mask: Optional[torch.Tensor] = None,    # (B, T, N) True=real
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        B, T, N, Dv = visual_features.shape
+
+        memories = []
+        pad_masks = []
+
+        # --- visual tokens memory ---
+        if self.memory_mode in {"tokens", "tokens+slots"}:
+            if self.temporal_pooling == "concat":
+                vis = visual_features.reshape(B, T * N, Dv)
+                memories.append(vis)
+                if attention_mask is not None:
+                    # key_padding_mask True=pad
+                    vis_pad = ~attention_mask.reshape(B, T * N)
+                    pad_masks.append(vis_pad)
+                else:
+                    pad_masks.append(None)
+            else:
+                # mean over time with masking
+                if attention_mask is not None:
+                    m = attention_mask.float()  # (B,T,N)
+                    vis_sum = (visual_features * m.unsqueeze(-1)).sum(dim=1)  # (B,N,Dv)
+                    denom = m.sum(dim=1, keepdim=False).unsqueeze(-1).clamp_min(1.0)  # (B,N,1)
+                    vis = vis_sum / denom
+                    memories.append(vis)
+                    vis_pad = ~attention_mask.any(dim=1)  # (B,N)
+                    pad_masks.append(vis_pad)
+                else:
+                    memories.append(visual_features.mean(dim=1))  # (B,N,Dv)
+                    pad_masks.append(None)
+
+        # --- slots memory ---
+        if self.memory_mode in {"slots", "tokens+slots"}:
+            assert slots_per_frame is not None, "slots_per_frame required for slots memory"
+            Bs, Ts, K, H = slots_per_frame.shape
+            assert Bs == B and Ts == T
+            slot_mem = slots_per_frame.reshape(B, T * K, H)  # (B, T*K, H)
+            slot_mem = self.slot_mem_proj(slot_mem)          # (B, T*K, Dv)
+            memories.append(slot_mem)
+            # slots are never padded
+            pad_masks.append(None)
+
+        # concat memories
+        memory = torch.cat(memories, dim=1)  # (B, M, Dv)
+
+        # concat pad masks (if any exist)
+        if all(m is None for m in pad_masks):
+            return memory, None
+
+        masks = []
+        for m in pad_masks:
+            if m is None:
+                # no padding -> all False
+                masks.append(torch.zeros(B, memories[masks.__len__()].shape[1], device=memory.device, dtype=torch.bool))
+            else:
+                masks.append(m.to(device=memory.device))
+
+        memory_key_padding_mask = torch.cat(masks, dim=1)  # (B, M)
+        return memory, memory_key_padding_mask
+
+    def forward(
+        self,
+        queries: torch.Tensor,                  # (B, Q, H)
+        visual_features: torch.Tensor,          # (B, T, N, Dv)
+        slots: torch.Tensor,                   # (B, K, H) (internal slots for coordination)
+        slots_per_frame: Optional[torch.Tensor] = None,  # (B, T, K, H)
+        context_tokens: Optional[torch.Tensor] = None,   # (B, C, H) e.g. robot/object tokens
+        attention_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        memory, mem_kpm = self.build_memory(visual_features, slots_per_frame, attention_mask)
+
+        for layer in self.layers:
+            queries = layer(
+                queries=queries,
+                slots=slots,
+                context=context_tokens,
+                memory=memory,
+                memory_key_padding_mask=mem_kpm,
+            )
+        return queries
+
+
+# -----------------------------
+# Full Hybrid Model
+# -----------------------------
+class HybridSlotQueryModel(nn.Module):
+    """
+    Revised design:
+      - Stage 1: INTERNAL slots track objects/parts across frames (K_internal)
+      - Stage 1b: Role pooling compresses -> robot token + M object tokens (small, stable)
+      - Stage 2: Typed queries run PER object token (multi-object ready), attend to tokens+slots memory
+      - Stage 3: LLM integration (kept frozen)
+    """
+
+    def __init__(
+        self,
+        vision_dim: int = 1280,
+        vision_hidden_dim: int = 1024,
+        num_slots_internal: int = 8,     # robust decomposition
+        num_object_tokens: int = 2,      # how many manipulated objects you want to represent
+        num_frames: int = 16,
+        num_heads: int = 8,
+        qwen_model: str = "Qwen/Qwen2-0.5B",
+        memory_mode: str = "tokens+slots",   # 'tokens', 'slots', 'tokens+slots'
+        slot_init_type: str = "random",      # 'random' or 'fixed'
+        slot_init_frozen: bool = False,      # Only for fixed init
+    ):
+        super().__init__()
+
+        hidden_dim = vision_hidden_dim
+        self.hidden_dim = hidden_dim
+        self.num_slots_internal = num_slots_internal
+        self.num_object_tokens = num_object_tokens
+        self.num_frames = num_frames
+
+        # --------------------------
+        # Stage 1: Slot discovery (internal slots)
+        # --------------------------
+        self.slot_discovery = MotionAwareSlotAttention(
+            input_dim=vision_dim,
+            slot_dim=hidden_dim,
+            num_slots_internal=num_slots_internal,
+            num_iterations=3,
+            init_type=slot_init_type,
+            init_frozen=slot_init_frozen,
+        )
+
+        # Slot classification over INTERNAL slots: robot, object, background
+        self.slot_classifier = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 2, 3),
+        )
+
+        # Role pooling: internal slots -> robot token + M object tokens
+        self.role_pooler = SlotRolePooler(
+            hidden_dim=hidden_dim,
+            num_object_tokens=num_object_tokens,
+            use_background_token=False,
+        )
+
+        # --------------------------
+        # Stage 2: Typed relation queries
+        # --------------------------
+        self.relation_queries = nn.ModuleDict({
+            "start_location": LearnableQuery(hidden_dim),
+            "end_location": LearnableQuery(hidden_dim),
+            "target_container": LearnableQuery(hidden_dim),
+            "robot_gripper": LearnableQuery(hidden_dim),
+        })
+
+        self.relation_encoder = RelationQueryEncoder(
+            hidden_dim=hidden_dim,
+            visual_dim=vision_dim,               # visual_features are still in vision_dim
+            num_heads=num_heads,
+            num_layers=2,
+            temporal_pooling="concat",
+            memory_mode=memory_mode,
+        )
+
+        # --------------------------
+        # Stage 3: LLM Integration (frozen)
+        # --------------------------
+        from transformers import Qwen2ForCausalLM, AutoTokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(qwen_model)
+        self.llm = Qwen2ForCausalLM.from_pretrained(qwen_model, torch_dtype=torch.bfloat16)
+
+        for p in self.llm.parameters():
+            p.requires_grad = False
+
+        llm_dim = self.llm.config.hidden_size
+        self.slot_to_llm = nn.Linear(hidden_dim, llm_dim)
+        self.query_to_llm = nn.Linear(hidden_dim, llm_dim)
+
+        # --------------------------
+        # Heads (optional)
+        # --------------------------
+        # Internal slot boxes per frame (if you have supervision/pseudo-labels)
+        self.slot_box_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 4),
+            nn.Sigmoid(),
+        )
+
+        # Query boxes (per object token, per query)
+        self.query_box_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 4),
+            nn.Sigmoid(),
+        )
+
+        self.temporal_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 2, 2),
+            nn.Sigmoid(),
+        )
+
+        self.setup_special_tokens()
+
+    def setup_special_tokens(self):
+        special_tokens = ["<obj>", "</obj>", "<loc>", "</loc>", "<box>", "</box>"]
+        self.tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+        self.llm.resize_token_embeddings(len(self.tokenizer))
+
+    def get_n_video_tokens(self):
+        # For an LLM interface you likely want: 1 robot + M objects + Q relation tokens (maybe per object)
+        # Here we return the minimal count if you choose to pass:
+        #   robot token + M object tokens + Q global query tokens (not per object)
+        # If you pass per-object query tokens, multiply Q by M.
+        return 1 + self.num_object_tokens + len(self.relation_queries)
+
+    def forward(
+        self,
+        visual_features: torch.Tensor,                 # (B, T, N, vision_dim)
+        attention_mask: Optional[torch.Tensor] = None, # (B, T, N) True=real, False=pad
+    ) -> Dict[str, torch.Tensor]:
+        B, T, N, D = visual_features.shape
+
+        # --------------------------
+        # Stage 1: Internal slot tracking
+        # --------------------------
+        slot_out = self.slot_discovery(visual_features, attention_mask=attention_mask)
+        slots_int = slot_out["slots_internal"]                 # (B, K, H)
+        slots_int_pf = slot_out["slots_internal_per_frame"]    # (B, T, K, H)
+        slot_attn = slot_out["attention"]                      # (B, T, K, N)
+        motion_score = slot_out["motion_score"]                # (B, K)
+
+        slot_class_logits = self.slot_classifier(slots_int)    # (B, K, 3)
+
+        # per-frame boxes for internal slots (optional)
+        slot_boxes_pf = self.slot_box_head(slots_int_pf)       # (B, T, K, 4)
+        slot_boxes_pf = slot_boxes_pf.permute(0, 2, 1, 3)      # (B, K, T, 4)
+
+        temporal_bounds = self.temporal_head(slots_int)        # (B, K, 2)
+
+        # --------------------------
+        # Stage 1b: Role pooling (differentiable, multi-object)
+        # --------------------------
+        role = self.role_pooler(
+            slots=slots_int,
+            slot_class_logits=slot_class_logits,
+            motion_score=motion_score,
+        )
+        robot_token = role["robot_token"]          # (B,1,H)
+        object_tokens = role["object_tokens"]      # (B,M,H)
+        object_slot_weights = role["object_slot_weights"]  # (B,M,K)
+
+        # --------------------------
+        # Stage 2: Relation queries PER object token
+        # --------------------------
+        query_names = list(self.relation_queries.keys())
+        base_queries = torch.stack(
+            [self.relation_queries[name](B, visual_features.device).squeeze(1) for name in query_names],
+            dim=1,
+        )  # (B, Q, H)
+
+        # For each object token, run the typed queries conditioned on:
+        #   context_tokens = [robot_token, object_token]
+        # This yields Q relation tokens per object.
+        per_object_query_feats = []
+        per_object_query_boxes = []
+
+        for m in range(self.num_object_tokens):
+            obj_tok = object_tokens[:, m:m+1, :]               # (B,1,H)
+            context = torch.cat([robot_token, obj_tok], dim=1) # (B,2,H)
+
+            q_feats = self.relation_encoder(
+                queries=base_queries,
+                visual_features=visual_features,
+                slots=slots_int,                 # internal slots coordinate with queries
+                slots_per_frame=slots_int_pf,     # used if memory_mode includes slots
+                context_tokens=context,
+                attention_mask=attention_mask,
+            )  # (B, Q, H)
+
+            q_boxes = self.query_box_head(q_feats)  # (B, Q, 4)
+
+            per_object_query_feats.append(q_feats)
+            per_object_query_boxes.append(q_boxes)
+
+        per_object_query_feats = torch.stack(per_object_query_feats, dim=1)  # (B, M, Q, H)
+        per_object_query_boxes = torch.stack(per_object_query_boxes, dim=1)  # (B, M, Q, 4)
+
+        # Optional: if you want a single "global" query set, you can also run with context=[robot, mean(objects)]
+        global_obj = object_tokens.mean(dim=1, keepdim=True)
+        global_context = torch.cat([robot_token, global_obj], dim=1)
+        global_queries = self.relation_encoder(
+            queries=base_queries,
+            visual_features=visual_features,
+            slots=slots_int,
+            slots_per_frame=slots_int_pf,
+            context_tokens=global_context,
+            attention_mask=attention_mask,
+        )  # (B, Q, H)
+
+        global_query_boxes = self.query_box_head(global_queries)  # (B, Q, 4)
+
+        return {
+            # Stage 1 outputs (internal)
+            "slots_internal": slots_int,                  # (B,K,H)
+            "slots_internal_per_frame": slots_int_pf,     # (B,T,K,H)
+            "slot_attention": slot_attn,                  # (B,T,K,N)
+            "slot_class_logits": slot_class_logits,       # (B,K,3)
+            "motion_score": motion_score,                 # (B,K)
+            "slot_boxes_per_frame": slot_boxes_pf,        # (B,K,T,4)
+            "temporal_bounds": temporal_bounds,           # (B,K,2)
+
+            # Role tokens (compressed, stable interface)
+            "robot_token": robot_token,                   # (B,1,H)
+            "object_tokens": object_tokens,               # (B,M,H)
+            "object_slot_weights": object_slot_weights,   # (B,M,K)
+
+            # Stage 2 outputs (per object)
+            "per_object_query_features": per_object_query_feats,  # (B,M,Q,H)
+            "per_object_query_boxes": per_object_query_boxes,     # (B,M,Q,4)
+
+            # Stage 2 outputs (global)
+            "query_features": {name: global_queries[:, i, :] for i, name in enumerate(query_names)},  # dict of (B,H)
+            "query_boxes": {name: global_query_boxes[:, i, :] for i, name in enumerate(query_names)}, # dict of (B,4)
+        }
 
 
 
@@ -851,7 +1530,13 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
 
         self.post_init()
 
-        self.post_init()
+        #self.post_init()
+
+    def _init_weights(self, module):
+        if hasattr(module, "reset_parameters"):
+            module.reset_parameters()
+        else:
+            super()._init_weights(module)
 
     def rot_pos_emb(self, grid_thw: torch.Tensor) -> torch.Tensor:
         merge_size = self.spatial_merge_size
@@ -1156,53 +1841,41 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         self.rope_deltas = None  # cache rope_deltas here
 
         # ---------------------------------------------------------------------
-        # TimeChat-style temporal querying over videos (two-stage querying):
-        #  (1) per-frame queries (frame_resampler) with optional timestamp conditioning
-        #  (2) temporal aggregation (video_resampler) over (t * num_frame_queries) tokens
-        #
-        # This keeps the BLIP-style "query tokens -> cross-attend -> project to LLM" pattern,
-        # but uses Qwen components and a cleaner (less modular) implementation.
+        # Hybrid Slot Query Model for motion-aware object discovery and tracking
+        # Uses slot attention to discover moving objects and semantic queries for relations
         # ---------------------------------------------------------------------
-        self.use_timechat_querying = getattr(config, "use_timechat_querying", True)
-        self.timechat_qformer_text_input = getattr(config, "timechat_qformer_text_input", True)
-        self.timechat_window_size = getattr(config, "timechat_window_size", 0)
-        self.timechat_stride = getattr(config, "timechat_stride", 0)
-
-        self.timechat_num_frame_queries = getattr(config, "timechat_num_frame_queries", 32)
-        self.timechat_num_video_queries = getattr(config, "timechat_num_video_queries", 32)
-        self.timechat_frame_query_layers = getattr(config, "timechat_frame_query_layers", 2)
-        self.timechat_video_query_layers = getattr(config, "timechat_video_query_layers", 2)
-        self.timechat_query_heads = getattr(config, "timechat_query_heads", 8)
-        self.timechat_max_frame_pos = getattr(config, "timechat_max_frame_pos", 128)
+        self.use_slot_query = getattr(config, "use_slot_query", True)
+        self.slot_query_max_frames = getattr(config, "slot_query_max_frames", 128)
+        self.slot_query_num_heads = getattr(config, "slot_query_num_heads", 8)
 
         vision_dim = config.vision_config.out_hidden_size
         text_dim = config.text_config.hidden_size
 
-        self.timechat_frame_pos_emb = nn.Embedding(self.timechat_max_frame_pos, vision_dim)
-        self.timechat_frame_resampler = QueryResampler(
-            dim=vision_dim,
-            num_queries=self.timechat_num_frame_queries,
-            num_layers=self.timechat_frame_query_layers,
-            num_heads=self.timechat_query_heads,
-            mlp_ratio=4.0,
-            dropout=0.0,
+        # Hybrid Slot Query Model parameters
+        self.hybrid_slot_num_slots = getattr(config, "hybrid_slot_num_slots", 8)
+        self.hybrid_slot_hidden_dim = getattr(config, "hybrid_slot_hidden_dim", 512)
+        
+        self.slot_frame_pos_emb = nn.Embedding(self.slot_query_max_frames, vision_dim)
+        
+        # Use HybridSlotQueryModel for frame-level processing
+        self.hybrid_slot_query_model = HybridSlotQueryModel(
+            vision_dim=vision_dim,
+            #hidden_dim=self.hybrid_slot_hidden_dim,
+            num_slots_internal=self.hybrid_slot_num_slots,
+            num_frames=self.slot_query_max_frames,
+            num_heads=self.slot_query_num_heads,
+            vision_hidden_dim=vision_dim,
         )
-        self.timechat_video_resampler = QueryResampler(
-            dim=vision_dim,
-            num_queries=self.timechat_num_video_queries,
-            num_layers=self.timechat_video_query_layers,
-            num_heads=self.timechat_query_heads,
-            mlp_ratio=4.0,
-            dropout=0.0,
-        )
-        self.timechat_mm_projector = nn.Identity() if vision_dim == text_dim else nn.Linear(vision_dim, text_dim, bias=False)
+
+
+        self.n_tokens_per_video = self.hybrid_slot_query_model.get_n_video_tokens()
+        
+        # Project hybrid slot query output to text_dim for LLM
+        # Note: hybrid slot model outputs vision_dim, not hybrid_slot_hidden_dim
+        self.slot_to_llm = nn.Identity() if vision_dim == text_dim else nn.Linear(vision_dim, text_dim, bias=False)
 
         # Initialize weights and apply final processing
         self.post_init()
-
-        # If dimensions allow, initialize the resampler attention from the Qwen3VL text attention weights.
-        # This gives a reasonable "initialized from qwen3vl2b" starting point when loading from that checkpoint.
-        self._init_timechat_query_modules_from_text()
 
 
     def get_input_embeddings(self):
@@ -1211,69 +1884,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
     def set_input_embeddings(self, value):
         self.language_model.set_input_embeddings(value)
 
-    def _init_timechat_query_modules_from_text(self):
-        """Initialize the temporal querying modules from the (already-loaded) Qwen text model weights.
 
-        We try to copy projection matrices from the text self-attention blocks into the MultiheadAttention
-        layers inside the QueryResampler modules. This is only applied when shapes are compatible (e.g. no
-        GQA mismatch). If incompatible, we simply keep the default initialization.
-        """
-        if not getattr(self, "use_timechat_querying", False):
-            return
-
-        vision_dim = self.config.vision_config.hidden_size
-        text_dim = self.config.text_config.hidden_size
-        if vision_dim != text_dim:
-            # we can still use temporal querying, but we cannot safely reuse text attention weights
-            return
-
-        layers = getattr(self.language_model, "layers", None)
-        if not layers:
-            return
-
-        def _copy_attn(mha: nn.MultiheadAttention, src_attn: nn.Module):
-            D = vision_dim
-            if not (
-                hasattr(src_attn, "q_proj")
-                and hasattr(src_attn, "k_proj")
-                and hasattr(src_attn, "v_proj")
-                and hasattr(src_attn, "o_proj")
-            ):
-                return
-
-            # Skip if k/v projections are not full-sized (e.g. GQA).
-            if src_attn.q_proj.weight.shape != (D, D):
-                return
-            if src_attn.k_proj.weight.shape != (D, D):
-                return
-            if src_attn.v_proj.weight.shape != (D, D):
-                return
-            if src_attn.o_proj.weight.shape != (D, D):
-                return
-
-            with torch.no_grad():
-                mha.in_proj_weight[:D].copy_(src_attn.q_proj.weight)
-                mha.in_proj_weight[D : 2 * D].copy_(src_attn.k_proj.weight)
-                mha.in_proj_weight[2 * D : 3 * D].copy_(src_attn.v_proj.weight)
-
-                if mha.in_proj_bias is not None:
-                    if src_attn.q_proj.bias is not None:
-                        mha.in_proj_bias[:D].copy_(src_attn.q_proj.bias)
-                    if src_attn.k_proj.bias is not None:
-                        mha.in_proj_bias[D : 2 * D].copy_(src_attn.k_proj.bias)
-                    if src_attn.v_proj.bias is not None:
-                        mha.in_proj_bias[2 * D : 3 * D].copy_(src_attn.v_proj.bias)
-
-                mha.out_proj.weight.copy_(src_attn.o_proj.weight)
-                if mha.out_proj.bias is not None and src_attn.o_proj.bias is not None:
-                    mha.out_proj.bias.copy_(src_attn.o_proj.bias)
-
-        for resampler in [getattr(self, "timechat_frame_resampler", None), getattr(self, "timechat_video_resampler", None)]:
-            if resampler is None:
-                continue
-            for i, mha in enumerate(resampler.cross_attn):
-                src = layers[i % len(layers)].self_attn
-                _copy_attn(mha, src)
 
     def get_rope_index(
         self,
@@ -1399,24 +2010,6 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         return res[0] if isinstance(res, (tuple, list)) else res
     
 
-
-    def _call_video_resampler(self, x: torch.Tensor, mask: Optional[torch.Tensor]):
-        """
-        Try calling timechat_video_resampler with x_key_padding_mask if supported.
-        Fallback to calling without mask.
-        """
-        try:
-            if mask is None:
-                return self._unwrap_q(self.timechat_video_resampler(x))
-            return self._unwrap_q(self.timechat_video_resampler(x, x_key_padding_mask=mask))
-        except TypeError:
-            # Module doesn't accept x_key_padding_mask
-            if mask is not None and mask.any().item():
-                raise ValueError(
-                    "timechat_video_resampler does not support padding masks, "
-                    "but variable lengths require padding. Use per-video loop or make it accept x_key_padding_mask."
-                )
-            return self._unwrap_q(self.timechat_video_resampler(x))
     def compress_videos_frame_stage_batched(
     self,
     video_tokens_list: List[torch.Tensor],   # each [T_i*per_frame_i, D]
@@ -1456,89 +2049,44 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             per_frame_list.append(per_frame)
             T_list.append(T)
 
-        # ---- (2) flatten frames across all videos into one big batch ----
-        # We'll keep frames in (vid0 frames, vid1 frames, ...) order for easy regrouping.
-        Nframes = sum(T_list)
+        # ---- (2) Batch videos properly: [B, max_T, Lmax, D] ----
+        max_T = max(T_list)
         Lmax = max(per_frame_list)
 
         device = video_tokens_list[0].device
         dtype = video_tokens_list[0].dtype
 
-        x_all = torch.zeros((Nframes, Lmax, D_in), device=device, dtype=dtype)
-        pad_mask_all = torch.ones((Nframes, Lmax), device=device, dtype=torch.bool)  # True=PAD
-        owner_vid = torch.empty((Nframes,), device=device, dtype=torch.long)
-        frame_idx = torch.empty((Nframes,), device=device, dtype=torch.long)
+        x_batched = torch.zeros((B, max_T, Lmax, D_in), device=device, dtype=dtype)
+        pad_mask_batched = torch.ones((B, max_T, Lmax), device=device, dtype=torch.bool)  # True=PAD
+        frame_idx_batched = torch.zeros((B, max_T), device=device, dtype=torch.long)
 
-        cursor = 0
         for vid_idx, (tokens_tf, T, L) in enumerate(zip(tokens_tf_list, T_list, per_frame_list)):
             # tokens_tf: [T, L, D]
-            x_all[cursor:cursor+T, :L, :] = tokens_tf
-            pad_mask_all[cursor:cursor+T, :L] = False  # not pad
-            owner_vid[cursor:cursor+T] = vid_idx
-            frame_idx[cursor:cursor+T] = torch.arange(T, device=device, dtype=torch.long)
-            cursor += T
+            x_batched[vid_idx, :T, :L, :] = tokens_tf
+            pad_mask_batched[vid_idx, :T, :L] = False  # not pad
+            frame_idx_batched[vid_idx, :T] = torch.arange(T, device=device, dtype=torch.long)
 
-        # ---- (3) optional timestamp conditioning (batched across frames) ----
-        # This assumes timestamps are per-frame (like TimeChat), not per-token.
-        if self.timechat_qformer_text_input and timestamps_input_ids is not None:
-            # Build ids per frame in the SAME order as x_all (vid-major, then time).
-            # We'll create ids_all: [Nframes, Ltxt] and mask_all: [Nframes, Ltxt] (or None).
-            ids_chunks = []
-            mask_chunks = [] if timestamps_attention_mask is not None else None
+        # ---- (3) Language conditioning removed - pure visual slot query ----
 
-            for vid_idx in range(B):
-                T = T_list[vid_idx]
-                ts_ids = None
-                ts_mask = None
-
-                if timestamps_input_ids.dim() == 3:
-                    ts_ids = timestamps_input_ids[vid_idx]  # [T, Ltxt] (expected)
-                    ts_mask = timestamps_attention_mask[vid_idx] if timestamps_attention_mask is not None else None
-                elif timestamps_input_ids.dim() == 2 and frame_offsets is not None:
-                    off = int(frame_offsets[vid_idx].item())
-                    ts_ids = timestamps_input_ids[off:off+T]
-                    ts_mask = timestamps_attention_mask[off:off+T] if timestamps_attention_mask is not None else None
-                else:
-                    raise ValueError("Unsupported timestamp layout for batching.")
-
-                # allow broadcast if ts_ids is [Ltxt]
-                if ts_ids.dim() == 1:
-                    ts_ids = ts_ids.unsqueeze(0).expand(T, -1)
-                    if ts_mask is not None and ts_mask.dim() == 1:
-                        ts_mask = ts_mask.unsqueeze(0).expand(T, -1)
-
-                ids_chunks.append(ts_ids)
-                if mask_chunks is not None:
-                    mask_chunks.append(ts_mask)
-
-            ids_all = torch.cat(ids_chunks, dim=0).to(device)            # [Nframes, Ltxt]
-            emb = self.language_model.embed_tokens(ids_all)              # [Nframes, Ltxt, text_dim]
-
-            # Only inject if dims match current x dim (after any input projection you might have)
-            if emb.shape[-1] == x_all.shape[-1]:
-                if mask_chunks is None:
-                    pooled = emb.mean(dim=1)                             # [Nframes, D]
-                else:
-                    m_all = torch.cat(mask_chunks, dim=0).to(device).float()  # [Nframes, Ltxt]
-                    denom = m_all.sum(dim=1, keepdim=True).clamp(min=1.0)
-                    pooled = (emb * m_all.unsqueeze(-1)).sum(dim=1) / denom   # [Nframes, D]
-                x_all = x_all + pooled.unsqueeze(1)                      # [Nframes, Lmax, D]
-
-        # ---- (4) run frame QueryResampler ONCE for all frames ----
-        # IMPORTANT: do NOT index [0] unless your module returns a tuple.
-        q_all = self._unwrap_q(self.timechat_frame_resampler(x_all, x_key_padding_mask=pad_mask_all))
-        # q_all: [Nframes, Qf, Dq]
-
+        # ---- (4) run Hybrid Slot Query Model ONCE for all videos ----
+        # x_batched is already [B, max_T, Lmax, D]
+        attn_mask = ~pad_mask_batched  # [B, max_T, Lmax] - True=real, False=pad
+        hybrid_output = self.hybrid_slot_query_model(x_batched, attention_mask=attn_mask)  # returns dict
+        
+        # Extract slot features [B, max_T, num_slots, H]
+        slot_features = hybrid_output['slots_internal_per_frame']  # [B, max_T, num_slots, H]
+        
         # ---- (5) add frame position embedding (batched) ----
-        pos = frame_idx.clamp(max=self.timechat_max_frame_pos - 1)
-        q_all = q_all + self.timechat_frame_pos_emb(pos).unsqueeze(1)  # [Nframes, Qf, Dq]
+        pos = frame_idx_batched.clamp(max=self.slot_query_max_frames - 1)  # [B, max_T]
+        pos_emb = self.slot_frame_pos_emb(pos).unsqueeze(2)  # [B, max_T, 1, vision_dim]
+        
+        # Project slots to text_dim and add position  
+        q_all = self.slot_to_llm(slot_features + pos_emb[:, :, :, :slot_features.shape[-1]] if pos_emb.shape[-1] >= slot_features.shape[-1] else slot_features)  # [B, max_T, num_slots, text_dim]
 
         # ---- (6) regroup back per video into q_time: [1, T*Qf, Dq] ----
         q_time_per_video = [None] * B
-        cursor = 0
         for vid_idx, T in enumerate(T_list):
-            q_vid = q_all[cursor:cursor+T]  # [T, Qf, Dq]
-            cursor += T
+            q_vid = q_all[vid_idx, :T]  # [T, Qf, Dq]
             q_time_per_video[vid_idx] = q_vid.reshape(1, T * q_vid.shape[1], q_vid.shape[2])
 
 
@@ -1693,7 +2241,8 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         ids_blocks = []
         mask_blocks = []
 
-        use_ts = bool(self.timechat_qformer_text_input and timestamps_input_ids is not None)
+        # Language conditioning removed - pure visual slot query
+        use_ts = False
 
         for vid_idx in range(B):
             T = T_list[vid_idx]
@@ -1712,42 +2261,29 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             pos_vid = torch.arange(T, device=device, dtype=torch.long).repeat(S)
             pos_blocks.append(pos_vid)
 
-            # timestamps: repeat per-frame ids S times for this video
-            if use_ts and ts_ids_list[vid_idx] is not None:
-                ts_ids = ts_ids_list[vid_idx]
-                ts_mask = ts_mask_list[vid_idx]
-
-                if ts_ids.dim() == 1:
-                    ts_ids = ts_ids.unsqueeze(0).expand(T, -1)
-                    if ts_mask is not None and ts_mask.dim() == 1:
-                        ts_mask = ts_mask.unsqueeze(0).expand(T, -1)
-
-                ids_blocks.append(ts_ids.repeat(S, 1))  # [S*T, Ltxt]
-                if timestamps_attention_mask is not None:
-                    mask_blocks.append(ts_mask.repeat(S, 1))
+            # timestamps: not used in slot query approach
         #xblocks is list length B of [S*T, per_frame, D]
         x_all = torch.cat(x_blocks, dim=0)              # [S*sumT (B*S*T), per_frame, D]
         pos_all = torch.cat(pos_blocks, dim=0)          # [S*sumT]
 
-        # optional timestamp injection (batched)
-        if use_ts and len(ids_blocks) == B:  # require all videos had timestamps; else you'd need a mixed-path
-            ids_all = torch.cat(ids_blocks, dim=0).to(device)  # [S*sumT, Ltxt]
-            emb = self.language_model.embed_tokens(ids_all)    # [S*sumT, Ltxt, text_dim]
-            if emb.shape[-1] == D:
-                if timestamps_attention_mask is None:
-                    pooled = emb.mean(dim=1)
-                else:
-                    m_all = torch.cat(mask_blocks, dim=0).to(device).float()  # [S*sumT, Ltxt]
-                    denom = m_all.sum(dim=1, keepdim=True).clamp(min=1.0)
-                    pooled = (emb * m_all.unsqueeze(-1)).sum(dim=1) / denom
-                x_all = x_all + pooled.unsqueeze(1)
+        # Language conditioning removed - timestamp injection not used
 
-        # run frame resampler once
-        q_frames = self._unwrap_q(self.timechat_frame_resampler(x_all))  # [S*sumT, Qf, D]
-
+        # run Hybrid Slot Query Model once
+        # Reshape to [1, S*sumT, per_frame, D]
+        x_for_hybrid = x_all.unsqueeze(0)  # [1, S*sumT, per_frame, D]
+        # All tokens are real (no padding in this path since per_frame is constant)
+        attn_mask = torch.ones(1, x_all.shape[0], x_all.shape[1], dtype=torch.bool, device=device)
+        hybrid_output = self.hybrid_slot_query_model(x_for_hybrid, attention_mask=attn_mask)  # returns dict
+        
+        # Extract slot features [1, S*sumT, num_slots, H]
+        slot_features = hybrid_output['slot_per_frame'].squeeze(0)  # [S*sumT, num_slots, H]
+        
         # add frame pos emb
-        pos_all = pos_all.clamp(max=self.timechat_max_frame_pos - 1)
-        q_frames = q_frames + self.timechat_frame_pos_emb(pos_all).unsqueeze(1)
+        pos_all = pos_all.clamp(max=self.slot_query_max_frames - 1)
+        pos_emb = self.slot_frame_pos_emb(pos_all).unsqueeze(1)  # [S*sumT, 1, vision_dim]
+        
+        # Project to text_dim
+        q_frames = self.slot_to_llm(slot_features + pos_emb[:, :, :slot_features.shape[-1]] if pos_emb.shape[-1] >= slot_features.shape[-1] else slot_features)  # [S*sumT, num_slots, text_dim]
 
         # --- regroup back: for each ds_level produce torch.cat(per_video, dim=0) like your original ---
         Qf = q_frames.shape[1]
@@ -1853,8 +2389,8 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         timestamps_attention_mask (`torch.LongTensor`, *optional*):
             Attention mask for `timestamps_input_ids` (same shape without the vocab dim).
         """
-        # If we don't have grid info or temporal querying is disabled, fall back to the default behavior.
-        if video_grid_thw is None or not getattr(self, "use_timechat_querying", False):
+        # If we don't have grid info or slot query is disabled, fall back to the default behavior.
+        if video_grid_thw is None or not getattr(self, "use_slot_query", False):
             return self.get_image_features(pixel_values_videos, video_grid_thw, **kwargs)
 
         # Forward all frames through the vision encoder in one pass.
@@ -1941,37 +2477,38 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
                     x = x + pooled.unsqueeze(1)  # [T, per_frame, D]
 
-            # Frame resampler (batched)
-            # Expecting something like (q, ...) where q is [T, Qf, D]
-            q = self.timechat_frame_resampler(x)  # [T, Qf, D]
-
-            # Frame position embedding (batched)
-            pos_ids = torch.arange(T, device=q.device, dtype=torch.long)
-            pos_ids = pos_ids.clamp(max=self.timechat_max_frame_pos - 1)  # [T]
-            q = q + self.timechat_frame_pos_emb(pos_ids).unsqueeze(1)  # [T, Qf, D]
-
-            # Flatten time back into a single sequence (same as original torch.cat over frames)
-            q_time = q.reshape(1, T * q.shape[1], D)  # [1, T*Qf, D]
-
-            win = int(self.timechat_window_size)
-            stride = int(self.timechat_stride) if int(self.timechat_stride) > 0 else win
-            if win <= 0 or win >= T:
-                out = self.timechat_video_resampler(q_time)[0]  # [1, Qv, D]
-                out = self.timechat_mm_projector(out)
-                return out.squeeze(0)
-
-            clip_outs = []
-            Qf = int(self.timechat_num_frame_queries)
-            for st in range(0, T, stride):
-                ed = min(st + win, T)
-                clip = q_time[:, st * Qf : ed * Qf, :]
-                clip_outs.append(self.timechat_video_resampler(clip)[0])
-                if ed == T:
-                    break
-
-            out = torch.cat(clip_outs, dim=1)  # [1, num_clips*Qv, D]
-            out = self.timechat_mm_projector(out)
-            return out.squeeze(0)
+            # Hybrid Slot Query Model (batched)
+            # Reshape to [1, T, per_frame, D] for hybrid slot query model
+            x_for_hybrid = x.unsqueeze(0)  # [1, T, per_frame, D]
+            hybrid_output = self.hybrid_slot_query_model(x_for_hybrid)  # returns dict
+            
+            # Extract slot features [1, T, num_slots, H]
+            slot_features = hybrid_output['slot_per_frame']  # [1, T, num_slots, H]
+            slot_features = slot_features.squeeze(0)  # [T, num_slots, H]
+            
+            # Frame position embedding
+            pos_ids = torch.arange(T, device=slot_features.device, dtype=torch.long)
+            pos_ids = pos_ids.clamp(max=self.slot_query_max_frames - 1)  # [T]
+            pos_emb = self.slot_frame_pos_emb(pos_ids).unsqueeze(1)  # [T, 1, vision_dim]
+            
+            # Project slots to text_dim and add position embedding
+            # First project to vision_dim to match pos_emb, then to text_dim
+            slots_vision = torch.nn.functional.linear(
+                slot_features, 
+                self.slot_to_llm.weight if hasattr(self.slot_to_llm, 'weight') else torch.eye(slot_features.shape[-1], device=slot_features.device)
+            )  # [T, num_slots, vision_dim or text_dim]
+            
+            # If projection exists, add positional embedding before final projection
+            if hasattr(self.slot_to_llm, 'weight'):
+                # Expand pos_emb to match num_slots
+                pos_emb_expanded = pos_emb.expand(-1, slot_features.shape[1], -1)  # [T, num_slots, vision_dim]
+                slots_with_pos = slot_features + pos_emb_expanded[:, :, :slot_features.shape[-1]] if pos_emb_expanded.shape[-1] >= slot_features.shape[-1] else slot_features
+                out = self.slot_to_llm(slots_with_pos)  # [T, num_slots, text_dim]
+            else:
+                out = slot_features
+            
+            # Flatten to [T*num_slots, text_dim]
+            return out.reshape(-1, out.shape[-1])
 
 
         # Compress pooler_output per video.
@@ -2208,29 +2745,15 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             inputs_embeds = self.get_input_embeddings()(input_ids)
         # Rebuild input_ids/attention_mask/inputs_embeds early using predicted compressed video token counts
         if input_ids is not None and video_grid_thw is not None and bool(process_as_video_per_entry.any().item()):
-            Qv = int(self.timechat_num_video_queries)
-            win = int(self.timechat_window_size)
-            stride = int(self.timechat_stride) if int(self.timechat_stride) > 0 else win
+            Qv = int(self.n_tokens_per_video)
 
             per_video_token_counts = []
             video_batch_indices = []
             for b in range(batch_size):
                 if bool(process_as_video_per_entry[b].item()):
                     T = int(frames_per_batch_entry[b].item())
-                    if win <= 0 or win >= T:
-                        n_clips = 1
-                    else:
-                        if stride <= 0:
-                            stride = win
-                        n_clips = 0
-                        st = 0
-                        while True:
-                            ed = min(st + win, T)
-                            n_clips += 1
-                            if ed == T:
-                                break
-                            st += stride
-                    per_video_token_counts.append(n_clips * Qv)
+
+                    per_video_token_counts.append(Qv)
                     video_batch_indices.append(b)
 
             if len(per_video_token_counts) != video_grid_thw.shape[0]:
@@ -2466,7 +2989,7 @@ class Qwen3VLCausalLMOutputWithPast(ModelOutput):
     rope_deltas: Optional[torch.LongTensor] = None
 
 
-class Qwen3VLForConditionalGenerationTimechat(Qwen3VLPreTrainedModel, GenerationMixin):
+class Qwen3VLForConditionalGenerationSlot(Qwen3VLPreTrainedModel, GenerationMixin):
     _checkpoint_conversion_mapping = {}
     _tied_weights_keys = ["lm_head.weight"]
     # Reference: fix gemma3 grad acc #37208

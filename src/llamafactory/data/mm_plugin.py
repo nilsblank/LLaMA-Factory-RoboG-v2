@@ -1569,6 +1569,7 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
         video_processor: BaseImageProcessor = getattr(processor, "video_processor", None)
         mm_inputs = {}
         if len(images) != 0:
+            
             images = self._regularize_images(
                 images,
                 image_max_pixels=getattr(processor, "image_max_pixels", 768 * 768),

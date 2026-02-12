@@ -142,6 +142,12 @@ def load_custom_pretrained_model_cls(custom_model_name, model_args):
     if "Qwen3VLForConditionalGenerationTimechat" in custom_model_name:
         from ..custom_models.qwen_3_vl_query_timechat import Qwen3VLForConditionalGenerationTimechat
         return Qwen3VLForConditionalGenerationTimechat
+    if "Qwen3VLStandard" in custom_model_name:
+        from ..custom_models.qwen3_vl import Qwen3VLForConditionalGeneration
+        return Qwen3VLForConditionalGeneration
+    if "Qwen3VLForConditionalGenerationSlotQuery" in custom_model_name:
+        from ..custom_models.temporal_resamplers.hybrid_slot_query.qwen_3_vl_slot_track_model import Qwen3VLForConditionalGenerationSlot
+        return Qwen3VLForConditionalGenerationSlot
 
 
 def load_model(
@@ -175,6 +181,8 @@ def load_model(
         elif "custom_model_architecture" in [f.name for f in fields(model_args)] and model_args.custom_model_architecture is not None:
             load_cls = load_custom_pretrained_model_cls(model_args.custom_model_architecture, model_args)
             model = load_cls.from_pretrained(**init_kwargs)
+            model.apply(lambda m: m.reset_parameters() if hasattr(m, "reset_parameters") else None)
+
         else:
             if type(config) in AutoModelForImageTextToText._model_mapping.keys():  # image-text
                 load_class = AutoModelForImageTextToText
