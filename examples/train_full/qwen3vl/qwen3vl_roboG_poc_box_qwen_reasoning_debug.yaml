@@ -1,14 +1,27 @@
 ### model
 model_name_or_path: Qwen/Qwen3-VL-4B-Instruct
-custom_model_architecture: Qwen3VLForConditionalGenerationSlotQuery #Qwen3VLForConditionalGenerationTimechat
+custom_model_architecture: Qwen3VLForConditionalGenerationSlotQuery #Qwen3VLForConditionalGenerationTimechat Qwen3VLForConditionalGenerationSlotQuery 
 image_max_pixels: 65536 #262144
-video_max_pixels: 16384
+video_max_pixels: 65536
+#video_min_pixels: 65536
+
+
+hybrid_slot_num_slots: 8
+hybrid_n_query_groups: 4
+per_frame_query: true
+append_query: true
+pass_individual_frames: true
+
+
 #video_maxlen: 32
 
 trust_remote_code: true
 
 
 use_fast_tokenizer: true
+
+
+
 
 
 
@@ -28,11 +41,11 @@ enable_liger_kernel: true
 
 ### dataset
 dataset: roboG_stagepoc_grounding_only_video_train  #,eo1m,sav,video_espresso,fsd
-template: qwen3_vl_nothink
+template: qwen3_vl_nothink_slot_query_hybrid
 cutoff_len: 4096
 max_samples: 32
 overwrite_cache: true
-preprocessing_num_workers: 128
+preprocessing_num_workers: 1
 dataloader_num_workers: 4
 
 ### output
@@ -59,7 +72,7 @@ resume_from_checkpoint: null
 
 ##optimizationspip
 flash_attn: fa2
-#use_unsloth: true
+#use_unsloth: trues
 #optim: adamw_bnb_8bit
 #pure_bf16: true
 
@@ -68,7 +81,9 @@ evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /data/roboG_debug/${dataset}/
+#tokenized_path: /data/roboG_debug/${dataset}/
+
+
 
 ### eval
 #val_size: 0.1

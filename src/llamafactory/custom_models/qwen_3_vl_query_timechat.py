@@ -26,6 +26,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+from transformers.utils.generic import maybe_autocast
+
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
@@ -528,38 +530,51 @@ class Qwen3VLTextRotaryEmbedding(nn.Module):
 
     def __init__(self, config: Qwen3VLTextConfig, device=None):
         super().__init__()
-        if hasattr(config, "rope_scaling") and config.rope_scaling is not None:
-            self.rope_type = config.rope_scaling.get("rope_type", "default")
-        else:
-            self.rope_type = "default"
         self.max_seq_len_cached = config.max_position_embeddings
         self.original_max_seq_len = config.max_position_embeddings
 
         self.config = config
-        self.rope_init_fn = ROPE_INIT_FUNCTIONS[self.rope_type]
 
-        inv_freq, self.attention_scaling = self.rope_init_fn(self.config, device)
+        self.rope_type = self.config.rope_parameters["rope_type"]
+        rope_init_fn: Callable = self.compute_default_rope_parameters
+        if self.rope_type != "default":
+            rope_init_fn = ROPE_INIT_FUNCTIONS[self.rope_type]
+        inv_freq, self.attention_scaling = rope_init_fn(self.config, device)
+
         self.register_buffer("inv_freq", inv_freq, persistent=False)
-        self.original_inv_freq = self.inv_freq
+        self.register_buffer("original_inv_freq", inv_freq.clone(), persistent=False)
 
-        self.mrope_section = config.rope_scaling.get("mrope_section", [24, 20, 20])
+        self.mrope_section = config.rope_parameters.get("mrope_section", [24, 20, 20])
 
-    def apply_interleaved_mrope(self, freqs, mrope_section):
-        """Apply interleaved MRoPE to 3D rotary embeddings.
-        Reorganizes frequency layout from chunked [TTT...HHH...WWW] to
-        interleaved [THTHWHTHW...TT], preserving frequency continuity.
-        args:
-            x: (3, bs, seq_len, head_dim // 2)
-            mrope_section: (3,)
-        returns:
-            x_t: (bs, seq_len, head_dim // 2)
+    @staticmethod
+    def compute_default_rope_parameters(
+        config: Qwen3VLTextConfig | None = None,
+        device: Optional["torch.device"] = None,
+        seq_len: int | None = None,
+    ) -> tuple["torch.Tensor", float]:
         """
-        freqs_t = freqs[0]  # just overwrite the first dimension T
-        for dim, offset in enumerate((1, 2), start=1):  # H, W
-            length = mrope_section[dim] * 3
-            idx = slice(offset, length, 3)
-            freqs_t[..., idx] = freqs[dim, ..., idx]
-        return freqs_t
+        Computes the inverse frequencies according to the original RoPE implementation
+        Args:
+            config ([`~transformers.PreTrainedConfig`]):
+                The model configuration.
+            device (`torch.device`):
+                The device to use for initialization of the inverse frequencies.
+            seq_len (`int`, *optional*):
+                The current sequence length. Unused for this type of RoPE.
+        Returns:
+            Tuple of (`torch.Tensor`, `float`), containing the inverse frequencies for the RoPE embeddings and the
+            post-processing scaling factor applied to the computed cos/sin (unused in this type of RoPE).
+        """
+        base = config.rope_parameters["rope_theta"]
+        dim = getattr(config, "head_dim", None) or config.hidden_size // config.num_attention_heads
+
+        attention_factor = 1.0  # Unused in this type of RoPE
+
+        # Compute the inverse frequencies
+        inv_freq = 1.0 / (
+            base ** (torch.arange(0, dim, 2, dtype=torch.int64).to(device=device, dtype=torch.float) / dim)
+        )
+        return inv_freq, attention_factor
 
     @torch.no_grad()
     @dynamic_rope_update  # power user: used with advanced RoPE types (e.g. dynamic rope)
@@ -572,7 +587,7 @@ class Qwen3VLTextRotaryEmbedding(nn.Module):
         position_ids_expanded = position_ids[:, :, None, :].float()  # shape (3, bs, 1, positions)
 
         device_type = x.device.type if isinstance(x.device.type, str) and x.device.type != "mps" else "cpu"
-        with torch.autocast(device_type=device_type, enabled=False):  # Force float32
+        with maybe_autocast(device_type=device_type, enabled=False):  # Force float32
             freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(2, 3)
             freqs = self.apply_interleaved_mrope(freqs, self.mrope_section)
             emb = torch.cat((freqs, freqs), dim=-1)
@@ -580,6 +595,23 @@ class Qwen3VLTextRotaryEmbedding(nn.Module):
             sin = emb.sin() * self.attention_scaling
 
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
+
+    def apply_interleaved_mrope(self, freqs, mrope_section):
+        """Apply interleaved MRoPE to 3D rotary embeddings.
+        Reorganizes frequency layout from chunked [TTT...HHH...WWW] to
+        interleaved [THWTHWTHW...TT], preserving frequency continuity.
+        args:
+            x: (3, bs, seq_len, head_dim // 2)
+            mrope_section: (3,)
+        returns:
+            x_t: (bs, seq_len, head_dim // 2)
+        """
+        freqs_t = freqs[0]  # just overwrite the first dimension T
+        for dim, offset in enumerate((1, 2), start=1):  # H, W
+            length = mrope_section[dim] * 3
+            idx = slice(offset, length, 3)
+            freqs_t[..., idx] = freqs[dim, ..., idx]
+        return freqs_t
 
 
 @use_kernel_forward_from_hub("RMSNorm")
@@ -2297,7 +2329,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                             after_video_tokens = seq[last_vid_pos+1:]
                             start_tokens = seq[:3]
                             #cat vision start token id to start_tokens
-                            start_tokens = torch.cat([start_tokens, seq.new_full((1,), self.config.video_token_id)], dim=0)
+                            start_tokens = torch.cat([start_tokens, seq.new_full((1,), self.config.vision_start_token_id)], dim=0)
                             seq = torch.cat([start_tokens, seq.new_full((needed,), self.config.video_token_id), after_video_tokens], dim=0)
                 new_input_ids_list.append(seq)
 
@@ -2357,6 +2389,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             #    input_ids, inputs_embeds=inputs_embeds, video_features=video_embeds
             #)
             special_video_mask_expanded = special_video_mask.unsqueeze(-1).expand_as(inputs_embeds).to(inputs_embeds.device)
+            assert special_video_mask_expanded.sum().item() <= video_embeds.numel(), f"masked_scatter mismatch: mask elements={special_video_mask_expanded.sum().item()}, src elements={video_embeds.numel()}"
             inputs_embeds = inputs_embeds.masked_scatter(special_video_mask_expanded, video_embeds)
 
         visual_pos_masks = None
@@ -2468,11 +2501,11 @@ class Qwen3VLCausalLMOutputWithPast(ModelOutput):
 
 class Qwen3VLForConditionalGenerationTimechat(Qwen3VLPreTrainedModel, GenerationMixin):
     _checkpoint_conversion_mapping = {}
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
-
+    
     def __init__(self, config):
         super().__init__(config)
         self.model = Qwen3VLModel(config)
@@ -2602,6 +2635,14 @@ class Qwen3VLForConditionalGenerationTimechat(Qwen3VLPreTrainedModel, Generation
         logits = self.lm_head(hidden_states[:, slice_indices, :])
 
         loss = None
+        #remove first labels tokens (since we did compression internally) to align with the logits
+        n_to_remove = labels.shape[1] - logits.shape[1]
+        if n_to_remove > 0:
+            removed = labels[:, :n_to_remove]
+            if (removed != -100).any():
+                raise ValueError(f"Labels contain tokens in the removed positions that are not set to -100: {removed}")
+            labels = labels[:, n_to_remove:]
+         
         if labels is not None:
             loss = self.loss_function(logits=logits, labels=labels, vocab_size=self.config.text_config.vocab_size)
 

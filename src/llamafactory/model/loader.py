@@ -127,6 +127,8 @@ def load_tokenizer(model_args: "ModelArguments") -> "TokenizerModule":
 
     if processor is not None:
         patch_processor(processor, tokenizer, model_args)
+    
+
 
     return {"tokenizer": tokenizer, "processor": processor}
 
@@ -186,8 +188,23 @@ def load_model(
             model = load_mod_pretrained_model(**init_kwargs)
         elif "custom_model_architecture" in [f.name for f in fields(model_args)] and model_args.custom_model_architecture is not None:
             load_cls = load_custom_pretrained_model_cls(model_args.custom_model_architecture, model_args)
-            model = load_cls.from_pretrained(**init_kwargs)
-            model.apply(lambda m: m.reset_parameters() if hasattr(m, "reset_parameters") else None)
+            
+            #cat model_args and init_kwargs for custom model loading
+            import json
+            custom_init_kwargs = {}
+            #only keep json serializable items in model_args for custom model loading, and log warning for non-serializable items
+            for f in fields(model_args):
+                if hasattr(model_args, f.name):
+                    value = getattr(model_args, f.name)
+                    try:
+                        json.dumps(value)
+                        custom_init_kwargs[f.name] = value
+                    except TypeError:
+                        logger.warning_rank0(f"Custom model init arg {f.name} with value {value} is not JSON serializable. Skipping this argument for custom model loading.")
+            custom_init_kwargs.update(init_kwargs)
+            model = load_cls.from_pretrained(**custom_init_kwargs)
+
+            
 
         else:
             if type(config) in AutoModelForImageTextToText._model_mapping.keys():  # image-text

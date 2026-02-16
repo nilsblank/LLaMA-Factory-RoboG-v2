@@ -29,6 +29,7 @@ from ..trainer_utils import create_modelcard_and_push, create_ref_model
 from .metric import ComputeAccuracy, ComputeSimilarity, eval_logit_processor
 from .trainer import CustomSeq2SeqTrainer
 from ...eval.callback_adapters import BoundingBoxEvaluatorCallback,LabelEvaluatorCallback
+from dataclasses import asdict
 
 
 
@@ -51,6 +52,16 @@ def run_sft(
     callbacks: Optional[list["TrainerCallback"]] = None,
 ):
     tokenizer_module = load_tokenizer(model_args)
+
+    #add custom model args for later use (everything after custom_model_architecture if not None)
+
+    if "custom_model_architecture" in model_args.__dict__ and model_args.custom_model_architecture is not None:
+        model_arg_dict = asdict(model_args)
+        custom_start_index = list(model_arg_dict.keys()).index("custom_model_architecture") + 1
+        custom_model_args = {key: value for key, value in model_arg_dict.items() if list(model_arg_dict.keys()).index(key) >= custom_start_index}
+
+        tokenizer_module["processor"].custom_model_args = custom_model_args 
+
     tokenizer = tokenizer_module["tokenizer"]
     template = get_template_and_fix_tokenizer(tokenizer, data_args)
     dataset_module = get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)

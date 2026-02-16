@@ -17,7 +17,7 @@
 
 import json
 from dataclasses import asdict, dataclass, field, fields
-from typing import Any, Literal, Self
+from typing import Any, Literal, Optional, Self
 
 import torch
 from omegaconf import OmegaConf
@@ -543,6 +543,50 @@ class ModelArguments(
         default=None,
         metadata={"help": "Custom model architecture to use."}
     )
+
+
+    hybrid_slot_num_slots: Optional[int] = field(
+        default=None,
+        metadata={"help": "The number of slots in the model, used for CustomModel Artchitectures and custom processing."}
+    )
+
+    hybrid_slot_hidden_dim: Optional[int] = field(
+        default=512,
+        metadata={"help": "The hidden dimension of slots in the model, used for CustomModel Artchitectures and custom processing."}
+    )
+
+
+    hybrid_n_query_groups: Optional[int] = field(
+        default=None,
+        metadata={"help": "The number of query groups in the model, used for CustomModel Artchitectures and custom processing."}
+    )
+
+    n_queries: Optional[int] = field(
+        default=None,
+        metadata={"help": "The number of queries in the model, used for CustomModel Artchitectures and custom processing."}
+    )
+
+    slot_merge_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "The method to merge slots in the model, used for CustomModel Artchitectures and custom processing."}
+    )   
+
+    pass_individual_frames: bool = field(
+        default=False,
+        metadata={"help": "Whether to pass individual frames in video inputs for custom processing."}
+    )
+
+    append_query: bool = field(
+        default=False,
+        metadata={"help": "Whether to append extra query tokens at the end of video tokens for better temporal modeling in custom processing."}
+    )
+
+    per_frame_query: bool = field(
+        default=False,
+        metadata={"help": "Whether to treat query tokens as per-frame for video inputs in custom processing."}
+    )
+
+
 
     def __post_init__(self):
         BaseModelArguments.__post_init__(self)

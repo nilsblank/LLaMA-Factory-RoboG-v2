@@ -28,6 +28,9 @@ import numpy as np
 import torch
 import torchaudio
 from transformers.image_utils import get_image_size, is_valid_image, to_numpy_array
+
+from transformers.video_utils import VideoMetadata
+
 from transformers.models.mllama.processing_mllama import (
     convert_sparse_cross_attention_mask_to_dense,
     get_cross_attention_token_mask,
@@ -1731,6 +1734,211 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
         return messages
 
 
+
+@dataclass
+class Qwen3VLPluginQueryHybrid(Qwen2VLPlugin):
+    @override
+    def _get_mm_inputs(
+        self,
+        images: list["ImageInput"],
+        videos: list["VideoInput"],
+        audios: list["AudioInput"],
+        processor: "MMProcessor",
+    ) -> dict[str, "torch.Tensor"]:
+        image_processor: BaseImageProcessor = getattr(processor, "image_processor", None)
+        video_processor: BaseImageProcessor = getattr(processor, "video_processor", None)
+        mm_inputs = {}
+        if len(images) != 0:
+            images = self._regularize_images(
+                images,
+                image_max_pixels=getattr(processor, "image_max_pixels", 768 * 768),
+                image_min_pixels=getattr(processor, "image_min_pixels", 32 * 32),
+            )["images"]
+            mm_inputs.update(image_processor(images, return_tensors="pt"))
+
+        if len(videos) != 0:
+            videos = self._regularize_videos(
+                videos,
+                image_max_pixels=getattr(processor, "video_max_pixels", 256 * 256),
+                image_min_pixels=getattr(processor, "video_min_pixels", 32 * 32),
+                video_fps=getattr(processor, "video_fps", 2.0),
+                video_maxlen=getattr(processor, "video_maxlen", 128),
+            )
+
+
+            video_metadata = [
+                {"fps": getattr(processor, "video_fps", 24.0), "duration": duration, "total_num_frames": len(video)}
+                for video, duration in zip(videos["videos"], videos["durations"])
+            ]
+            if processor.custom_model_args["pass_individual_frames"]:
+                pixel_values_videos = []
+                video_grid_thw = []
+                batch_video_metadata = []
+                
+
+                for one_video, one_video_metadata in zip(videos["videos"], video_metadata):
+                    n_frames = len(one_video)
+                    mm_processor_out = image_processor(images=one_video, return_tensors="pt")
+                    _, h, w = mm_processor_out["image_grid_thw"][0]
+
+                    pixel_values_videos.append(mm_processor_out["pixel_values"])
+                    video_grid_thw.append([n_frames, int(h), int(w)])
+
+                    metadata = VideoMetadata(**one_video_metadata)
+                    metadata.frames_indices = np.arange(n_frames)
+                    batch_video_metadata.append(metadata)
+
+                vid_dict = {
+                    "pixel_values_videos": torch.cat(pixel_values_videos, dim=0),
+                    "video_grid_thw": torch.tensor(video_grid_thw),
+                    "video_metadata": batch_video_metadata,
+                }
+                mm_inputs.update(vid_dict)
+            else:
+                mm_inputs.update(
+                    video_processor(
+                        videos=videos["videos"],
+                        video_metadata=video_metadata,
+                        fps=getattr(processor, "video_fps", 2.0),
+                        return_metadata=True,
+                        temporal_patch_size=2,
+                    )
+                )
+            temporal_patch_size: int = getattr(image_processor, "temporal_patch_size", 2)
+            if "second_per_grid_ts" in processor.model_input_names:
+                mm_inputs["second_per_grid_ts"] = [temporal_patch_size / fps for fps in videos["fps_per_video"]]
+
+        return mm_inputs
+
+    @override
+    def process_messages(
+        self,
+        messages: list[dict[str, str]],
+        images: list["ImageInput"],
+        videos: list["VideoInput"],
+        audios: list["AudioInput"],
+        processor: Optional["MMProcessor"],
+    ) -> list[dict[str, str]]:
+        self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
+        num_image_tokens, num_video_tokens = 0, 0
+        messages = deepcopy(messages)
+        image_processor: BaseImageProcessor = getattr(processor, "image_processor")
+        video_processor: BaseImageProcessor = getattr(processor, "video_processor")
+
+        image_merge_length: int = getattr(image_processor, "merge_size") ** 2
+        video_merge_length: int = getattr(video_processor, "merge_size") ** 2
+        if self.expand_mm_tokens:
+            
+            mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
+            image_grid_thw = mm_inputs.get("image_grid_thw", [])
+            video_grid_thw = mm_inputs.get("video_grid_thw", [])
+            num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
+            video_metadata = mm_inputs.get("video_metadata", {})
+
+        else:
+            image_grid_thw = [None] * len(images)
+            video_grid_thw = [None] * len(videos)
+            num_frames = 0
+            timestamps = [0]
+
+
+        if video_grid_thw is None and processor.custom_model_args.get("pass_individual_frames", True):
+            video_grid_thw = [None] * len(videos)
+            rebuild_image_grid = []
+
+        for idx, message in enumerate(messages):
+            content = message["content"]
+            n_images = content.count(IMAGE_PLACEHOLDER)
+
+
+
+            while IMAGE_PLACEHOLDER in content:
+
+
+                if n_images >= 4 and processor.custom_model_args["pass_individual_frames"]:
+                    #we treat as video and apply custom vide token processing
+                    n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
+                    n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
+                    per_frame_query = processor.custom_model_args["per_frame_query"]
+                    append_query = processor.custom_model_args["append_query"]
+
+                    if per_frame_query:
+                        total_per_frame = n_slots_per_frame + n_queries_per_frame
+                    else:
+                        total_per_frame = n_slots_per_frame
+                    content = content.replace(IMAGE_PLACEHOLDER, 
+                                              f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
+                                              1)
+                    num_image_tokens += 1
+                else:
+                
+
+                    image_seqlen = (
+                        image_grid_thw[num_image_tokens].prod() // image_merge_length if self.expand_mm_tokens else 1
+                    )
+                    content = content.replace(
+                        IMAGE_PLACEHOLDER,
+                        f"{self.vision_bos_token}{self.image_token * image_seqlen}{self.vision_eos_token}",
+                        1,
+                    )
+                num_image_tokens += 1
+
+            while VIDEO_PLACEHOLDER in content:
+                
+                if processor.custom_model_args.get("pass_individual_frames", True):
+                    video_processor.merge_size = 1  # override merge size to 1 to pass individual frames without merging
+
+
+                if self.expand_mm_tokens:
+                    metadata = video_metadata[idx]
+                    timestamps = processor._calculate_timestamps(
+                        metadata.frames_indices,
+                        metadata.fps,
+                        video_processor.merge_size,
+                    )
+                    video_structure = ""
+                    for frame_index in range(num_frames):
+                        video_seqlen = (
+                            video_grid_thw[num_video_tokens][1:].prod() // video_merge_length
+                            if self.expand_mm_tokens
+                            else 1
+                        )
+                        n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
+                        n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
+
+                        per_frame_query = processor.custom_model_args["per_frame_query"]
+                        append_query = processor.custom_model_args["append_query"]
+
+                        if per_frame_query:
+                            total_per_frame = n_slots_per_frame + n_queries_per_frame
+                        else:
+                            total_per_frame = n_slots_per_frame
+                        video_seqlen = total_per_frame
+                        timestamp_sec = timestamps[frame_index]
+                        frame_structure = (
+                            f"<{timestamp_sec:.1f} seconds>"
+                            f"{self.vision_bos_token}{self.video_token * video_seqlen}{self.vision_eos_token}"
+                        )
+                        video_structure += frame_structure
+                else:
+                    video_structure = f"{self.vision_bos_token}{self.video_token}{self.vision_eos_token}"
+
+                if append_query:
+                    #append extra query tokens at the end of video tokens for better temporal modeling
+                    n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
+                    append_structure = (
+                        f"{self.vision_bos_token}{self.video_token * n_queries_per_frame}{self.vision_eos_token}"
+                    )
+                    video_structure = video_structure + append_structure
+                content = content.replace(VIDEO_PLACEHOLDER, video_structure, 1)
+                num_video_tokens += 1
+
+            message["content"] = content
+
+        return messages
+
+
 @dataclass
 class GLM4VPlugin(Qwen2VLPlugin):
     @override
@@ -2215,6 +2423,7 @@ PLUGINS = {
     "qwen2_omni": Qwen2OmniPlugin,
     "qwen2_vl": Qwen2VLPlugin,
     "qwen3_vl": Qwen3VLPlugin,
+    "qwen3_vl_slot_query_hybrid": Qwen3VLPluginQueryHybrid,
     "video_llava": VideoLlavaPlugin,
     "youtu_vl": YoutuVLPlugin,
 }
