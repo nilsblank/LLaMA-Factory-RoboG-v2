@@ -66,9 +66,43 @@ def _training_function(config: dict[str, Any]) -> None:
     args = config.get("args")
     callbacks: list[Any] = config.get("callbacks")
     evaluators = args.pop("evaluators", None)
-    custom_args = {"evaluators": evaluators} if evaluators is not None else {}
-    model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
+    slot_query_pretrain = args.pop("slot_query_pretrain", True)
+    slot_patch_recon_weight = args.pop("slot_patch_recon_weight", 1.0)
+    slot_patch_recon_mask_ratio = args.pop("slot_patch_recon_mask_ratio", 0.25)
+    slot_pretrain_use_supervised_losses = args.pop("slot_pretrain_use_supervised_losses", True)
+    slot_loss_keys = args.pop("slot_loss_keys", None)
+    slot_box_weight = args.pop("slot_box_weight", 2.0)
+    query_box_weight = args.pop("query_box_weight", 2.0)
+    slot_temporal_weight = args.pop("slot_temporal_weight", 0.5)
+    slot_contrastive_weight = args.pop("slot_contrastive_weight", 1.0)
+    slot_contrastive_temperature = args.pop("slot_contrastive_temperature", 0.1)
+    slot_contrastive_queue_size = args.pop("slot_contrastive_queue_size", 0)
 
+    custom_args = {
+        "evaluators": evaluators,
+        "slot_query_pretrain": slot_query_pretrain,
+        "slot_patch_recon_weight": slot_patch_recon_weight,
+        "slot_patch_recon_mask_ratio": slot_patch_recon_mask_ratio,
+        "slot_pretrain_use_supervised_losses": slot_pretrain_use_supervised_losses,
+        "slot_box_weight": slot_box_weight,
+        "query_box_weight": query_box_weight,
+        "slot_temporal_weight": slot_temporal_weight,
+        "slot_contrastive_weight": slot_contrastive_weight,
+        "slot_contrastive_temperature": slot_contrastive_temperature,
+        "slot_contrastive_queue_size": slot_contrastive_queue_size,
+    }
+    if slot_loss_keys is not None:
+        custom_args["slot_loss_keys"] = slot_loss_keys
+
+    if evaluators is None:
+        custom_args.pop("evaluators")
+
+    model_args, data_args, training_args, finetuning_args, generating_args, custom_args_parsed = get_train_args(args)
+
+
+    #merge custom_args and custom_args_parsed
+    custom_args_parsed = vars(custom_args_parsed)
+    custom_args.update(custom_args_parsed)
     callbacks.append(LogCallback())
     if finetuning_args.pissa_convert:
         callbacks.append(PissaConvertCallback())

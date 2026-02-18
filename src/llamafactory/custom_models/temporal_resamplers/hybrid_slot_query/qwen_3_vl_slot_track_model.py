@@ -130,7 +130,7 @@ class MotionAwareSlotAttention(nn.Module):
         motion_weight: float = 0.5,
         num_heads_temporal: int = 8,
         eps: float = 1e-8,
-        init_type: str = "random",  # "random" or "fixed"
+        init_type: str = "fixed",  # "random" or "fixed"
         init_frozen: bool = False,  # Only for fixed init
     ):
         super().__init__()
@@ -362,6 +362,8 @@ class SlotRolePooler(nn.Module):
         if slot_bias is not None:
             logits = logits + slot_bias.unsqueeze(1)
         weights = torch.softmax(logits, dim=-1)  # over K
+        #cast to slot dtype
+        weights = weights.to(slots.dtype)
         pooled = torch.einsum("bmk,bkh->bmh", weights, slots)
         return pooled, weights
 
@@ -1949,11 +1951,16 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         self.use_slot_query = kwargs.get("use_slot_query", True)
         self.slot_query_max_frames = kwargs.get("slot_query_max_frames", 128)
         self.slot_query_num_heads = kwargs.get("slot_query_num_heads", 8)
+        self.slot_query_use_pooled_output = kwargs.get("slot_query_use_pooled_output", False)
 
-
-
-        vision_dim = config.vision_config.out_hidden_size
+        if self.slot_query_use_pooled_output:
+            vision_dim = config.vision_config.out_hidden_size
+        else:            
+            vision_dim = config.vision_config.hidden_size   
+        
         text_dim = config.text_config.hidden_size
+
+        self.vision_dim = vision_dim
 
         # Hybrid Slot Query Model parameters
         self.hybrid_slot_num_slots = kwargs.get("hybrid_slot_num_slots", 2)
@@ -1963,9 +1970,23 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
         self.use_per_frame_query = kwargs.get("per_frame_query", False)
         self.append_query_at_end = kwargs.get("append_query", False)
+        # Choose HSQ input source from vision encoder:
+        # - True: use `vision_output.pooler_output` (merged grid, default)
+        # - False: use `vision_output.last_hidden_state` (token-level grid)
 
         
         self.slot_frame_pos_emb = nn.Embedding(self.slot_query_max_frames, vision_dim)
+
+        # If token-level source is enabled, input dim may differ from HSQ expected dim.
+        vision_hidden_size = config.vision_config.hidden_size
+        # self.slot_query_input_proj = (
+        #     nn.Identity()
+        #     if (self.slot_query_use_pooled_output or vision_hidden_size == vision_dim)
+        #     else nn.Linear(vision_hidden_size, vision_dim, bias=False)
+        # )
+        self.slot_query_input_proj = (
+           nn.Linear(vision_hidden_size, vision_dim, bias=False)
+        )
         
         # Use HybridSlotQueryModel for frame-level processing
         self.hybrid_slot_query_model = HybridSlotQueryModel(
@@ -2129,6 +2150,11 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
     def _unwrap_q(self,res):
         return res[0] if isinstance(res, (tuple, list)) else res
+
+    def _get_hsq_per_frame_tokens(self, height: int, width: int) -> int:
+        if self.slot_query_use_pooled_output:
+            return (height * width) // (self.visual.spatial_merge_size**2)
+        return height * width
     
 
     def compress_videos_frame_stage_batched(
@@ -2157,7 +2183,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             T = int(thw[0].item())
             H = int(thw[1].item())
             W = int(thw[2].item())
-            per_frame = (H * W) // (self.visual.spatial_merge_size**2)
+            per_frame = self._get_hsq_per_frame_tokens(H, W)
 
             vt = video_tokens_list[vid_idx]
             if vt.shape[-1] != D_in:
@@ -2491,8 +2517,15 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         )
 
         spatial_merge = self.visual.spatial_merge_size
-        split_sizes = (video_grid_thw.prod(-1) // (spatial_merge**2)).tolist()
-        video_tokens_list = torch.split(vision_output.pooler_output, split_sizes)
+        if self.slot_query_use_pooled_output:
+            split_sizes = (video_grid_thw.prod(-1) // (spatial_merge**2)).tolist()
+            token_source = vision_output.pooler_output
+        else:
+            split_sizes = video_grid_thw.prod(-1).tolist()
+            token_source = vision_output.last_hidden_state
+            token_source = self.slot_query_input_proj(token_source)
+
+        video_tokens_list = torch.split(token_source, split_sizes)
 
         deepstack_tokens = vision_output.deepstack_features
         deepstack_tokens_split = None

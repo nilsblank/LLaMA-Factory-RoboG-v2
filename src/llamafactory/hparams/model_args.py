@@ -586,6 +586,12 @@ class ModelArguments(
         metadata={"help": "Whether to treat query tokens as per-frame for video inputs in custom processing."}
     )
 
+    slot_query_use_pooled_output: bool = field(
+        default=False,
+        metadata={"help": "Whether to use the pooled output from the vision encoder as input for the slot and query modules in custom processing."
+        " Setting this to False will use the token-level grid features instead, which may be better for fine-grained spatial understanding but worse for temporal modeling."}
+    )
+
 
 
     def __post_init__(self):

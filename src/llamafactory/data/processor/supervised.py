@@ -99,10 +99,10 @@ class SupervisedDatasetProcessor(DatasetProcessor):
                 )
                 continue
             try:
-                if examples["_videos"][i] and len(examples["_videos"][i]) > 0:
-                    logger.warning_rank0(
-                        "Processing example: {}".format(examples["_videos"][i])
-                    )
+                # if examples["_videos"][i] and len(examples["_videos"][i]) > 0:
+                #     logger.warning_rank0(
+                #         "Processing example: {}".format(examples["_videos"][i])
+                #     )
                 # logger.warning_rank0(
                 #     "Processing example: {}".format(examples["_images"][i] or [])
                 # )

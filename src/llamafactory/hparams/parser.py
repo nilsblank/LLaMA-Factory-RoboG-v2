@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass, field
 import json
 import os
 import sys
@@ -47,8 +48,25 @@ logger = logging.get_logger(__name__)
 check_dependencies()
 
 
-_TRAIN_ARGS = [ModelArguments, DataArguments, TrainingArguments, FinetuningArguments, GeneratingArguments]
-_TRAIN_CLS = tuple[ModelArguments, DataArguments, TrainingArguments, FinetuningArguments, GeneratingArguments]
+
+@dataclass
+class CustomArguments:
+    slot_pretrain_eval_steps: int = field(default=50, metadata={"help": "Evaluation steps during slot pretraining."})
+    slot_pretrain_num_train_epochs: int = field(default=100, metadata={"help": "Number of training epochs during slot pretraining."})
+    slot_pretrain_batch_size: int = field(default=32, metadata={"help": "Batch size during slot pretraining."})
+    slot_pretrain_gradient_accumulation_steps: int = field(default=1, metadata={"help": "Gradient accumulation steps during slot pretraining."})
+
+    slot_vis_masks: bool = field(default=False, metadata={"help": "Whether to visualize slot masks during training."})
+    slot_vis_steps: int = field(default=50, metadata={"help": "Visualization steps during training."})
+    slot_vis_max_samples: int = field(default=2, metadata={"help": "Maximum number of samples to visualize."})
+    slot_vis_upsample_factor: int = field(default=8, metadata={"help": "Upsample factor for visualization."})
+    slot_vis_eval: bool = field(default=False, metadata={"help": "Whether to perform evaluation during visualization."})
+    slot_vis_seed: int = field(default=42, metadata={"help": "Random seed for visualization."})
+
+
+
+_TRAIN_ARGS = [ModelArguments, DataArguments, TrainingArguments, FinetuningArguments, GeneratingArguments, CustomArguments]
+_TRAIN_CLS = tuple[ModelArguments, DataArguments, TrainingArguments, FinetuningArguments, GeneratingArguments, CustomArguments]
 _INFER_ARGS = [ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments]
 _INFER_CLS = tuple[ModelArguments, DataArguments, FinetuningArguments, GeneratingArguments]
 _EVAL_ARGS = [ModelArguments, DataArguments, EvaluationArguments, FinetuningArguments]
@@ -245,9 +263,9 @@ def get_ray_args(args: dict[str, Any] | list[str] | None = None) -> RayArguments
 
 def get_train_args(args: dict[str, Any] | list[str] | None = None) -> _TRAIN_CLS:
     if is_env_enabled("USE_MCA"):
-        model_args, data_args, training_args, finetuning_args, generating_args = _parse_train_mca_args(args)
+        model_args, data_args, training_args, finetuning_args, generating_args, custom_args = _parse_train_mca_args(args)
     else:
-        model_args, data_args, training_args, finetuning_args, generating_args = _parse_train_args(args)
+        model_args, data_args, training_args, finetuning_args, generating_args, custom_args = _parse_train_args(args)
         finetuning_args.use_mca = False
 
     # Setup logging
@@ -470,7 +488,7 @@ def get_train_args(args: dict[str, Any] | list[str] | None = None) -> _TRAIN_CLS
     )
     transformers.set_seed(training_args.seed)
 
-    return model_args, data_args, training_args, finetuning_args, generating_args
+    return model_args, data_args, training_args, finetuning_args, generating_args, custom_args
 
 
 def get_infer_args(args: dict[str, Any] | list[str] | None = None) -> _INFER_CLS:
