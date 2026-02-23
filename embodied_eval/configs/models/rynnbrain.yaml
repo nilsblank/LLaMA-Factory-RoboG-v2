@@ -1,0 +1,9 @@
+_target_: models.RynnBrain
+name: rynnbrain
+model_name_or_path: Alibaba-DAMO-Academy/RynnBrain-8B
+device: cuda
+
+# Generation parameters
+use_vllm: false
+generation_kwargs:
+  max_new_tokens: 128

@@ -71,6 +71,7 @@ register_model("llamafactory")(models.LlamaFactoryModel)
 register_model("openai")(models.OpenAIModel)
 register_model("gemini")(models.GoogleModel)
 register_model("roboannotatorx")(models.RoboAnnotatorX)
+register_model("rynnbrain")(models.RynnBrain)
 
 
 def instantiate_from_config(cfg: DictConfig):

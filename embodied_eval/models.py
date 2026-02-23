@@ -845,10 +845,8 @@ class OpenAIModel(BaseModel):
         """
         # OpenAI doesn't use vLLM, so return a simple structure
         # that indicates this model doesn't support vLLM inference
-        text = " ".join([msg.get("content", "") for msg in chat_messages])
-        
         return {
-            "prompt_token_ids": [],  # OpenAI handles tokenization internally
+            "prompt_token_ids": [],
             "multi_modal_data": None,
             "mm_processor_kwargs": None,
             "_note": "OpenAI models use API-based inference, not vLLM"
@@ -1081,10 +1079,8 @@ class GoogleModel(BaseModel):
         """
         # Google doesn't use vLLM, so return a simple structure
         # that indicates this model doesn't support vLLM inference
-        text = " ".join([msg.get("content", "") for msg in chat_messages])
-        
         return {
-            "prompt_token_ids": [],  # Google handles tokenization internally
+            "prompt_token_ids": [],
             "multi_modal_data": None,
             "mm_processor_kwargs": None,
             "_note": "Google models use API-based inference, not vLLM"
@@ -1277,10 +1273,7 @@ class RoboAnnotatorX(BaseModel):
         audios: Optional[List[np.ndarray]] = None,
         **kwargs
     ) -> str:
-        """Run RoboAnnotatorX inference and return decoded text.
-
-        The implementation follows the example usage at the bottom of this file.
-        """
+        """Run RoboAnnotatorX inference and return decoded text."""
         from roboannotatorx.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
         from roboannotatorx.constants import IMAGE_TOKEN_INDEX
         
@@ -1374,4 +1367,217 @@ class RoboAnnotatorX(BaseModel):
             "multi_modal_data": None,
             "mm_processor_kwargs": None,
             "_note": "RoboAnnotatorX does not use vLLM"
+        }
+
+class RynnBrain(BaseModel):
+    """
+    Wrapper for the RynnBrain model to load the components
+    and run inference.
+    """
+
+    def __init__(self, cfg: Union[str, Path, DictConfig, Dict] = None):
+        """Initialize RynnBrain wrapper."""
+        super().__init__(cfg)
+
+        # Device to run inference on
+        self.device = self.config.get("device", "cuda")
+        # System Prompt
+        self.system_prompt = "When returning bounding boxes, use normalized image coordinates in the range 0 to 1000, formatted as (x_min, y_min, x_max, y_max), where (0,0) is the top-left and (1000,1000) is the bottom-right of the image."
+
+        # Components
+        self.processor = None
+        self.model = None
+        self._load_model()
+
+    def _load_model(self):
+        """Load HF model and processor."""
+
+        try:
+            from transformers import AutoModelForImageTextToText, AutoProcessor
+        except Exception as e:
+            raise ImportError(
+                "Transformers package not installed or failed to import. "
+                "Install and ensure it's importable. Original error: {}".format(e)
+            )
+
+        model = AutoModelForImageTextToText.from_pretrained(self.model_path, dtype="auto", device_map="auto")
+        processor = AutoProcessor.from_pretrained(self.model_path)
+
+        # Move model to device if possible
+        try:
+            model = model.to(self.device)
+        except Exception:
+            pass
+
+        self.model = model
+        self.processor = processor
+
+    def _build_prompt(self, messages, images, videos):
+
+        # Determine which tags to look for
+        image_tag = "<image>"
+        video_tag = "<video>"
+        tags_to_find = []
+        if images is not None and len(images) > 0:
+            tags_to_find.append(image_tag)
+        if videos is not None and len(videos) > 0:
+            tags_to_find.append(video_tag)
+
+        # Process messages
+        messages_with_media = []
+        image_idx = 0
+        video_idx = 0
+
+        for msg in messages:
+            role = msg["role"]
+            if role != "user" and role != "system":
+                continue  # Skip other roles
+            
+            # Parse the text to find tags and build content
+            text = msg.get("content", "")
+            content = []
+            
+            # Split text by tags for interleaving
+            if tags_to_find:
+                # Create pattern: (<image>|<video>)
+                pattern = f"({'|'.join(tags_to_find)})"
+                parts = re.split(pattern, text)
+            else:
+                # No tags to process, treat the whole thing as a single part
+                parts = [text]
+
+            for part in parts:
+                if part == image_tag:
+                    # Add image if available
+                    if image_idx < len(images):
+                        from PIL import Image
+
+                        image = images[image_idx]
+                        if isinstance(image, np.ndarray):  # Only PIL images and paths are okay
+                            image = Image.fromarray(image.astype('uint8'))
+
+                        content.append({
+                            "type": "image",
+                            "image": image
+                        })
+                        image_idx += 1
+                elif part == video_tag:
+                    # Add video if available
+                    if video_idx < len(videos):
+                        video = videos[video_idx]
+                        
+                        content.append({
+                            "type": "video",
+                            "video": video
+                        })
+                        video_idx += 1
+                else:
+                    # Add text part if not empty
+                    if part.strip():
+                        content.append({
+                            "type": "text",
+                            "text": part
+                        })
+
+            # Append the model's own system prompt to clarify bbox coordinates
+            if msg["role"] == "system":
+                content.append({
+                    "type": "text",
+                    "text": self.system_prompt
+                })
+
+            messages_with_media.append({
+                "role": msg.get("role", "user"),
+                "content": content
+            })
+
+        return messages_with_media
+
+    def generate(
+        self,
+        prompt: Union[str, Dict[str, str], List[Dict[str, str]]],
+        images: Optional[List[np.ndarray]] = None,
+        videos: Optional[List[str]] = None,
+        audios: Optional[List[np.ndarray]] = None,
+        **kwargs
+    ) -> str:
+        """Run RynnBrain inference and return decoded text. The implementation follows the cookbooks: https://github.com/alibaba-damo-academy/RynnBrain/tree/main/cookbooks"""
+
+        # Merge generation kwargs
+        gen_kwargs = {**self.generation_kwargs, **kwargs}
+
+        # Build messages
+        if isinstance(prompt, str):
+            messages = [{"role": "user", "content": prompt}]
+        elif isinstance(prompt, dict):
+            messages = [prompt]
+        elif isinstance(prompt, list):
+            messages = prompt
+        else:
+            raise NotImplementedError("Unsupported prompt format")
+        
+        # Audio is not supported
+        if audios is not None and len(audios) > 0:
+            raise NotImplementedError("RoboAnnotatorX does not support audio inputs")
+
+        # Build prompt
+        processed_prompt = self._build_prompt(messages, images, videos)
+
+        # Process the input
+        inputs = self.processor.apply_chat_template(
+            processed_prompt,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_dict=True,
+            return_tensors="pt"
+        )
+        inputs = inputs.to(self.device)
+        
+        # Run inference
+        generated_ids = self.model.generate(**inputs, **gen_kwargs)
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+
+        # Decode output
+        output = self.processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0]
+
+        return output
+
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """RynnBrain uses coordinates in range 0-1000 for bounding boxes by default."""
+        
+        if format == "xyxy":
+            width, height = original_size
+            x1 = bbox[0] / 1000 * width
+            y1 = bbox[1] / 1000 * height
+            x2 = bbox[2] / 1000 * width
+            y2 = bbox[3] / 1000 * height
+            return [x1, y1, x2, y2]
+        else:
+            raise NotImplementedError()
+
+    def prepare_vllm_inputs_from_chat(
+        self,
+        chat_messages: List[Dict[str, str]],
+        sample: Sample
+    ) -> Dict[str, Any]:
+        """
+        Note: RynnBrain doesn't use vLLM, so this returns a placeholder.
+        This method exists to satisfy the abstract base class requirement.
+        """
+        # RynnBrain doesn't use vLLM, so return a simple structure
+        # that indicates this model doesn't support vLLM inference        
+        return {
+            "prompt_token_ids": [],
+            "multi_modal_data": None,
+            "mm_processor_kwargs": None,
+            "_note": "RynnBrain does not use vLLM"
         }
