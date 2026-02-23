@@ -61,6 +61,9 @@ import robo2vlm_benchmark
 import models
 # Register benchmarks
 register_benchmark("robovqa")(robovqa_benchmark.RoboVQABenchmark)
+register_benchmark("robog")(roboG_benchmark.RoboGBenchmark)
+register_benchmark("vstar")(vstar_benchmark.VStarBenchmark)
+register_benchmark("robo2vlm")(robo2vlm_benchmark.Robo2VLMBenchmark)
 
 # Register models
 register_model("mock")(models.MockModel)
@@ -68,6 +71,7 @@ register_model("llamafactory")(models.LlamaFactoryModel)
 register_model("openai")(models.OpenAIModel)
 register_model("gemini")(models.GoogleModel)
 register_model("roboannotatorx")(models.RoboAnnotatorX)
+register_model("rynnbrain")(models.RynnBrain)
 
 
 def instantiate_from_config(cfg: DictConfig):
