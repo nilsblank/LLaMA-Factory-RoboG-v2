@@ -67,6 +67,7 @@ register_model("mock")(models.MockModel)
 register_model("llamafactory")(models.LlamaFactoryModel)
 register_model("openai")(models.OpenAIModel)
 register_model("gemini")(models.GoogleModel)
+register_model("roboannotatorx")(models.RoboAnnotatorX)
 
 
 def instantiate_from_config(cfg: DictConfig):
