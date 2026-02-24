@@ -48,6 +48,8 @@ from transformers.models.qwen3_vl.video_processing_qwen3_vl import Qwen3VLVideoP
 from transformers.models.qwen2_vl.image_processing_qwen2_vl_fast import Qwen2VLImageProcessorFast
 from transformers.utils.generic import maybe_autocast
 
+from llamafactory.custom_models.temporal_resamplers.hybrid_slot_query.slot_constrast_pred import TransformerEncoder
+
 @dataclass
 @auto_docstring
 class BaseModelOutputWithDeepstackFeatures(BaseModelOutputWithPooling):
@@ -107,6 +109,12 @@ class FixedLearnedInit(nn.Module):
         if frozen:
             self.slots.requires_grad_(False)
 
+    def reset_parameters(self):
+        # Only run when not meta and not frozen
+        if self.slots.is_meta or not self.slots.requires_grad:
+            return
+        nn.init.normal_(self.slots, mean=0.0, std=self.slots.size(-1) ** -0.5)
+
     def forward(self, batch_size: int, device: torch.device, dtype: torch.dtype):
         return self.slots.to(device=device, dtype=dtype).expand(batch_size, -1, -1)
 
@@ -142,7 +150,12 @@ class MotionAwareSlotAttention(nn.Module):
         self.eps = eps
         self.init_type = init_type
 
+        self.use_motion_encoder = False
+
         # Slot initialization: random or fixed learned
+        #init_type = "fixed"
+
+
         if init_type == "random":
             self.slots = RandomInit(num_slots_internal, slot_dim)
             s = 1
@@ -167,8 +180,16 @@ class MotionAwareSlotAttention(nn.Module):
         self.to_k = nn.Linear(slot_dim, slot_dim, bias=False)
         self.to_v = nn.Linear(slot_dim, slot_dim, bias=False)
 
-        self.slot_norm = nn.LayerNorm(slot_dim)
 
+        self.predictor = TransformerEncoder(
+            dim = slot_dim,
+            n_blocks=1,
+            n_heads=4,)
+
+        #self.predictor = None
+
+
+        self.slot_norm = nn.LayerNorm(slot_dim)
         self.gru = nn.GRUCell(slot_dim, slot_dim)
         self.mlp = nn.Sequential(
             nn.LayerNorm(slot_dim),
@@ -180,6 +201,37 @@ class MotionAwareSlotAttention(nn.Module):
         # Optional temporal smoothing/aggregation of per-frame slots
         self.temporal_attn = nn.MultiheadAttention(slot_dim, num_heads_temporal, batch_first=True)
         self.temporal_norm = nn.LayerNorm(slot_dim)
+
+        # Pretraining heads (initialized explicitly via initialize_pretrain_modules)
+        self.patch_pos_proj: Optional[nn.Linear] = None
+        self.patch_decoder: Optional[nn.Sequential] = None
+
+    def initialize_pretrain_modules(
+        self,
+        patch_pos_dim: int,
+        vision_dim: int,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
+    ) -> None:
+        """Initialize reconstruction modules once so their params are optimizer-visible."""
+        if self.patch_pos_proj is None:
+            self.patch_pos_proj = nn.Linear(patch_pos_dim, self.slot_dim)
+        if self.patch_decoder is None:
+            self.patch_decoder = nn.Sequential(
+                nn.Linear(self.slot_dim, vision_dim),
+                nn.ReLU(),
+                nn.Linear(vision_dim, vision_dim),
+                nn.ReLU(),
+                nn.Linear(vision_dim, vision_dim),
+                nn.ReLU(),
+                nn.Linear(vision_dim, vision_dim + 1),
+            )
+
+        if device is not None or dtype is not None:
+            if self.patch_pos_proj is not None:
+                self.patch_pos_proj = self.patch_pos_proj.to(device=device, dtype=dtype)
+            if self.patch_decoder is not None:
+                self.patch_decoder = self.patch_decoder.to(device=device, dtype=dtype)
 
     def compute_motion(self, features: torch.Tensor) -> torch.Tensor:
         """Compute motion signal between consecutive frames."""
@@ -210,10 +262,11 @@ class MotionAwareSlotAttention(nn.Module):
         # Project inputs into slot space
         feats = self.input_norm(self.input_proj(visual_features))      # (B, T, N, H)
 
-        # Motion bias
-        motion_raw = self.compute_motion(visual_features)              # (B, T, N, Din)
-        motion_feats = self.motion_proj(motion_raw)                    # (B, T, N, H)
-        feats = feats + self.motion_weight * motion_feats
+        if self.use_motion_encoder:
+            # Motion bias
+            motion_raw = self.compute_motion(visual_features)              # (B, T, N, Din)
+            motion_feats = self.motion_proj(motion_raw)                    # (B, T, N, H)
+            feats = feats + self.motion_weight * motion_feats
 
         # Initialize slots only once (t=0), then carry forward
         slots = self.init_slots(B, device=device, dtype=dtype)         # (B, K, H)
@@ -273,27 +326,36 @@ class MotionAwareSlotAttention(nn.Module):
                 ).view(B, self.num_slots_internal, self.slot_dim)
 
                 frame_slots = frame_slots + self.mlp(frame_slots)
-
+                #frame_slots = frame_slots
+                #frame_slots = self.mlp(frame_slots)
+            
             all_slots.append(frame_slots)
             all_attn.append(attn)
 
             # temporal carry: use current frame slots as next init
             slots = frame_slots
 
+            if self.predictor is not None:
+                slots = self.predictor(slots)
+
         slots_per_frame = torch.stack(all_slots, dim=1)  # (B, T, K, H)
         attn_per_frame = torch.stack(all_attn, dim=1)    # (B, T, K, N)
 
         # Compute motion score per slot (helps select manipulated objects later)
         # Use motion magnitude in slot space, weighted by slot attention over tokens.
-        motion_mag = motion_feats.norm(dim=-1)  # (B, T, N)
+        if self.use_motion_encoder:
+            motion_mag = motion_feats.norm(dim=-1)  # (B, T, N)
 
-        if attention_mask is not None:
-            motion_mag = motion_mag * attention_mask.float()  # zero out padded
+            if attention_mask is not None:
+                motion_mag = motion_mag * attention_mask.float()  # zero out padded
 
-        # attn_per_frame: (B,T,K,N)
-        num = (attn_per_frame * motion_mag.unsqueeze(2)).sum(dim=(1, 3))          # (B,K)
-        den = attn_per_frame.sum(dim=(1, 3)).clamp_min(self.eps)                  # (B,K)
-        motion_score = num / den                                                  # (B,K)
+            # attn_per_frame: (B,T,K,N)
+            num = (attn_per_frame * motion_mag.unsqueeze(2)).sum(dim=(1, 3))          # (B,K)
+            den = attn_per_frame.sum(dim=(1, 3)).clamp_min(self.eps)                  # (B,K)
+            motion_score = num / den                                                  # (B,K)
+
+        else:
+            motion_score = torch.zeros(B, self.num_slots_internal, device=slots.device)
 
         # Temporal aggregation: smooth slot tracks then pool
         slots_flat = slots_per_frame.permute(0, 2, 1, 3).reshape(B * self.num_slots_internal, T, self.slot_dim)
@@ -308,6 +370,78 @@ class MotionAwareSlotAttention(nn.Module):
             "slots_internal_per_frame": slots_per_frame,  # (B, T, K, H)
             "attention": attn_per_frame,            # (B, T, K, N)
             "motion_score": motion_score,           # (B, K)
+        }
+
+    def compute_batch_losses(
+        self,
+        visual_features: torch.Tensor,
+        attention_mask: torch.Tensor,
+        patch_pos_qwen: torch.Tensor,
+        supervised_loss: Optional[torch.Tensor] = None,
+        patch_recon_weight: float = 1.0,
+        patch_recon_mask_ratio: float = 0.0,
+        hybrid_output: Optional[Dict[str, torch.Tensor]] = None,
+        return_visuals: bool = False,
+        video_grid_thw: Optional[torch.Tensor] = None,
+        pixel_values_videos: Optional[torch.Tensor] = None,
+    ) -> Dict[str, Optional[torch.Tensor]]:
+        if self.patch_pos_proj is None or self.patch_decoder is None:
+            raise RuntimeError(
+                "Pretrain modules are not initialized. Call initialize_pretrain_modules(...) before training."
+            )
+
+        if hybrid_output is None:
+            hybrid_output = self.forward(visual_features, attention_mask=attention_mask)
+
+        if supervised_loss is None:
+            supervised_loss = visual_features.new_zeros(())
+
+        slot_states = hybrid_output["slots_internal_per_frame"]  # (B,T,K,H)
+        patch_pos = self.patch_pos_proj(patch_pos_qwen)  # (B,T,N,H)
+
+        bsz, t_steps, num_slots, hidden_dim = slot_states.shape
+        num_patches = patch_pos.shape[2]
+        slots_plus_pos = (
+            slot_states.unsqueeze(3).expand(bsz, t_steps, num_slots, num_patches, hidden_dim)
+            + patch_pos.unsqueeze(2).expand(bsz, t_steps, num_slots, num_patches, hidden_dim)
+        )
+
+        decoded = self.patch_decoder(slots_plus_pos)
+        vision_dim = visual_features.shape[-1]
+        recons, alpha = decoded.split((vision_dim, 1), dim=-1)
+
+        invalid = (~attention_mask).unsqueeze(2).unsqueeze(-1)
+        alpha = alpha.masked_fill(invalid, -1e4)
+        masks = torch.softmax(alpha, dim=2)
+        pred_patches = (recons * masks).sum(dim=2)
+
+        valid_mask = attention_mask
+        if patch_recon_mask_ratio > 0:
+            rand_mask = torch.rand_like(valid_mask.float())
+            recon_mask = valid_mask & (rand_mask < patch_recon_mask_ratio)
+            if recon_mask.sum() == 0:
+                recon_mask = valid_mask
+        else:
+            recon_mask = valid_mask
+
+        pred = F.layer_norm(pred_patches[recon_mask], normalized_shape=(vision_dim,))
+        target = F.layer_norm(visual_features[recon_mask], normalized_shape=(vision_dim,))
+
+        recon_loss = F.mse_loss(pred, target)
+        total_loss = supervised_loss + patch_recon_weight * recon_loss
+
+        vis_payload = None
+        if return_visuals:
+            vis_payload = {
+                "masks": masks.detach().float().cpu(),
+                "video_grid_thw": video_grid_thw.detach().cpu() if video_grid_thw is not None else None,
+                "pixel_values_videos": pixel_values_videos.detach().float().cpu() if pixel_values_videos is not None else None,
+            }
+
+        return {
+            "total_loss": total_loss,
+            "recon_loss": recon_loss,
+            "vis_payload": vis_payload,
         }
     
 
@@ -482,6 +616,7 @@ class RelationQueryEncoder(nn.Module):
         self,
         hidden_dim: int,
         visual_dim: int,
+        slot_dim: int,
         num_heads: int = 8,
         num_layers: int = 2,
         temporal_pooling: str = "concat",     # 'concat' or 'mean'
@@ -502,7 +637,8 @@ class RelationQueryEncoder(nn.Module):
         # so memory_dim becomes visual_dim for the visual part and hidden_dim for slots part.
         # To keep the layer simple, we'll project everything to visual_dim before mem_proj OR
         # just unify memory to visual_dim using a projector. We'll do unify-to-visual_dim.
-        self.slot_mem_proj = nn.Linear(hidden_dim, visual_dim) if hidden_dim != visual_dim else nn.Identity()
+        self.slot_mem_proj = nn.Linear(slot_dim, visual_dim) if slot_dim != visual_dim else nn.Identity()
+        self.slot_proj = nn.Linear(slot_dim, hidden_dim) if slot_dim != hidden_dim else nn.Identity()
 
     def build_memory(
         self,
@@ -580,10 +716,14 @@ class RelationQueryEncoder(nn.Module):
     ) -> torch.Tensor:
         memory, mem_kpm = self.build_memory(visual_features, slots_per_frame, attention_mask)
 
+
+        #project slots
+        slots_proj = self.slot_proj(slots)
+
         for layer in self.layers:
             queries = layer(
                 queries=queries,
-                slots=slots,
+                slots=slots_proj,
                 context=context_tokens,
                 memory=memory,
                 memory_key_padding_mask=mem_kpm,
@@ -610,10 +750,11 @@ class HybridSlotQueryModel(nn.Module):
         num_slots_internal: int = 8,     # robust decomposition
         num_object_tokens: int = 2,      # how many manipulated objects you want to represent
         num_frames: int = 16,
+        slot_dim = 128,
         num_heads: int = 8,
         qwen_model: str = "Qwen/Qwen2-0.5B",
         memory_mode: str = "tokens+slots",   # 'tokens', 'slots', 'tokens+slots'
-        slot_init_type: str = "random",      # 'random' or 'fixed'
+        slot_init_type: str = "fixed",      # 'random' or 'fixed'
         slot_init_frozen: bool = False,      # Only for fixed init
         use_per_frame_query: bool = False,
     ):
@@ -626,12 +767,13 @@ class HybridSlotQueryModel(nn.Module):
         self.num_frames = num_frames
         self.use_per_frame_query = use_per_frame_query
 
+        self.slot_dim = slot_dim
         # --------------------------
         # Stage 1: Slot discovery (internal slots)
         # --------------------------
         self.slot_discovery = MotionAwareSlotAttention(
             input_dim=vision_dim,
-            slot_dim=hidden_dim,
+            slot_dim=slot_dim,
             num_slots_internal=num_slots_internal,
             num_iterations=3,
             init_type=slot_init_type,
@@ -640,14 +782,14 @@ class HybridSlotQueryModel(nn.Module):
 
         # Slot classification over INTERNAL slots: robot, object, background
         self.slot_classifier = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.Linear(slot_dim, slot_dim // 2),
             nn.ReLU(),
-            nn.Linear(hidden_dim // 2, 3),
+            nn.Linear(slot_dim // 2, 3),
         )
 
         # Role pooling: internal slots -> robot token + M object tokens
         self.role_pooler = SlotRolePooler(
-            hidden_dim=hidden_dim,
+            hidden_dim=slot_dim,
             num_object_tokens=num_object_tokens,
             use_background_token=False,
         )
@@ -665,6 +807,7 @@ class HybridSlotQueryModel(nn.Module):
         self.relation_encoder = RelationQueryEncoder(
             hidden_dim=hidden_dim,
             visual_dim=vision_dim,               # visual_features are still in vision_dim
+            slot_dim=slot_dim,
             num_heads=num_heads,
             num_layers=2,
             temporal_pooling="concat",
@@ -694,9 +837,9 @@ class HybridSlotQueryModel(nn.Module):
         # --------------------------
         # Internal slot boxes per frame (if you have supervision/pseudo-labels)
         self.slot_box_head = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
+            nn.Linear(slot_dim, slot_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 4),
+            nn.Linear(slot_dim, 4),
             nn.Sigmoid(),
         )
 
@@ -709,9 +852,9 @@ class HybridSlotQueryModel(nn.Module):
         )
 
         self.temporal_head = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.Linear(slot_dim, slot_dim // 2),
             nn.ReLU(),
-            nn.Linear(hidden_dim // 2, 2),
+            nn.Linear(slot_dim // 2, 2),
             nn.Sigmoid(),
         )
 
@@ -721,6 +864,36 @@ class HybridSlotQueryModel(nn.Module):
     #     special_tokens = ["<obj>", "</obj>", "<loc>", "</loc>", "<box>", "</box>"]
     #     self.tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
     #     self.llm.resize_token_embeddings(len(self.tokenizer))
+
+
+
+    def reset_parameters(self):
+        # recursively init all submodules
+        #self.apply(self._init_weights)
+        for m in self.modules():  # includes self; harmless if handled
+            if m is self:
+                continue
+            if hasattr(m, "reset_parameters"):
+                m.reset_parameters()
+            #else:
+            #    s = 1
+
+        
+        # init *this one specific parameter* once
+        self.slot_discovery.slots.reset_parameters()
+
+    # @staticmethod
+    # def _init_weights(module):
+    #     if isinstance(module, nn.Linear):
+    #         nn.init.xavier_uniform_(module.weight)
+    #         if module.bias is not None:
+    #             nn.init.zeros_(module.bias)
+        
+        #check if is meta and train, then reset parameters of meta modules (for all types
+ 
+        #module.reset_parameters()
+
+
 
     def get_n_video_tokens(self):
         # For an LLM interface you likely want: 1 robot + M objects + Q relation tokens (maybe per object)
@@ -782,8 +955,8 @@ class HybridSlotQueryModel(nn.Module):
 
             per_frame_queries = base_queries.unsqueeze(1).expand(B, T, Q, self.hidden_dim).reshape(BT, Q, self.hidden_dim)
             per_frame_visual = visual_features.reshape(BT, 1, N, D)
-            per_frame_slots = slots_int_pf.reshape(BT, self.num_slots_internal, self.hidden_dim)
-            per_frame_slots_pf = slots_int_pf.reshape(BT, 1, self.num_slots_internal, self.hidden_dim)
+            per_frame_slots = slots_int_pf.reshape(BT, self.num_slots_internal, self.slot_dim)
+            per_frame_slots_pf = slots_int_pf.reshape(BT, 1, self.num_slots_internal, self.slot_dim)
 
             per_frame_attn_mask = None
             if attention_mask is not None:
@@ -1636,11 +1809,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
 
         #self.post_init()
 
-    def _init_weights(self, module):
-        if hasattr(module, "reset_parameters"):
-            module.reset_parameters()
-        else:
-            super()._init_weights(module)
+        #init slots 
 
     def rot_pos_emb(self, grid_thw: torch.Tensor) -> torch.Tensor:
         merge_size = self.spatial_merge_size
@@ -1952,6 +2121,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         self.slot_query_max_frames = kwargs.get("slot_query_max_frames", 128)
         self.slot_query_num_heads = kwargs.get("slot_query_num_heads", 8)
         self.slot_query_use_pooled_output = kwargs.get("slot_query_use_pooled_output", False)
+        self.slot_dim = kwargs.get("slot_dim", 512)  # dimension of each slot query
 
         if self.slot_query_use_pooled_output:
             vision_dim = config.vision_config.out_hidden_size
@@ -1994,6 +2164,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             #hidden_dim=self.hybrid_slot_hidden_dim,
             num_slots_internal=self.hybrid_slot_num_slots,
             num_frames=self.slot_query_max_frames,
+            slot_dim= self.slot_dim,
             num_heads=self.slot_query_num_heads,
             vision_hidden_dim=vision_dim,
             use_per_frame_query=self.use_per_frame_query,
@@ -2018,6 +2189,12 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
     def set_input_embeddings(self, value):
         self.language_model.set_input_embeddings(value)
+
+    def _init_weights(self, module):
+        super()._init_weights(module)
+
+        if isinstance(module, HybridSlotQueryModel):
+            module.reset_parameters()
 
 
 

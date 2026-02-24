@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import copy
+import math
 import os
 import random
 from typing import TYPE_CHECKING, Optional
@@ -23,7 +24,6 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 import torch
 from accelerate import Accelerator
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -542,6 +542,13 @@ def _run_slot_query_pretrain(
     qwen3vlmodelinstance = _unwrap_model_for_hsq(model)
     slot_query_model = qwen3vlmodelinstance.hybrid_slot_query_model
 
+    vision_dim = qwen3vlmodelinstance.vision_dim
+    slot_query_model.slot_discovery.initialize_pretrain_modules(
+        patch_pos_dim=qwen3vlmodelinstance.visual.pos_embed.embedding_dim,
+        vision_dim=vision_dim,
+        dtype=model.dtype,
+    )
+
 
 
 
@@ -576,24 +583,8 @@ def _run_slot_query_pretrain(
         accelerator.init_trackers(tracker_name, config=custom_args)
 
     device = accelerator.device
-    hidden_dim = slot_query_model.hidden_dim
-    
 
-    vision_dim = qwen3vlmodelinstance.vision_dim
-
-    # Explicit SlotAttention-style decoder:
-    # slots + patch-pos -> MLP -> [patch_recon, alpha], masks=softmax(alpha over slots)
-    patch_pos_proj = nn.Linear(qwen3vlmodelinstance.visual.pos_embed.embedding_dim, hidden_dim).to(device)
-    #cast to same dtype as model for stable training
-    patch_pos_proj = patch_pos_proj.to(dtype=model.dtype)
-    patch_decoder = nn.Sequential(
-        nn.Linear(hidden_dim, hidden_dim),
-        nn.GELU(),
-        nn.Linear(hidden_dim, vision_dim + 1),
-    ).to(device)
-    patch_decoder = patch_decoder.to(dtype=model.dtype)
-
-    params = list(slot_query_model.parameters()) + list(patch_pos_proj.parameters()) + list(patch_decoder.parameters())
+    params = list(slot_query_model.parameters())
     if train_slot_input_proj:
         params += list(slot_query_input_proj.parameters())
     optimizer = AdamW(
@@ -641,14 +632,62 @@ def _run_slot_query_pretrain(
         num_training_steps=max_steps,
     )
 
-    slot_query_model, patch_pos_proj, patch_decoder, optimizer, train_loader,scheduler = accelerator.prepare(
+
+
+
+    # import functools
+    # from torch.profiler import record_function, profile, ProfilerActivity
+    # from torch.profiler import profile, ProfilerActivity, schedule, tensorboard_trace_handler
+
+    # def profile_module(module, module_name):
+    #     """Wraps a module's forward pass in a profiler context to avoid hook dict issues."""
+    #     original_forward = module.forward
+        
+    #     @functools.wraps(original_forward)
+    #     def forward_with_profiling(*args, **kwargs):
+    #         # The context manager wraps the forward pass. 
+    #         # Autograd will automatically link the corresponding backward C++ ops to this name!
+    #         with record_function(f"Module: {module_name}"):
+    #             return original_forward(*args, **kwargs)
+                
+    #     # Override the original forward method with our wrapped one
+    #     module.forward = forward_with_profiling
+
+    # def auto_tag_modules(model, prefix="", current_depth=1, target_depth=2):
+    #     """Recursively iterates through submodules and patches them for profiling."""
+    #     for name, submodule in model.named_children():
+    #         full_name = f"{prefix}.{name}" if prefix else name
+    #         has_children = len(list(submodule.named_children())) > 0
+            
+    #         if current_depth >= target_depth or not has_children:
+    #             profile_module(submodule, full_name)
+    #             # Optional: print(f"Patched: {full_name}")
+    #         else:
+    #             auto_tag_modules(
+    #                 submodule, 
+    #                 prefix=full_name, 
+    #                 current_depth=current_depth + 1, 
+    #                 target_depth=target_depth
+    #             )
+
+    # prof = profile(
+    # activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+    # schedule=schedule(wait=1, warmup=1, active=3, repeat=1), # Profiles steps 3, 4, and 5
+    # #on_trace_ready=tensorboard_trace_handler('./profiler_logs'),
+    # record_shapes=True,
+    # with_stack=True # Captures the exact line of code causing the bottleneck
+    # )   
+
+    # auto_tag_modules(slot_query_model)
+
+
+    slot_query_model, optimizer, train_loader, scheduler = accelerator.prepare(
         slot_query_model,
-        patch_pos_proj,
-        patch_decoder,
         optimizer,
         train_loader,
         scheduler,
     )
+    slot_discovery = accelerator.unwrap_model(slot_query_model).slot_discovery
     if eval_loader is not None:
         eval_loader = accelerator.prepare(eval_loader)
 
@@ -663,7 +702,7 @@ def _run_slot_query_pretrain(
     ).to(device)
 
     patch_recon_weight = float(custom_args.get("slot_patch_recon_weight", 1.0))
-    patch_recon_mask_ratio = float(custom_args.get("slot_patch_recon_mask_ratio", 0.25))
+    patch_recon_mask_ratio = float(custom_args.get("slot_patch_recon_mask_ratio", 0))
     use_supervised_slot_loss = bool(custom_args.get("slot_pretrain_use_supervised_losses", True))
     vis_masks = bool(custom_args.get("slot_vis_masks", False))
     vis_steps = int(custom_args.get("slot_vis_steps", max(1, training_args.logging_steps or 100)))
@@ -694,8 +733,6 @@ def _run_slot_query_pretrain(
 
     model.train()
     slot_query_model.train()
-    patch_pos_proj.train()
-    patch_decoder.train()
 
     eval_steps = int(custom_args.get("slot_pretrain_eval_steps", max(1, training_args.logging_steps or 100)))
     max_eval_batches = int(custom_args.get("slot_pretrain_max_eval_batches", 0))
@@ -710,6 +747,11 @@ def _run_slot_query_pretrain(
         hybrid_output = slot_query_model(x_batched, attention_mask=attn_mask)
 
         supervised_loss = torch.tensor(0.0, device=device)
+        loss_dict = {
+            "total": supervised_loss,
+            "temporal": torch.tensor(0.0, device=device),
+            "contrastive": torch.tensor(0.0, device=device),
+        }
         if use_supervised_slot_loss:
             moved_gt = _get_first_available(cur_batch, moved_key_candidates)
             start_gt = _get_first_available(cur_batch, start_key_candidates)
@@ -738,8 +780,6 @@ def _run_slot_query_pretrain(
             #         "Only reconstruction loss will be used for those batches."
             #     )
 
-        slot_states = hybrid_output["slots_internal_per_frame"]
-
         patch_pos_qwen = _build_qwen_patch_pos_emb_batched(
             qwen3vlmodelinstance=qwen3vlmodelinstance,
             video_grid_thw=cur_batch["video_grid_thw"],
@@ -749,70 +789,25 @@ def _run_slot_query_pretrain(
             dtype=x_batched.dtype,
             use_pooled_output=slot_query_use_pooled_output,
         )
-        patch_pos = patch_pos_proj(patch_pos_qwen)
 
-
-        #alternatively: simple learned pos emebd without qwen interpolation.
-
-        num_patches_per_frame = cur_batch["video_grid_thw"][:, 1] * cur_batch["video_grid_thw"][:, 2]
-        max_patches = num_patches_per_frame.max().item()
-        pos_embed_simple = nn.Parameter(torch.randn((1, max_patches, patch_pos_qwen.shape[-1]), device=device, dtype=patch_pos_qwen.dtype) * 0.02)
-
-        slots_flat = slot_states.view(slot_states.shape[0]* slot_states.shape[1] * slot_states.shape[2], slot_states.shape[3])
-        slots_expanded = slots_flat.unsqueeze(1).expand(-1, max_patches, -1)
-
-
-
-        slots_plus_pos = slots_expanded + pos_embed_simple
-
-        #reshape
-        slots_plus_pos = slots_plus_pos.view(slot_states.shape[0], slot_states.shape[1], slot_states.shape[2], max_patches, slot_states.shape[3])
-        
-        #slots_zero = torch.zeros_like(slots_expanded)
-        #slots_plus_pos = slots_zero + pos_embed_simple
-        #slots_plus_pos = slots_plus_pos.view(slot_states.shape[0], slot_states.shape[1], slot_states.shape[2], max_patches, slot_states.shape[3])
-
-
-        decoded = patch_decoder(slots_plus_pos)
-        recons, alpha = decoded.split((vision_dim, 1), dim=-1)
-
-        invalid = (~attn_mask).unsqueeze(2).unsqueeze(-1)
-        alpha = alpha.masked_fill(invalid, -1e4)
-        masks = torch.softmax(alpha, dim=2)
-        pred_patches = (recons * masks).sum(dim=2)
-
-        valid_mask = attn_mask
-        if patch_recon_mask_ratio > 0:
-            rand_mask = torch.rand_like(valid_mask.float())
-            recon_mask = valid_mask & (rand_mask < patch_recon_mask_ratio)
-            if recon_mask.sum() == 0:
-                recon_mask = valid_mask
-        else:
-            recon_mask = valid_mask
-
-        pred = F.layer_norm(pred_patches[recon_mask], normalized_shape=(vision_dim,))
-        target = F.layer_norm(x_batched[recon_mask], normalized_shape=(vision_dim,))
-
-        mean_per_vid = pred.view(pred.shape[0], -1, pred.shape[-1]).mean(dim=1)
-
-        recon_loss = F.mse_loss(pred, target)
-        total_loss = supervised_loss + patch_recon_weight * recon_loss
-
-        vis_payload = None
-        if return_visuals:
-            vis_payload = {
-                "masks": masks.detach().float().cpu(),
-                "video_grid_thw": cur_batch["video_grid_thw"].detach().cpu(),
-                "pixel_values_videos": cur_batch.get("pixel_values_videos", None).detach().float().cpu()
-                if cur_batch.get("pixel_values_videos", None) is not None
-                else None,
-            }
+        recon_out = slot_discovery.compute_batch_losses(
+            visual_features=x_batched,
+            attention_mask=attn_mask,
+            patch_pos_qwen=patch_pos_qwen,
+            supervised_loss=supervised_loss,
+            patch_recon_weight=patch_recon_weight,
+            patch_recon_mask_ratio=patch_recon_mask_ratio,
+            hybrid_output=hybrid_output,
+            return_visuals=return_visuals,
+            video_grid_thw=cur_batch.get("video_grid_thw", None),
+            pixel_values_videos=cur_batch.get("pixel_values_videos", None),
+        )
 
         return {
-            "total_loss": total_loss,
+            "total_loss": recon_out["total_loss"],
             "supervised_loss": loss_dict,
-            "recon_loss": recon_loss,
-            "vis_payload": vis_payload,
+            "recon_loss": recon_out["recon_loss"],
+            "vis_payload": recon_out["vis_payload"],
         }
 
     @torch.no_grad()
@@ -821,8 +816,6 @@ def _run_slot_query_pretrain(
             return None
 
         slot_query_model.eval()
-        patch_pos_proj.eval()
-        patch_decoder.eval()
 
         eval_sum = torch.tensor(0.0, device=device)
         eval_count = torch.tensor(0, device=device, dtype=torch.long)
@@ -868,14 +861,13 @@ def _run_slot_query_pretrain(
             eval_count = accelerator.reduce(eval_count, reduction="sum")
 
         slot_query_model.train()
-        patch_pos_proj.train()
-        patch_decoder.train()
 
         if eval_count.item() == 0:
             return None
 
         return (eval_sum / eval_count).item()
 
+    save_steps = 4000
     global_step = 0
     optimizer.zero_grad(set_to_none=True)
     progress_bar = tqdm(total=max_steps, disable=not accelerator.is_main_process, desc="slot_pretrain")
@@ -926,7 +918,62 @@ def _run_slot_query_pretrain(
                 constrastive_loss = batch_loss_out["supervised_loss"]["contrastive"] if "contrastive" in batch_loss_out["supervised_loss"] else torch.tensor(0.0, device=device)
                 recon_loss = batch_loss_out["recon_loss"]
                 loss = total_loss
-                accelerator.backward(loss)
+
+
+
+
+                accelerator.backward(constrastive_loss)
+
+                log_payload = {}
+                #get gradient norms for logging. seperately for slot_query_model, patch_pos_proj, and patch_decoder, pos_embed_simple
+                log_payload["slot_pretrain/gradient_norm_slot_query"] = 0.0
+                log_payload["slot_pretrain/gradient_norm_patch_pos_proj"] = 0.0
+                log_payload["slot_pretrain/gradient_norm_patch_decoder"] = 0.0
+                log_payload["slot_pretrain/gradient_norm_pos_embed_simple"] = 0.0
+
+
+
+                #prefix is always hybrid_slot_query_model
+
+                print("\n--- Suspicious Weight Diagnostics ---")
+                for name, p in slot_query_model.named_parameters():
+                    # Filter for the layers we know are behaving wildly
+                    if "slot_discovery" in name and any(x in name for x in ["gru", "mlp", "predictor", "to_q", "to_k", "to_v", "patch_pos_proj", "patch_decoder"]):
+                        if p.data is not None:
+                            norm = p.data.norm().item()
+                            max_val = p.data.max().item()
+                            min_val = p.data.min().item()
+                            has_nan = torch.isnan(p.data).any().item()
+                            #grad norm
+                            grad_norm = p.grad.norm().item() if p.grad is not None else 0.0
+
+                            # Format nicely for easy reading
+                            print(f"{name:.<50} Norm: {norm:>10.6f} | Max: {max_val:>8.6f} | Min: {min_val:>8.6f} | NaN: {has_nan} | Grad Norm: {grad_norm:>8.6f}")
+                print("-------------------------------------\n")
+
+                for name, param in slot_query_model.named_parameters():
+                    if not param.requires_grad:
+                        continue
+                    if "patch_pos_proj" in name:
+                        if param.grad is not None:
+                            log_payload["slot_pretrain/gradient_norm_patch_pos_proj"] += param.grad.detach().data.norm(2).item() ** 2
+                    elif "patch_decoder" in name:
+                        if param.grad is not None:
+                            log_payload["slot_pretrain/gradient_norm_patch_decoder"] += param.grad.detach().data.norm(2).item() ** 2
+                    elif "slot_discovery" in name:
+                        if param.grad is not None:
+                            log_payload["slot_pretrain/gradient_norm_slot_query"] += param.grad.detach().data.norm(2).item() ** 2
+                    elif train_slot_input_proj and "slot_query_input_proj" in name:
+                        if param.grad is not None:
+                            log_payload["slot_pretrain/gradient_norm_slot_query"] += param.grad.detach().data.norm(2).item() ** 2
+                    elif "pos_embed_simple" in name:
+                        if param.grad is not None:
+                            log_payload["slot_pretrain/gradient_norm_pos_embed_simple"] += param.grad.detach().data.norm(2).item() ** 2
+
+                log_payload["slot_pretrain/gradient_norm_slot_query"] = math.sqrt(log_payload["slot_pretrain/gradient_norm_slot_query"])
+                log_payload["slot_pretrain/gradient_norm_patch_pos_proj"] = math.sqrt(log_payload["slot_pretrain/gradient_norm_patch_pos_proj"])
+                log_payload["slot_pretrain/gradient_norm_patch_decoder"] = math.sqrt(log_payload["slot_pretrain/gradient_norm_patch_decoder"])
+                log_payload["slot_pretrain/gradient_norm_pos_embed_simple"] = math.sqrt(log_payload["slot_pretrain/gradient_norm_pos_embed_simple"])
 
                 #if (step + 1) % training_args.gradient_accumulation_steps == 0:
                 if training_args.max_grad_norm and training_args.max_grad_norm > 0:
@@ -937,7 +984,7 @@ def _run_slot_query_pretrain(
                 global_step += 1
                 progress_bar.update(1)
 
-                log_payload = {
+                log_payload_losses = {
                     "slot_pretrain/total_loss": total_loss.detach().item(),
                     "slot_pretrain/supervised_loss": supervised_loss.detach().item(),
                     "slot_pretrain/temporal_loss": temporal_loss.detach().item(),
@@ -945,6 +992,9 @@ def _run_slot_query_pretrain(
                     "slot_pretrain/recon_loss": recon_loss.detach().item(),
                     "slot_pretrain/lr": scheduler.get_last_lr()[0],
                 }
+
+                log_payload.update(log_payload_losses)
+
                 accelerator.log(log_payload, step=global_step)
 
                 if accelerator.is_main_process:
@@ -971,7 +1021,7 @@ def _run_slot_query_pretrain(
                         accelerator.log({"slot_pretrain/eval_loss": eval_loss}, step=global_step)
                         logger.info_rank0("slot_pretrain eval step=%d eval_loss=%.6f" % (global_step, eval_loss))
 
-                if training_args.save_steps > 0 and global_step % training_args.save_steps == 0:
+                if save_steps > 0 and global_step % save_steps == 0:
                     accelerator.wait_for_everyone()
                     if accelerator.is_main_process:
                         os.makedirs(training_args.output_dir, exist_ok=True)
@@ -980,14 +1030,14 @@ def _run_slot_query_pretrain(
                             {
                                 "step": global_step,
                                 "hybrid_slot_query_model": accelerator.get_state_dict(slot_query_model),
-                                "patch_pos_proj": accelerator.get_state_dict(patch_pos_proj),
-                                "patch_decoder": accelerator.get_state_dict(patch_decoder),
                                 "optimizer": optimizer.state_dict(),
                                 "scheduler": scheduler.state_dict(),
                             },
                             ckpt_path,
                         )
                         logger.info_rank0(f"Saved slot pretraining checkpoint: {ckpt_path}")
+
+        
 
         if global_step >= max_steps:
             break
@@ -1001,8 +1051,6 @@ def _run_slot_query_pretrain(
             {
                 "step": global_step,
                 "hybrid_slot_query_model": accelerator.get_state_dict(slot_query_model),
-                "patch_pos_proj": accelerator.get_state_dict(patch_pos_proj),
-                "patch_decoder": accelerator.get_state_dict(patch_decoder),
                 "optimizer": optimizer.state_dict(),
                 "scheduler": scheduler.state_dict(),
             },
