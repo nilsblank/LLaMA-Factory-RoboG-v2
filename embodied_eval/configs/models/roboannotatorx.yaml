@@ -1,0 +1,12 @@
+_target_: models.RoboAnnotatorX
+name: roboannotatorx
+model_name_or_path: /hkfs/work/workspace/scratch/uemjv-roboG_datasets/RoboAnnotatorX/roboannotatorx-13b-assembled
+
+model_base: lmsys/vicuna-13b-v1.5
+device: cuda
+
+# Generation parameters
+use_vllm: false
+generation_kwargs:
+  temperature: 0.2
+  max_new_tokens: 1024

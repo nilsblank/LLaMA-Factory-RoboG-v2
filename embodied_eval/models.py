@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from omegaconf import DictConfig
+import torch
 
 from base import BaseModel, Sample
 
@@ -1087,4 +1088,290 @@ class GoogleModel(BaseModel):
             "multi_modal_data": None,
             "mm_processor_kwargs": None,
             "_note": "Google models use API-based inference, not vLLM"
+        }
+
+class RoboAnnotatorX(BaseModel):
+    """
+    Wrapper for the RoboAnnotatorX model to load the components
+    and run inference.
+    """
+
+    def __init__(self, cfg: Union[str, Path, DictConfig, Dict] = None):
+        """Initialize RoboAnnotatorX wrapper."""
+        super().__init__(cfg)
+
+        # Optional base model name used by the example loader
+        self.model_base = self.config.get("model_base", None)
+        # Device to run inference on
+        self.device = self.config.get("device", "cuda")
+        # System Prompt
+        self.system_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions."
+
+        # Components
+        self.tokenizer = None
+        self.model = None
+        self.image_processor = None
+        self._load_model()
+
+    def _load_model(self):
+        """Load tokenizer, model and image processor."""
+        try:
+            from roboannotatorx.model.builder import load_roboannotator
+        except Exception as e:
+            raise ImportError(
+                "roboannotatorx package not installed or failed to import. "
+                "Install and ensure it's importable. Original error: {}".format(e)
+            )
+
+        # The example returns tokenizer, model, image_processor, _
+        tokenizer, model, image_processor, _ = load_roboannotator(
+            model_path=self.model_path,
+            model_base=self.model_base,
+        )
+
+        # Move model to device if possible
+        try:
+            model = model.to(self.device)
+        except Exception:
+            pass
+
+        self.tokenizer = tokenizer
+        self.model = model
+        self.image_processor = image_processor
+
+    def _load_image(self, image_input, num_frames=8):
+        from PIL import Image
+
+        # Handle file path
+        if isinstance(image_input, str):
+            image_input = Image.open(image_input).convert("RGB")
+
+        # Handle PIL Image
+        if isinstance(image_input, Image.Image):
+            frame = np.array(image_input)   # (H, W, C)
+        elif isinstance(image_input, np.ndarray):
+            frame = image_input
+        else:
+            raise ValueError(f"Unsupported image type: {type(image_input)}")
+        
+        # TODO Try to match this:
+        # if type(images) is list or images.ndim == 5: # video
+        #     images = [image if len(image.shape) == 4 else image.unsqueeze(0) for image in images]
+        #     image_counts = [image.shape[0] for image in images]
+        #     concat_images = torch.cat(images, dim=0)
+        #     image_features = self.encode_images(concat_images, image_counts)
+        # else: # single-image / multi-image
+        #     image_features = self.encode_images(images)
+        
+        # Fix by repeating image
+        frames = np.repeat(frame[None, ...], num_frames, axis=0)  # (T, H, W, C)
+
+        # Prepare images
+        tensor = self.image_processor.preprocess(
+            frames, return_tensors="pt"
+        )["pixel_values"]  # (1, C, H, W)
+
+        return tensor.half().to(self.device)
+
+    def _load_video(self, video_input: str):
+        from decord import VideoReader, cpu
+
+        if not isinstance(video_input, str):
+            raise ValueError(f"Expected video file path as string, got {type(video_input)}")
+
+        vr = VideoReader(video_input, ctx=cpu(0))
+        frame_idx = list(range(len(vr)))
+
+        # Downsampling
+        if len(frame_idx) > 2000:
+            frame_idx = frame_idx[::4]
+        elif len(frame_idx) > 500:
+            frame_idx = frame_idx[::2]
+
+        frames = vr.get_batch(frame_idx).asnumpy()
+        tensor = self.image_processor.preprocess(
+            frames, return_tensors="pt"
+        )["pixel_values"]
+        return tensor.half().to(self.device)
+
+    def _build_prompt(self, messages, images, videos):
+        from roboannotatorx.constants import (
+            DEFAULT_IMAGE_TOKEN,
+            DEFAULT_IM_START_TOKEN,
+            DEFAULT_IM_END_TOKEN
+        )
+
+        # Determine which tags to look for
+        image_tag = "<image>"
+        video_tag = "<video>"
+        tags_to_find = []
+        if images is not None and len(images) > 0:
+            tags_to_find.append(image_tag)
+        if videos is not None and len(videos) > 0:
+            tags_to_find.append(video_tag)
+
+        # Process messages
+        processed_prompt = ""
+        combined_media = []
+        image_idx = 0
+        video_idx = 0
+        media_token = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN if self.model.config.mm_use_im_start_end else DEFAULT_IMAGE_TOKEN
+        seps = [" ", "</s>"]
+        sep_idx = 0
+
+        for msg in messages:
+            role = msg["role"]
+            if role != "user" and role != "system":
+                continue  # Skip other roles
+            
+            # Parse the text to find tags and build content
+            text = msg.get("content", "")
+            content = ""
+            
+            # Split text by tags for interleaving
+            if tags_to_find:
+                # Create pattern: (<image>|<video>)
+                pattern = f"({'|'.join(tags_to_find)})"
+                parts = re.split(pattern, text)
+            else:
+                # No tags to process, treat the whole thing as a single part
+                parts = [text]
+
+            for part in parts:
+                if part == image_tag:
+                    # Add image if available
+                    if image_idx < len(images):
+                        combined_media.append(self._load_image(images[image_idx]))
+                        content += f"{media_token}\n"
+                        image_idx += 1
+                elif part == video_tag:
+                    # Add video if available
+                    if video_idx < len(videos):
+                        combined_media.append(self._load_video(videos[video_idx]))
+                        content += f"{media_token}\n"
+                        video_idx += 1
+                else:
+                    # Add text part if not empty
+                    if part.strip():
+                        content += f"{part}\n"
+
+            if role == "system":
+                # Append the model's own system prompt
+                content += self.system_prompt
+                # Add message to processed prompt
+                processed_prompt += content.strip() + seps[0]
+            else: 
+                # Add message to processed prompt
+                sep = seps[sep_idx % 2]
+                processed_prompt += role.upper() + ": " + content.strip() + sep
+                sep_idx += 1
+
+        processed_prompt += "ASSISTANT:"
+        return processed_prompt, combined_media
+
+    def generate(
+        self,
+        prompt: Union[str, Dict[str, str], List[Dict[str, str]]],
+        images: Optional[List[np.ndarray]] = None,
+        videos: Optional[List[str]] = None,
+        audios: Optional[List[np.ndarray]] = None,
+        **kwargs
+    ) -> str:
+        """Run RoboAnnotatorX inference and return decoded text.
+
+        The implementation follows the example usage at the bottom of this file.
+        """
+        from roboannotatorx.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
+        from roboannotatorx.constants import IMAGE_TOKEN_INDEX
+        
+        # Merge generation kwargs
+        gen_kwargs = {**self.generation_kwargs, **kwargs}
+
+        # Build messages
+        if isinstance(prompt, str):
+            messages = [{"role": "user", "content": prompt}]
+        elif isinstance(prompt, dict):
+            messages = [prompt]
+        elif isinstance(prompt, list):
+            messages = prompt
+        else:
+            raise NotImplementedError("Unsupported prompt format")
+        
+        # Audio is not supported
+        if audios is not None and len(audios) > 0:
+            raise NotImplementedError("RoboAnnotatorX does not support audio inputs")
+
+        # Build prompt
+        processed_prompt, combined_media = self._build_prompt(messages, images, videos)
+
+        # Tokenize and insert image token using helper if available
+        input_ids = tokenizer_image_token(
+            processed_prompt,
+            self.tokenizer,
+            IMAGE_TOKEN_INDEX,
+            return_tensors="pt"
+        ).unsqueeze(0).to(self.device)
+        
+        # Stopping criteria
+        keywords = ["</s>"]
+        stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
+
+        # Run inference
+        with torch.inference_mode():
+            output_ids = self.model.generate(
+                input_ids=input_ids,
+                images=combined_media,
+                do_sample=True,
+                use_cache=True,
+                stopping_criteria=[stopping_criteria],
+                **gen_kwargs,
+            )
+
+        # Decode output
+        output = self.tokenizer.batch_decode(
+            output_ids[:, input_ids.shape[1]:],
+            skip_special_tokens=True
+        )[0].strip()
+
+        return output
+
+    def denormalize_bbox(
+        self,
+        bbox: List[float],
+        original_size: tuple,
+        format: str = "xyxy"
+    ) -> List[float]:
+        """Assume RoboAnnotatorX returns normalized 0.0-1.0 coords by default.
+
+        Convert to pixel coordinates in the same style as OpenAIModel.
+        """
+        # TODO verify this matches training setup, unclear if they actually trained bbox prediction
+        if format == "xyxy":
+            width, height = original_size
+            x1 = bbox[0] * width
+            y1 = bbox[1] * height
+            x2 = bbox[2] * width
+            y2 = bbox[3] * height
+            return [x1, y1, x2, y2]
+        else:
+            raise NotImplementedError()
+
+    def prepare_vllm_inputs_from_chat(
+        self,
+        chat_messages: List[Dict[str, str]],
+        sample: Sample
+    ) -> Dict[str, Any]:
+        """
+        Note: RoboAnnotatorX doesn't use vLLM, so this returns a placeholder.
+        This method exists to satisfy the abstract base class requirement.
+        """
+        # RoboAnnotatorX doesn't use vLLM, so return a simple structure
+        # that indicates this model doesn't support vLLM inference
+        text = " ".join([msg.get("content", "") for msg in chat_messages])
+        
+        return {
+            "prompt_token_ids": [],
+            "multi_modal_data": None,
+            "mm_processor_kwargs": None,
+            "_note": "RoboAnnotatorX does not use vLLM"
         }
