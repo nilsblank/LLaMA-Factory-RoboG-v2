@@ -8,6 +8,7 @@ video_max_pixels: 262144
 
 hybrid_slot_num_slots: 8
 hybrid_n_query_groups: 4
+slot_dim: 128
 per_frame_query: true
 append_query: true
 pass_individual_frames: true
@@ -15,13 +16,13 @@ slot_query_use_pooled_output: False
 
 #slot pretrain config
 
-slot_pretrain_eval_steps: 50
+slot_pretrain_eval_steps: 500
 slot_pretrain_num_train_epochs: 100
-slot_pretrain_batch_size: 8
+slot_pretrain_batch_size: 32
 slot_pretrain_gradient_accumulation_steps: 1
 
 slot_vis_masks: true
-slot_vis_steps: 50
+slot_vis_steps: 100
 slot_vis_max_samples: 2
 slot_vis_upsample_factor: 8
 slot_vis_eval: true
@@ -62,7 +63,7 @@ template: qwen3_vl_nothink_slot_query_hybrid
 cutoff_len: 4096
 #max_samples: 32
 overwrite_cache: true
-preprocessing_num_workers: 1
+preprocessing_num_workers: 128
 dataloader_num_workers: 64
 
 ### output
@@ -83,7 +84,7 @@ learning_rate: 1.0e-5
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
 warmup_ratio: 0.04
-bf16: true
+#bf16: true
 ddp_timeout: 180000000
 resume_from_checkpoint: null
 
@@ -92,13 +93,13 @@ flash_attn: fa2
 #use_unsloth: trues
 #optim: adamw_bnb_8bit
 #pure_bf16: true
-
+infer_dtype: fp32
 
 evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /data/roboG_debug/${dataset}/${hybrid_slot_num_slots}_${hybrid_n_query_groups}_perframe${per_frame_query}_appendquery${append_query}/
+tokenized_path: /hkfs/work/workspace/scratch/bm3844-roboG_datasets/roboG_debug/${dataset}/${hybrid_slot_num_slots}_${hybrid_n_query_groups}_perframe${per_frame_query}_appendquery${append_query}/
 
 
 

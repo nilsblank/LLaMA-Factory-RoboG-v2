@@ -592,7 +592,10 @@ class ModelArguments(
         " Setting this to False will use the token-level grid features instead, which may be better for fine-grained spatial understanding but worse for temporal modeling."}
     )
 
-
+    slot_dim: int = field(
+        default=128,
+        metadata={"help": "The dimension of each slot in the model, used for CustomModel Architectures and custom processing."}
+    )
 
     def __post_init__(self):
         BaseModelArguments.__post_init__(self)

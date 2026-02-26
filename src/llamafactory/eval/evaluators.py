@@ -39,6 +39,8 @@ import os
 SECRET_KEY = os.getenv("OPENAI_API_KEY", "test")
 
 
+
+
 key = SECRET_KEY
 def query_parallel_gpt(prompt, temperature=0.7, model="gpt-4o-mini"):
 
