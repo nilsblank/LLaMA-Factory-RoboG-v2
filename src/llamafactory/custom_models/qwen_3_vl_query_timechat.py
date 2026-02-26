@@ -614,6 +614,7 @@ class Qwen3VLTextRotaryEmbedding(nn.Module):
         return freqs_t
 
 
+
 @use_kernel_forward_from_hub("RMSNorm")
 class Qwen3VLTextRMSNorm(nn.Module):
     def __init__(self, hidden_size, eps: float = 1e-6) -> None:
@@ -1239,6 +1240,10 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
     def get_input_embeddings(self):
         return self.language_model.get_input_embeddings()
+    
+
+    def get_n_video_tokens(self):
+        return self.timechat_num_video_queries
 
     def set_input_embeddings(self, value):
         self.language_model.set_input_embeddings(value)
@@ -2156,208 +2161,13 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
 
 
-        special_image_mask_expanded = None
-        special_video_mask_expanded = None
-        tokens_per_frame = (image_grid_thw.prod(dim=1) // (self.visual.spatial_merge_size ** 2))  # Shape: [total_frames]
-
-        # Get total image tokens per batch entry
-        image_token_counts = (input_ids == self.config.image_token_id).sum(dim=1)  # Shape: [batch_size]
-
-        # Assign frames to batch entries by matching token counts
-        batch_size = input_ids.shape[0]
-        frames_per_batch_entry = []
-        frame_idx = 0
-
-        for batch_idx in range(batch_size):
-            tokens_needed = image_token_counts[batch_idx].item()
-            num_frames = 0
-            tokens_accumulated = 0
-            
-            # Accumulate frames until we match the token count for this batch entry
-            while tokens_accumulated < tokens_needed and frame_idx < len(tokens_per_frame):
-                tokens_accumulated += tokens_per_frame[frame_idx].item()
-                num_frames += 1
-                frame_idx += 1
-            
-            frames_per_batch_entry.append(num_frames)
-
-        frames_per_batch_entry = torch.tensor(frames_per_batch_entry, device=input_ids.device)
-        
-    
-
-        process_as_video_per_entry = frames_per_batch_entry >= 4
-
-        #split image and video embeds to pixel_values_videos and pixel_values, and process them separately
-
-        special_image_mask = input_ids == self.config.image_token_id
-        special_video_mask = input_ids == self.config.video_token_id
-
-       
-
-        if any(process_as_video_per_entry) and video_grid_thw is not None:
-            raise ValueError("Some entries have enough frames to be treated as videos and videos were provided. This is currently not supported")
-
-        pixel_values_videos = []
-        pixel_values_images = []
-        start_frame_idx = 0
-        pixel_val_start_idx = 0
-        video_grid_thw_list = []
-        image_grid_thw_list = []
-        for batch_idx in range(batch_size):
-            n_frames = frames_per_batch_entry[batch_idx].item()
-
-            n_toks = (
-                    torch.prod(image_grid_thw[start_frame_idx : start_frame_idx + n_frames], dim=1)
-                    .sum()
-                    .item()
-                )
-            if process_as_video_per_entry[batch_idx]:
-
-                special_video_mask[batch_idx] = special_image_mask[batch_idx]
-                special_image_mask[batch_idx] = False
-
-                #n_values to take from pixel_values for this batch entry
-                pixel_values_videos.append(pixel_values[pixel_val_start_idx : pixel_val_start_idx + n_toks])
-                video_grid_thw_list.append(torch.cat([torch.tensor([n_frames], device=input_ids.device), image_grid_thw[start_frame_idx : start_frame_idx + n_frames, 1:][0]], dim=0))
-            else:
-                pixel_values_images.append(pixel_values[pixel_val_start_idx : pixel_val_start_idx + n_toks])
-                image_grid_thw_list.append(image_grid_thw[start_frame_idx : start_frame_idx + n_frames])
-            
-            pixel_val_start_idx += n_toks
-            start_frame_idx += n_frames
-            
-
-        pixel_values_videos = torch.cat(pixel_values_videos) if len(pixel_values_videos) > 0 else None
-        pixel_values = torch.cat(pixel_values_images) if len(pixel_values_images) > 0 else None
-
-
-        image_grid_thw = torch.cat(image_grid_thw_list) if len(image_grid_thw_list) > 0 else None
-        video_grid_thw = torch.stack(video_grid_thw_list,dim = 0) if len(video_grid_thw_list) > 0 else None
-        #batch videos and frames together for efficient processing, but keep track of which entries should be treated as videos vs images
-
-        video_grid_thw_for_rope = video_grid_thw
-        if inputs_embeds is None and not bool(process_as_video_per_entry.any().item()): 
-            inputs_embeds = self.get_input_embeddings()(input_ids)
-        # Rebuild input_ids/attention_mask/inputs_embeds early using predicted compressed video token counts
-        if input_ids is not None and video_grid_thw is not None and bool(process_as_video_per_entry.any().item()):
-            Qv = int(self.timechat_num_video_queries)
-            win = int(self.timechat_window_size)
-            stride = int(self.timechat_stride) if int(self.timechat_stride) > 0 else win
-
-            per_video_token_counts = []
-            video_batch_indices = []
-            for b in range(batch_size):
-                if bool(process_as_video_per_entry[b].item()):
-                    T = int(frames_per_batch_entry[b].item())
-                    if win <= 0 or win >= T:
-                        n_clips = 1
-                    else:
-                        if stride <= 0:
-                            stride = win
-                        n_clips = 0
-                        st = 0
-                        while True:
-                            ed = min(st + win, T)
-                            n_clips += 1
-                            if ed == T:
-                                break
-                            st += stride
-                    per_video_token_counts.append(n_clips * Qv)
-                    video_batch_indices.append(b)
-
-            if len(per_video_token_counts) != video_grid_thw.shape[0]:
-                raise ValueError(
-                    f"Video batch count mismatch: got {len(per_video_token_counts)} predicted videos but expected {video_grid_thw.shape[0]}."
-                )
-
-            # Convert image placeholders to video placeholders for video entries
-            input_ids = input_ids.clone()
-            for batch_idx in video_batch_indices:
-                input_ids[batch_idx, input_ids[batch_idx] == self.config.image_token_id] = self.config.video_token_id
-
-            if attention_mask is None:
-                attention_mask = torch.ones_like(input_ids)
-
-            new_input_ids_list = []
-            pad_token_id = self.config.pad_token_id if self.config.pad_token_id is not None else 0
-
-
-            #keep meta tokens, such as timestamp or imstart
-            keep_meta = False
-            video_count_map = {b: int(per_video_token_counts[i]) for i, b in enumerate(video_batch_indices)}
-            for b in range(batch_size):
-                seq = input_ids[b][attention_mask[b] == 1]
-                if b in video_count_map:
-                    needed = video_count_map[b]
-                    vid_pos = torch.nonzero(seq == self.config.video_token_id, as_tuple=False).squeeze(1)
-                    if needed > vid_pos.numel():
-                        raise ValueError(
-                            f"Predicted video tokens ({needed}) exceed available video placeholders ({vid_pos.numel()}) for batch index {b}."
-                        )
-                    if keep_meta:
-                        # Replace the last video-token run with `needed` tokens, removing all earlier video tokens
-                        if vid_pos.numel() == 0:
-                            raise ValueError(
-                                f"No video placeholder tokens found in sequence for batch index {b}, but {needed} video tokens are needed."
-                            )
-                        last_vid = vid_pos[-1].item()
-                        run_start = last_vid
-                        while run_start > 0 and seq[run_start - 1] == self.config.video_token_id:
-                            run_start -= 1
-
-                        # Count non-video tokens before the last run start to get insertion index
-                        insert_pos = (seq[:run_start] != self.config.video_token_id).sum().item()
-                        seq_no_vid = seq[seq != self.config.video_token_id]
-
-                        if needed > 0:
-                            seq = torch.cat(
-                                [
-                                    seq_no_vid[:insert_pos],
-                                    seq.new_full((needed,), self.config.video_token_id),
-                                    seq_no_vid[insert_pos:],
-                                ],
-                                dim=0,
-                            )
-                        else:
-                            seq = seq_no_vid
-                    else:
-                        #replace all tokens from 3:lastvideo token with number of needed video tokens, keep the rest of the sequence unchanged
-                        if needed > 0:
-                            if vid_pos.numel() == 0:
-                                raise ValueError(f"No video placeholder tokens found in sequence for batch index {b}, but {needed} video tokens are needed.")
-                            last_vid_pos = vid_pos[-1].item()
-                            after_video_tokens = seq[last_vid_pos+1:]
-                            start_tokens = seq[:3]
-                            #cat vision start token id to start_tokens
-                            start_tokens = torch.cat([start_tokens, seq.new_full((1,), self.config.vision_start_token_id)], dim=0)
-                            seq = torch.cat([start_tokens, seq.new_full((needed,), self.config.video_token_id), after_video_tokens], dim=0)
-                new_input_ids_list.append(seq)
-
-            max_len = max(seq.shape[0] for seq in new_input_ids_list) if new_input_ids_list else 0
-            new_input_ids = input_ids.new_full((batch_size, max_len), pad_token_id)
-            new_attention_mask = attention_mask.new_zeros((batch_size, max_len))
-
-            for b, seq in enumerate(new_input_ids_list):
-                new_input_ids[b, : seq.shape[0]] = seq
-                new_attention_mask[b, : seq.shape[0]] = 1
-
-            input_ids = new_input_ids
-            attention_mask = new_attention_mask
+        if inputs_embeds is None:
             inputs_embeds = self.get_input_embeddings()(input_ids)
 
-            # Recompute placeholder masks from rebuilt input_ids
-            if pixel_values is not None:
-                special_image_mask = input_ids == self.config.image_token_id
-            if pixel_values_videos is not None:
-                special_video_mask = input_ids == self.config.video_token_id
+        image_mask = None
+        video_mask = None
 
-            # Adjust video_grid_thw only for RoPE indexing (keep original for get_video_features)
-            merge = self.visual.spatial_merge_size
-            video_grid_thw_for_rope = video_grid_thw.clone()
-            for i, count in enumerate(per_video_token_counts):
-                video_grid_thw_for_rope[i, 0] = 1
-                video_grid_thw_for_rope[i, 1] = int(count) * merge
-                video_grid_thw_for_rope[i, 2] = merge
+
 
 
         if pixel_values is not None:
@@ -2376,21 +2186,9 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             deepstack_video_embeds = video_outputs.deepstack_features
             video_embeds = torch.cat(video_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
 
-        if pixel_values is not None:
-            #image_mask, _ = self.get_placeholder_mask(
-            #    input_ids, inputs_embeds=inputs_embeds, image_features=image_embeds
-            #)
-            special_image_mask_expanded = special_image_mask.unsqueeze(-1).expand_as(inputs_embeds).to(inputs_embeds.device)
-            inputs_embeds = inputs_embeds.masked_scatter(special_image_mask_expanded, image_embeds)
-
-        if pixel_values_videos is not None:
-            #if special_video_mask is not None:
-            #_, video_mask = self.get_placeholder_mask(
-            #    input_ids, inputs_embeds=inputs_embeds, video_features=video_embeds
-            #)
-            special_video_mask_expanded = special_video_mask.unsqueeze(-1).expand_as(inputs_embeds).to(inputs_embeds.device)
-            assert special_video_mask_expanded.sum().item() <= video_embeds.numel(), f"masked_scatter mismatch: mask elements={special_video_mask_expanded.sum().item()}, src elements={video_embeds.numel()}"
-            inputs_embeds = inputs_embeds.masked_scatter(special_video_mask_expanded, video_embeds)
+            _, video_mask = self.get_placeholder_mask(
+                input_ids, inputs_embeds=inputs_embeds, video_features=video_embeds
+            )
 
         visual_pos_masks = None
         deepstack_visual_embeds = None
@@ -2399,12 +2197,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         video_mask = None
         image_mask = None
 
-        if special_video_mask_expanded is not None:
-            video_mask = special_video_mask_expanded
-        if special_image_mask_expanded is not None:
-            image_mask = special_image_mask_expanded
-        #image_mask = special_image_mask
-        #video_mask = special_video_mask_expanded
+
 
         if image_mask is not None and video_mask is not None:
             # aggregate visual_pos_masks and deepstack_visual_embeds
@@ -2428,28 +2221,6 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             visual_pos_masks = video_mask
             deepstack_visual_embeds = deepstack_video_embeds
 
-
-        position_ids = None
-        if position_ids is None:
-            past_key_values_length = 0 if past_key_values is None else past_key_values.get_seq_length()
-            if self.rope_deltas is None or past_key_values_length == 0:
-                position_ids, rope_deltas = self.get_rope_index(
-                    input_ids,
-                    image_grid_thw,
-                    video_grid_thw_for_rope,
-                    attention_mask=attention_mask,
-                )
-                self.rope_deltas = rope_deltas
-            # then use the prev pre-calculated rope-deltas to get the correct position ids
-            else:
-                batch_size, seq_length, _ = inputs_embeds.shape
-                delta = (past_key_values_length + self.rope_deltas).to(inputs_embeds.device)
-                position_ids = torch.arange(seq_length, device=inputs_embeds.device)
-                position_ids = position_ids.view(1, -1).expand(batch_size, -1)
-                if cache_position is not None:  # otherwise `deltas` is an int `0`
-                    delta = delta.repeat_interleave(batch_size // delta.shape[0], dim=0)
-                position_ids = position_ids.add(delta)
-                position_ids = position_ids.unsqueeze(0).expand(3, -1, -1)
 
         outputs = self.language_model(
             input_ids=None,
@@ -2506,9 +2277,9 @@ class Qwen3VLForConditionalGenerationTimechat(Qwen3VLPreTrainedModel, Generation
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
     
-    def __init__(self, config):
+    def __init__(self, config, **kwargs):
         super().__init__(config)
-        self.model = Qwen3VLModel(config)
+        self.model = Qwen3VLModel(config, **kwargs)
         self.lm_head = nn.Linear(config.text_config.hidden_size, config.text_config.vocab_size, bias=False)
 
         self.post_init()
