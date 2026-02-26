@@ -1486,6 +1486,147 @@ class Qwen2AudioPlugin(BasePlugin):
         return self._get_mm_inputs(images, videos, audios, processor)
 
 
+def _get_image_size_no_decode(image: "ImageInput") -> tuple[int, int]:
+    """Return ``(width, height)`` for an image input without decoding pixels.
+
+    * ``PIL.Image``  → ``.size`` (free, already in memory)
+    * ``lerobot://``  → loads via bridge (unavoidable for arbitrary frame)
+    * path / BinaryIO → PIL header-only read (pixels NOT decoded)
+    * bytes / dict    → BytesIO header-only read
+    """
+    if isinstance(image, ImageObject):
+        return image.size  # (width, height), already in memory
+
+    if isinstance(image, str) and image.startswith("lerobot://"):
+        from .lerobot_bridge import load_lerobot_frame
+
+        return load_lerobot_frame(image).size
+
+    if isinstance(image, (str, BinaryIO)):
+        with Image.open(image) as img:
+            return img.size  # PIL lazy: header parsed, pixels NOT decoded
+
+    if isinstance(image, bytes):
+        with Image.open(BytesIO(image)) as img:
+            return img.size
+
+    if isinstance(image, dict):
+        src = image["bytes"] if image.get("bytes") is not None else image["path"]
+        with Image.open(BytesIO(src) if isinstance(src, bytes) else src) as img:
+            return img.size
+
+    raise ValueError(f"Cannot determine image size for input type {type(image)}")
+
+
+def _compute_qwen2vl_image_grid_thw(
+    width: int,
+    height: int,
+    image_processor: "BaseImageProcessor",
+    processor: "MMProcessor",
+) -> "torch.Tensor":
+    """Compute ``image_grid_thw`` (shape ``[3]``: ``[1, h_patches, w_patches]``)
+    from image dimensions alone, replicating the Qwen2VL / Qwen3VL resize
+    pipeline without loading any pixel data.
+
+    Mirrors the two-stage resize that ``_get_mm_inputs`` performs:
+    1. ``_preprocess_image`` area + Qwen2VL aspect-ratio clamps.
+    2. ``image_processor`` ``smart_resize`` → grid shape.
+    """
+    # ── Stage 1: _preprocess_image constraints ─────────────────────────────
+    image_max_pixels: int = getattr(processor, "image_max_pixels", 768 * 768)
+    image_min_pixels: int = getattr(processor, "image_min_pixels", 32 * 32)
+    w, h = width, height
+
+    if w * h > image_max_pixels:
+        f = math.sqrt(image_max_pixels / (w * h))
+        w, h = int(w * f), int(h * f)
+    if w * h < image_min_pixels:
+        f = math.sqrt(image_min_pixels / (w * h))
+        w, h = int(w * f), int(h * f)
+    # Qwen2VL-specific clamps (from _preprocess_image override)
+    if min(w, h) < 28:
+        w, h = max(w, 28), max(h, 28)
+    if w / h > 200:
+        w, h = h * 180, h
+    if h / w > 200:
+        w, h = w, w * 180
+
+    # ── Stage 2: smart_resize (as performed inside image_processor) ─────────
+    patch_size: int = getattr(image_processor, "patch_size", 14)
+    merge_size: int = getattr(image_processor, "merge_size", 2)
+    factor = patch_size * merge_size
+
+    size_cfg = getattr(image_processor, "size", {}) or {}
+    min_pixels: int = size_cfg.get("min_pixels", getattr(image_processor, "min_pixels", 256 * 256))
+    max_pixels: int = size_cfg.get("max_pixels", getattr(image_processor, "max_pixels", 1280 * 28 * 28))
+
+    h_bar = round(h / factor) * factor
+    w_bar = round(w / factor) * factor
+    if h_bar * w_bar > max_pixels:
+        beta = math.sqrt((h * w) / max_pixels)
+        h_bar = math.floor(h / beta / factor) * factor
+        w_bar = math.floor(w / beta / factor) * factor
+    elif h_bar * w_bar < min_pixels:
+        beta = math.sqrt(min_pixels / (h * w))
+        h_bar = math.ceil(h * beta / factor) * factor
+        w_bar = math.ceil(w * beta / factor) * factor
+
+    h_bar = max(factor, h_bar)
+    w_bar = max(factor, w_bar)
+
+    return torch.tensor([1, h_bar // patch_size, w_bar // patch_size])
+
+
+def _get_video_info_no_decode(
+    video: "VideoInput",
+    video_fps: float,
+    video_maxlen: int,
+) -> tuple[int, float, int, int]:
+    """Return ``(n_sampled_frames, duration, height, width)`` for a video
+    input **without** decoding any pixel data.
+
+    * ``lerobot://``   → episode metadata from :func:`get_lerobot_video_info`
+    * nested images    → count + first-frame header read
+    * file path        → ``av.open`` header probe (no decode)
+    """
+    if isinstance(video, str) and video.startswith("lerobot://"):
+        from .lerobot_bridge import get_lerobot_video_info
+
+        n_frames, _, h, w = get_lerobot_video_info(video, num_frames=video_maxlen)
+        # mirror _regularize_videos even-frame padding
+        if n_frames % 2 != 0:
+            n_frames += 1
+        return n_frames, n_frames / video_fps, h, w
+
+    if _check_video_is_nested_images(video) and len(video) > 0:
+        w, h = _get_image_size_no_decode(video[0])
+        n_frames = len(video)
+        if n_frames % 2 != 0:
+            n_frames += 1
+        return n_frames, n_frames / video_fps, h, w
+
+    # Regular video file — probe header only
+    container = av.open(video, "r")
+    vs = next(s for s in container.streams if s.type == "video")
+    h, w = vs.codec_context.height, vs.codec_context.width
+    total_frames = vs.frames
+    if total_frames == 0:
+        n_sample = video_maxlen
+    else:
+        n_sample = max(1, math.floor(float(vs.duration * vs.time_base) * video_fps))
+        n_sample = min(total_frames, video_maxlen, n_sample)
+
+    if vs.duration is None:
+        duration = n_sample / video_fps
+    else:
+        duration = float(vs.duration * vs.time_base)
+
+    container.close()
+    if n_sample % 2 != 0:
+        n_sample += 1
+    return n_sample, duration, h, w
+
+
 @dataclass
 class Qwen2VLPlugin(BasePlugin):
     vision_bos_token: str = "<|vision_start|>"
@@ -1603,9 +1744,20 @@ class Qwen2VLPlugin(BasePlugin):
 
         merge_length: int = getattr(image_processor, "merge_size") ** 2
         if self.expand_mm_tokens:
-            mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
-            image_grid_thw = mm_inputs.get("image_grid_thw", [])
-            video_grid_thw = mm_inputs.get("video_grid_thw", [])
+            # ── Images: cheap path — PIL header-only size read, no pixel decode ──
+            image_grid_thw = [
+                _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
+                for img in images
+            ]
+            # ── Videos: header probe only — no frame decode ──────────────────────
+            video_grid_thw = []
+            video_fps = getattr(processor, "video_fps", 2.0)
+            video_maxlen = getattr(processor, "video_maxlen", 128)
+            for vid in videos:
+                n_frames, _, h, w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
+                grid = _compute_qwen2vl_image_grid_thw(w, h, image_processor, processor)
+                # grid is [1, h_patches, w_patches]; set temporal dim = n_frames
+                video_grid_thw.append(torch.tensor([n_frames, grid[1].item(), grid[2].item()]))
         else:
             image_grid_thw = [None] * len(images)
             video_grid_thw = [None] * len(videos)
@@ -1701,18 +1853,32 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
 
         image_merge_length: int = getattr(image_processor, "merge_size") ** 2
         video_merge_length: int = getattr(video_processor, "merge_size") ** 2
-        if self.expand_mm_tokens:
-            mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
-            image_grid_thw = mm_inputs.get("image_grid_thw", [])
-            video_grid_thw = mm_inputs.get("video_grid_thw", [])
-            num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
-            video_metadata = mm_inputs.get("video_metadata", {})
 
+        if self.expand_mm_tokens:
+            # ── Images: cheap path — PIL header-only size read, no pixel decode ──
+            image_grid_thw = [
+                _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
+                for img in images
+            ]
+            # ── Videos: metadata-only — no frame decode ──────────────────────────
+            video_fps = getattr(processor, "video_fps", 2.0)
+            video_maxlen = getattr(processor, "video_maxlen", 128)
+            video_grid_thw = []
+            video_metadata_list: list[VideoMetadata] = []
+            for vid in videos:
+                n_frames, _, h, w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
+                grid = _compute_qwen2vl_image_grid_thw(w, h, image_processor, processor)
+                video_grid_thw.append(torch.tensor([n_frames, grid[1].item(), grid[2].item()]))
+                meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
+                meta.frames_indices = np.arange(n_frames)
+                video_metadata_list.append(meta)
+            num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0
+            video_metadata = video_metadata_list
         else:
             image_grid_thw = [None] * len(images)
             video_grid_thw = [None] * len(videos)
             num_frames = 0
-            timestamps = [0]
+            video_metadata = []
 
         for idx, message in enumerate(messages):
             content = message["content"]
@@ -1729,7 +1895,7 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
 
             while VIDEO_PLACEHOLDER in content:
                 if self.expand_mm_tokens:
-                    metadata = video_metadata[idx]
+                    metadata = video_metadata[num_video_tokens]
                     timestamps = processor._calculate_timestamps(
                         metadata.frames_indices,
                         metadata.fps,
@@ -1737,11 +1903,7 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
                     )
                     video_structure = ""
                     for frame_index in range(num_frames):
-                        video_seqlen = (
-                            video_grid_thw[num_video_tokens][1:].prod() // video_merge_length
-                            if self.expand_mm_tokens
-                            else 1
-                        )
+                        video_seqlen = video_grid_thw[num_video_tokens][1:].prod() // video_merge_length
                         timestamp_sec = timestamps[frame_index]
                         frame_structure = (
                             f"<{timestamp_sec:.1f} seconds>"
@@ -1757,7 +1919,6 @@ class Qwen3VLPlugin(Qwen2VLPlugin):
             message["content"] = content
 
         return messages
-
 
 
 @dataclass
@@ -1853,52 +2014,48 @@ class Qwen3VLPluginQueryHybrid(Qwen2VLPlugin):
 
         image_merge_length: int = getattr(image_processor, "merge_size") ** 2
         video_merge_length: int = getattr(video_processor, "merge_size") ** 2
-        if self.expand_mm_tokens:
-            
-            mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
-            image_grid_thw = mm_inputs.get("image_grid_thw", [])
-            video_grid_thw = mm_inputs.get("video_grid_thw", [])
-            num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
-            video_metadata = mm_inputs.get("video_metadata", {})
 
+        if self.expand_mm_tokens:
+            # ── Images: cheap path — PIL header-only size read, no pixel decode ──
+            image_grid_thw = [
+                _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
+                for img in images
+            ]
+            # ── Videos: metadata-only path — seqlen comes from custom_model_args,
+            #    so we only need frame count + fps for timestamps (no pixel decode). ──
+            video_fps = getattr(processor, "video_fps", 2.0)
+            video_maxlen = getattr(processor, "video_maxlen", 128)
+            video_metadata_list: list[VideoMetadata] = []
+            for vid in videos:
+                n_frames, _, _h, _w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
+                meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
+                meta.frames_indices = np.arange(n_frames)
+                video_metadata_list.append(meta)
+            num_frames = video_metadata_list[0].total_num_frames if video_metadata_list else 0
+            video_metadata = video_metadata_list
         else:
             image_grid_thw = [None] * len(images)
-            video_grid_thw = [None] * len(videos)
             num_frames = 0
-            timestamps = [0]
-
-
-        if video_grid_thw is None and processor.custom_model_args.get("pass_individual_frames", True):
-            video_grid_thw = [None] * len(videos)
-            rebuild_image_grid = []
+            video_metadata = []
 
         for idx, message in enumerate(messages):
             content = message["content"]
             n_images = content.count(IMAGE_PLACEHOLDER)
 
-
-
             while IMAGE_PLACEHOLDER in content:
-
-
                 if n_images >= 4 and processor.custom_model_args["pass_individual_frames"]:
-                    #we treat as video and apply custom vide token processing
+                    # treat multi-image input as video — seqlen from custom_model_args
                     n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
                     n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
                     per_frame_query = processor.custom_model_args["per_frame_query"]
-                    append_query = processor.custom_model_args["append_query"]
-
-                    if per_frame_query:
-                        total_per_frame = n_slots_per_frame + n_queries_per_frame
-                    else:
-                        total_per_frame = n_slots_per_frame
-                    content = content.replace(IMAGE_PLACEHOLDER, 
-                                              f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
-                                              1)
+                    total_per_frame = n_slots_per_frame + n_queries_per_frame if per_frame_query else n_slots_per_frame
+                    content = content.replace(
+                        IMAGE_PLACEHOLDER,
+                        f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
+                        1,
+                    )
                     num_image_tokens += 1
                 else:
-                
-
                     image_seqlen = (
                         image_grid_thw[num_image_tokens].prod() // image_merge_length if self.expand_mm_tokens else 1
                     )
@@ -1907,62 +2064,47 @@ class Qwen3VLPluginQueryHybrid(Qwen2VLPlugin):
                         f"{self.vision_bos_token}{self.image_token * image_seqlen}{self.vision_eos_token}",
                         1,
                     )
-                num_image_tokens += 1
+                    num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-                
                 if processor.custom_model_args.get("pass_individual_frames", True):
-                    video_processor.merge_size = 1  # override merge size to 1 to pass individual frames without merging
-
+                    video_processor.merge_size = 1
 
                 if self.expand_mm_tokens:
-                    metadata = video_metadata[idx]
+                    metadata = video_metadata[num_video_tokens]
                     timestamps = processor._calculate_timestamps(
                         metadata.frames_indices,
                         metadata.fps,
                         video_processor.merge_size,
                     )
+                    n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
+                    n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
+                    per_frame_query = processor.custom_model_args["per_frame_query"]
+                    append_query = processor.custom_model_args["append_query"]
+                    total_per_frame = n_slots_per_frame + n_queries_per_frame if per_frame_query else n_slots_per_frame
                     video_structure = ""
                     for frame_index in range(num_frames):
-                        video_seqlen = (
-                            video_grid_thw[num_video_tokens][1:].prod() // video_merge_length
-                            if self.expand_mm_tokens
-                            else 1
-                        )
-                        n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
-                        n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
-
-                        per_frame_query = processor.custom_model_args["per_frame_query"]
-                        append_query = processor.custom_model_args["append_query"]
-
-                        if per_frame_query:
-                            total_per_frame = n_slots_per_frame + n_queries_per_frame
-                        else:
-                            total_per_frame = n_slots_per_frame
-                        video_seqlen = total_per_frame
                         timestamp_sec = timestamps[frame_index]
                         frame_structure = (
                             f"<{timestamp_sec:.1f} seconds>"
-                            f"{self.vision_bos_token}{self.video_token * video_seqlen}{self.vision_eos_token}"
+                            f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}"
                         )
                         video_structure += frame_structure
                 else:
                     video_structure = f"{self.vision_bos_token}{self.video_token}{self.vision_eos_token}"
+                    append_query = processor.custom_model_args.get("append_query", False)
 
                 if append_query:
-                    #append extra query tokens at the end of video tokens for better temporal modeling
-                    n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
-                    append_structure = (
-                        f"{self.vision_bos_token}{self.video_token * n_queries_per_frame}{self.vision_eos_token}"
+                    n_global = processor.custom_model_args["hybrid_n_query_groups"]
+                    video_structure += (
+                        f"{self.vision_bos_token}{self.video_token * n_global}{self.vision_eos_token}"
                     )
-                    video_structure = video_structure + append_structure
                 content = content.replace(VIDEO_PLACEHOLDER, video_structure, 1)
                 num_video_tokens += 1
 
             message["content"] = content
 
         return messages
-    
 
 
 @dataclass
@@ -2059,57 +2201,51 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
 
 
         append_global_query = processor.custom_model_args.get("append_global_query")
-        use_individual_frame_query = processor.custom_model_args.get("pass_individual_frames")
-
 
         image_merge_length: int = getattr(image_processor, "merge_size") ** 2
         video_merge_length: int = getattr(video_processor, "merge_size") ** 2
-        if self.expand_mm_tokens:
-            
-            mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
-            image_grid_thw = mm_inputs.get("image_grid_thw", [])
-            video_grid_thw = mm_inputs.get("video_grid_thw", [])
-            num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
-            video_metadata = mm_inputs.get("video_metadata", {})
 
+        if self.expand_mm_tokens:
+            # ── Images: cheap path — PIL header-only size read, no pixel decode ──
+            image_grid_thw = [
+                _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
+                for img in images
+            ]
+            # ── Videos: metadata-only path — seqlen comes from custom_model_args,
+            #    so we only need frame count + fps for timestamps (no pixel decode). ──
+            video_fps = getattr(processor, "video_fps", 2.0)
+            video_maxlen = 8  # match _get_mm_inputs hardcode
+            video_metadata_list: list[VideoMetadata] = []
+            for vid in videos:
+                n_frames, _, _h, _w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
+                meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
+                meta.frames_indices = np.arange(n_frames)
+                video_metadata_list.append(meta)
+            num_frames = video_metadata_list[0].total_num_frames if video_metadata_list else 0
+            video_metadata = video_metadata_list
         else:
             image_grid_thw = [None] * len(images)
-            video_grid_thw = [None] * len(videos)
             num_frames = 0
-            timestamps = [0]
-
-
-        if video_grid_thw is None and processor.custom_model_args.get("pass_individual_frames", True):
-            video_grid_thw = [None] * len(videos)
-            rebuild_image_grid = []
+            video_metadata = []
 
         for idx, message in enumerate(messages):
             content = message["content"]
             n_images = content.count(IMAGE_PLACEHOLDER)
 
-
-
             while IMAGE_PLACEHOLDER in content:
-
-
                 if n_images >= 4 and processor.custom_model_args["pass_individual_frames"]:
-                    #we treat as video and apply custom vide token processing
+                    # treat multi-image input as video — seqlen from custom_model_args
                     n_slots_per_frame = processor.custom_model_args["hybrid_slot_num_slots"]
                     n_queries_per_frame = processor.custom_model_args["hybrid_n_query_groups"]
                     per_frame_query = processor.custom_model_args["per_frame_query"]
-                    append_query = processor.custom_model_args["append_query"]
-
-                    if per_frame_query:
-                        total_per_frame = n_slots_per_frame + n_queries_per_frame
-                    else:
-                        total_per_frame = n_slots_per_frame
-                    content = content.replace(IMAGE_PLACEHOLDER, 
-                                              f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
-                                              1)
+                    total_per_frame = n_slots_per_frame + n_queries_per_frame if per_frame_query else n_slots_per_frame
+                    content = content.replace(
+                        IMAGE_PLACEHOLDER,
+                        f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
+                        1,
+                    )
                     num_image_tokens += 1
                 else:
-                
-
                     image_seqlen = (
                         image_grid_thw[num_image_tokens].prod() // image_merge_length if self.expand_mm_tokens else 1
                     )
@@ -2118,50 +2254,36 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                         f"{self.vision_bos_token}{self.image_token * image_seqlen}{self.vision_eos_token}",
                         1,
                     )
-                num_image_tokens += 1
+                    num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-
-                #for query teimchat, we have total = processor.custom_model_args["timechat_num_video_queries"]
-                
                 if processor.custom_model_args.get("pass_individual_frames", True):
-                    video_processor.merge_size = 1  # override merge size to 1 to pass individual frames without merging
-
+                    video_processor.merge_size = 1
 
                 if self.expand_mm_tokens:
-                    metadata = video_metadata[idx]
+                    metadata = video_metadata[num_video_tokens]
                     timestamps = processor._calculate_timestamps(
                         metadata.frames_indices,
                         metadata.fps,
                         video_processor.merge_size,
                     )
+                    total_per_frame = processor.custom_model_args["timechat_num_frame_queries"]
                     video_structure = ""
                     for frame_index in range(num_frames):
-                        video_seqlen = (
-                            video_grid_thw[num_video_tokens][1:].prod() // video_merge_length
-                            if self.expand_mm_tokens
-                            else 1
-                        )
-                        total_per_frame = processor.custom_model_args["timechat_num_frame_queries"]
-                        
-                        video_seqlen = total_per_frame
                         timestamp_sec = timestamps[frame_index]
                         frame_structure = (
                             f"<{timestamp_sec:.1f} seconds>"
-                            f"{self.vision_bos_token}{self.video_token * video_seqlen}{self.vision_eos_token}"
+                            f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}"
                         )
                         video_structure += frame_structure
                 else:
                     video_structure = f"{self.vision_bos_token}{self.video_token}{self.vision_eos_token}"
 
                 if append_global_query:
-                    # Append the global video query block BEFORE substituting into content.
-                    # (global block has no timestamp prefix — it represents the whole video)
                     n_queries_global = processor.custom_model_args["timechat_num_video_queries"]
-                    append_structure = (
+                    video_structure += (
                         f"{self.vision_bos_token}{self.video_token * n_queries_global}{self.vision_eos_token}"
                     )
-                    video_structure = video_structure + append_structure
 
                 content = content.replace(VIDEO_PLACEHOLDER, video_structure, 1)
                 num_video_tokens += 1

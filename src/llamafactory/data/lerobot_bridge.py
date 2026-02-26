@@ -377,6 +377,83 @@ def load_lerobot_video_frames(
     return frames
 
 
+def get_lerobot_video_info(
+    ref: str,
+    num_frames: Optional[int] = None,
+) -> tuple[int, float, int, int]:
+    """Return video metadata for a LeRobot episode **without** decoding any frames.
+
+    Uses only episode index ranges and ``ds.meta.shapes`` / ``ds.meta.features``
+    which are pure metadata reads from ``info.json``.
+
+    Args:
+        ref: A ``lerobot://episode:<ep_idx>::<camera_key>`` reference.
+        num_frames: If set, the number of frames that *would* be uniformly
+            sampled (mirrors :func:`load_lerobot_video_frames` logic).
+
+    Returns:
+        A tuple ``(n_sampled_frames, duration, height, width)``.
+    """
+    import numpy as np
+
+    body = ref[len(LEROBOT_PREFIX):]
+    parts = body.split("::")
+
+    dataset_id = os.environ.get("LEROBOT_DATASET", "")
+
+    if len(parts) == 1:
+        episode_part = parts[0]
+        camera_key = resolve_camera_key(dataset_id, is_video=True)
+    elif len(parts) == 2:
+        if parts[0].startswith("episode:"):
+            episode_part = parts[0]
+            camera_key = parts[1]
+        else:
+            dataset_id = parts[0]
+            episode_part = parts[1]
+            camera_key = resolve_camera_key(dataset_id, is_video=True)
+    elif len(parts) == 3:
+        if parts[0].startswith("episode:"):
+            raise ValueError(f"Invalid lerobot video reference format: {ref!r}")
+        dataset_id = parts[0]
+        episode_part = parts[1]
+        camera_key = parts[2]
+    else:
+        raise ValueError(f"Invalid lerobot video reference format: {ref!r}")
+
+    if not episode_part.startswith("episode:"):
+        raise ValueError(f"Video reference must contain 'episode:<idx>'. Got: {ref!r}")
+
+    episode_idx = int(episode_part.split(":", 1)[1])
+
+    if not dataset_id:
+        raise ValueError(
+            "LEROBOT_DATASET environment variable must be set when using short-form lerobot:// references."
+        )
+
+    ds = _get_lerobot_dataset(dataset_id)
+
+    # Frame count from episode metadata
+    from_idx = ds.meta.episodes["dataset_from_index"][episode_idx]
+    to_idx = ds.meta.episodes["dataset_to_index"][episode_idx]
+    total = to_idx - from_idx
+
+    if num_frames is not None and num_frames < total:
+        n_sampled = num_frames
+    else:
+        n_sampled = total
+
+    # Resolution from dataset metadata — no frame decode needed
+    shape = ds.meta.shapes[camera_key]  # (H, W, C)
+    height, width = shape[0], shape[1]
+
+    # Duration mirrors _regularize_videos: n_sampled / video_fps (caller provides fps)
+    # We return 0.0 and let caller compute duration from fps + n_sampled
+    duration = 0.0
+
+    return n_sampled, duration, height, width
+
+
 def clear_cache() -> None:
     """Clear all cached LeRobot dataset instances and parsed env-var mappings."""
     global _datasets_map, _camera_keys_map, _video_keys_map

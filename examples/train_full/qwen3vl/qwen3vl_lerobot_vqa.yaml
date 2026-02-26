@@ -84,7 +84,7 @@ evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /data/roboG_debug/${dataset}/${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
+#tokenized_path: /data/roboG_debug/${dataset}/${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
 
 
 
