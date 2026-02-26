@@ -247,7 +247,7 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
 
         start_time = time.time()
 
-        eval_loop = self.prediction_loop if self.args.use_legacy_prediction_loop else self.evaluation_loop
+        eval_loop = self.evaluation_loop
         output = eval_loop(
             eval_dataloader,
             description="Evaluation",

@@ -253,10 +253,18 @@ class MMPluginMixin:
         return np.linspace(0, total_frames - 1, sample_frames).astype(np.int32)
 
     def _regularize_images(self, images: list["ImageInput"], **kwargs) -> "RegularizedImageOutput":
-        r"""Regularize images to avoid error. Including reading and pre-processing."""
+        r"""Regularize images to avoid error. Including reading and pre-processing.
+
+        Supports ``lerobot://`` references for on-the-fly frame loading from LeRobot
+        datasets (no intermediate disk writes). See :mod:`llamafactory.data.lerobot_bridge`.
+        """
         results = []
         for image in images:
-            if isinstance(image, (str, BinaryIO)):
+            if isinstance(image, str) and image.startswith("lerobot://"):
+                from .lerobot_bridge import load_lerobot_frame
+
+                image = load_lerobot_frame(image)
+            elif isinstance(image, (str, BinaryIO)):
                 image = Image.open(image)
             elif isinstance(image, bytes):
                 image = Image.open(BytesIO(image))
@@ -274,12 +282,22 @@ class MMPluginMixin:
         return {"images": results}
 
     def _regularize_videos(self, videos: list["VideoInput"], **kwargs) -> "RegularizedVideoOutput":
-        r"""Regularizes videos to avoid error. Including reading, resizing and converting."""
+        r"""Regularizes videos to avoid error. Including reading, resizing and converting.
+
+        Supports ``lerobot://episode:<ep_idx>::<camera_key>`` references for loading
+        full episode frame sequences from LeRobot datasets without writing to disk.
+        """
         results = []
         durations = []
         for video in videos:
             frames: list[ImageObject] = []
-            if _check_video_is_nested_images(video):
+            if isinstance(video, str) and video.startswith("lerobot://"):
+                from .lerobot_bridge import load_lerobot_video_frames
+
+                video_maxlen = kwargs.get("video_maxlen", None)
+                frames = load_lerobot_video_frames(video, num_frames=video_maxlen)
+                durations.append(len(frames) / kwargs.get("video_fps", 2.0))
+            elif _check_video_is_nested_images(video):
                 for frame in video:
                     if not is_valid_image(frame) and not isinstance(frame, dict) and not os.path.exists(frame):
                         raise ValueError("Invalid image found in video frames.")
@@ -1476,6 +1494,7 @@ class Qwen2VLPlugin(BasePlugin):
     @override
     def _preprocess_image(self, image: "ImageObject", **kwargs) -> "ImageObject":
         image = super()._preprocess_image(image, **kwargs)
+        
         if min(image.width, image.height) < 28:
             width, height = max(image.width, 28), max(image.height, 28)
             image = image.resize((width, height))
@@ -1495,7 +1514,13 @@ class Qwen2VLPlugin(BasePlugin):
         results, fps_per_video, durations = [], [], []
         for video in videos:
             frames: list[ImageObject] = []
-            if _check_video_is_nested_images(video):
+            if isinstance(video, str) and video.startswith("lerobot://"):
+                from .lerobot_bridge import load_lerobot_video_frames
+
+                video_maxlen = kwargs.get("video_maxlen", None)
+                frames = load_lerobot_video_frames(video, num_frames=video_maxlen)
+                durations.append(len(frames) / kwargs.get("video_fps", 2.0))
+            elif _check_video_is_nested_images(video):
                 for frame in video:
                     if not is_valid_image(frame) and not isinstance(frame, dict) and not os.path.exists(frame):
                         raise ValueError("Invalid image found in video frames.")
@@ -1967,7 +1992,8 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                 image_max_pixels=getattr(processor, "video_max_pixels", 256 * 256),
                 image_min_pixels=getattr(processor, "video_min_pixels", 32 * 32),
                 video_fps=getattr(processor, "video_fps", 2.0),
-                video_maxlen=getattr(processor, "video_maxlen", 128),
+                #video_maxlen=getattr(processor, "video_maxlen", 8),
+                video_maxlen=8,
             )
 
 
@@ -2031,6 +2057,11 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
         image_processor: BaseImageProcessor = getattr(processor, "image_processor")
         video_processor: BaseImageProcessor = getattr(processor, "video_processor")
 
+
+        append_global_query = processor.custom_model_args.get("append_global_query")
+        use_individual_frame_query = processor.custom_model_args.get("pass_individual_frames")
+
+
         image_merge_length: int = getattr(image_processor, "merge_size") ** 2
         video_merge_length: int = getattr(video_processor, "merge_size") ** 2
         if self.expand_mm_tokens:
@@ -2090,6 +2121,8 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                 num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
+
+                #for query teimchat, we have total = processor.custom_model_args["timechat_num_video_queries"]
                 
                 if processor.custom_model_args.get("pass_individual_frames", True):
                     video_processor.merge_size = 1  # override merge size to 1 to pass individual frames without merging
@@ -2109,7 +2142,7 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                             if self.expand_mm_tokens
                             else 1
                         )
-                        total_per_frame = processor.custom_model_args["timechat_num_video_queries"]
+                        total_per_frame = processor.custom_model_args["timechat_num_frame_queries"]
                         
                         video_seqlen = total_per_frame
                         timestamp_sec = timestamps[frame_index]
@@ -2121,13 +2154,15 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                 else:
                     video_structure = f"{self.vision_bos_token}{self.video_token}{self.vision_eos_token}"
 
-                if append_query:
-                    #append extra query tokens at the end of video tokens for better temporal modeling
-                    n_queries_per_frame = processor.custom_model_args["timechat_num_video_queries"]
+                if append_global_query:
+                    # Append the global video query block BEFORE substituting into content.
+                    # (global block has no timestamp prefix — it represents the whole video)
+                    n_queries_global = processor.custom_model_args["timechat_num_video_queries"]
                     append_structure = (
-                        f"{self.vision_bos_token}{self.video_token * n_queries_per_frame}{self.vision_eos_token}"
+                        f"{self.vision_bos_token}{self.video_token * n_queries_global}{self.vision_eos_token}"
                     )
                     video_structure = video_structure + append_structure
+
                 content = content.replace(VIDEO_PLACEHOLDER, video_structure, 1)
                 num_video_tokens += 1
 

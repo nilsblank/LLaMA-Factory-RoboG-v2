@@ -1015,7 +1015,7 @@
 },
 
 "roboG_stagepoc_grounding_only_video_train": {
-  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/bridge/roboG_stagepoc_grounding_only_video_train.jsonl",
+  "file_name": "/data/robogrounder/bridge/roboG_stagepoc_grounding_only_video_train.jsonl",
   "formatting": "sharegpt",
   "columns": {
     "messages": "messages",
@@ -1471,7 +1471,22 @@
     "assistant_tag": "assistant"
   }
 
-}
+},
+
+    "lerobot_vqa_bridge": {
+        "file_name": "/data/robogrounder/processed_datasets/bridge/scratch/train.jsonl",
+        "formatting": "sharegpt",
+        "columns": {
+            "messages": "messages",
+            "videos": "videos"
+        },
+        "tags": {
+            "role_tag": "role",
+            "content_tag": "content",
+            "user_tag": "user",
+            "assistant_tag": "assistant"
+        }
+    }
 
 
 }

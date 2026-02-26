@@ -132,6 +132,7 @@ def _gradient_checkpointing_enable(
         logger.warning_rank0_once("You are using the old GC format, some features (e.g. BAdam) will be invalid.")
     else:  # have already enabled input require gradients
         self._set_gradient_checkpointing(enable=True, gradient_checkpointing_func=gradient_checkpointing_func)
+        self.enable_input_require_grads()
 
 
 def _fp32_forward_post_hook(

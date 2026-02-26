@@ -66,7 +66,7 @@ def _training_function(config: dict[str, Any]) -> None:
     args = config.get("args")
     callbacks: list[Any] = config.get("callbacks")
     evaluators = args.pop("evaluators", None)
-    slot_query_pretrain = args.pop("slot_query_pretrain", True)
+    slot_query_pretrain = args.pop("slot_query_pretrain", False)
     slot_patch_recon_weight = args.pop("slot_patch_recon_weight", 1.0)
     slot_patch_recon_mask_ratio = args.pop("slot_patch_recon_mask_ratio", 0.25)
     slot_pretrain_use_supervised_losses = args.pop("slot_pretrain_use_supervised_losses", True)

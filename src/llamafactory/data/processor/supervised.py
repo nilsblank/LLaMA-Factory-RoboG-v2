@@ -16,6 +16,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional
 
+from tqdm import tqdm
+
 from ...extras import logging
 from ...extras.constants import IGNORE_INDEX
 from .processor_utils import DatasetProcessor, greedy_knapsack, infer_seqlen
@@ -89,7 +91,7 @@ class SupervisedDatasetProcessor(DatasetProcessor):
         # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
         # for multiturn examples, we only mask the prompt part in each prompt-response pair.
         model_inputs = defaultdict(list)
-        for i in range(len(examples["_prompt"])):
+        for i in tqdm(range(len(examples["_prompt"]))):
             # logger.warning_rank0(
             #     f"Processing example: {i} / {len(examples['_prompt'])}"
             # )

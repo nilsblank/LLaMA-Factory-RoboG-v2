@@ -188,6 +188,16 @@ class QueryResampler(nn.Module):
             for i in range(num_layers)
         ])
 
+    #weight initialization
+    def reset_parameters(self):
+        for m in self.modules():
+            if m is self:
+                continue
+        if hasattr(m, "reset_parameters"):
+            m.reset_parameters()
+        
+    
+
     def forward(
         self, 
         x: torch.Tensor,  # [B, L, D] visual tokens
@@ -1182,8 +1192,8 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLConfig
     _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, **kwargs):
+        super().__init__(config, **kwargs)
         self.visual = Qwen3VLVisionModel._from_config(config.vision_config)
         self.language_model = Qwen3VLTextModel._from_config(config.text_config)
         self.rope_deltas = None  # cache rope_deltas here
@@ -1195,18 +1205,33 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         #
         # This keeps the BLIP-style "query tokens -> cross-attend -> project to LLM" pattern,
         # but uses Qwen components and a cleaner (less modular) implementation.
-        # ---------------------------------------------------------------------
-        self.use_timechat_querying = getattr(config, "use_timechat_querying", True)
-        self.timechat_qformer_text_input = getattr(config, "timechat_qformer_text_input", True)
-        self.timechat_window_size = getattr(config, "timechat_window_size", 0)
-        self.timechat_stride = getattr(config, "timechat_stride", 0)
+        # ---------------------------------------------------------------------    
+        #     
+        self.use_timechat_querying = kwargs.get("use_timechat_querying", True)
 
-        self.timechat_num_frame_queries = getattr(config, "timechat_num_frame_queries", 32)
-        self.timechat_num_video_queries = getattr(config, "timechat_num_video_queries", 32)
-        self.timechat_frame_query_layers = getattr(config, "timechat_frame_query_layers", 2)
-        self.timechat_video_query_layers = getattr(config, "timechat_video_query_layers", 2)
-        self.timechat_query_heads = getattr(config, "timechat_query_heads", 8)
-        self.timechat_max_frame_pos = getattr(config, "timechat_max_frame_pos", 128)
+        self.timechat_qformer_text_input = kwargs.get("timechat_qformer_text_input", True)
+
+        # self.timechat_window_size = getattr(config, "timechat_window_size", 0)
+        # self.timechat_stride = getattr(config, "timechat_stride", 0)
+
+
+
+
+        self.timechat_window_size = kwargs.get("timechat_window_size", 0)
+        self.timechat_stride = kwargs.get("timechat_stride", 0)
+        self.timechat_num_frame_queries = kwargs.get("timechat_num_frame_queries", 32)
+        self.timechat_num_video_queries = kwargs.get("timechat_num_video_queries", 32)
+        self.timechat_frame_query_layers = kwargs.get("timechat_frame_query_layers", 2)
+        self.timechat_video_query_layers = kwargs.get("timechat_video_query_layers", 2)
+        self.timechat_query_heads = kwargs.get("timechat_query_heads", 8)
+        self.timechat_max_frame_pos = kwargs.get("timechat_max_frame_pos", 128)
+        
+
+
+        self.tokens_per_frame = self.timechat_num_frame_queries
+
+        self.append_global_query = kwargs.get("append_global_query",True)
+        self.use_individual_frame_query = kwargs.get("use_individual_frame_query", True)
 
         vision_dim = config.vision_config.out_hidden_size
         text_dim = config.text_config.hidden_size
@@ -1237,7 +1262,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         # This gives a reasonable "initialized from qwen3vl2b" starting point when loading from that checkpoint.
         self._init_timechat_query_modules_from_text()
 
-
+    
     def get_input_embeddings(self):
         return self.language_model.get_input_embeddings()
     
@@ -1319,12 +1344,59 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         video_grid_thw: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Different from the original implementation, Qwen3VL use timestamps rather than absolute time position ids."""
+        """Different from the original implementation, Qwen3VL use timestamps rather than absolute time position ids.
 
-        # Since we use timestamps to separate videos, like <t1> <vision_start> <frame1> <vision_end> <t2> <vision_start> <frame2> <vision_end>, the video_grid_thw should also be split
+        For timechat querying, each video placeholder group covers a fixed number of query tokens
+        (Qf per frame for individual-frame mode, Qv for global-only mode) rather than the raw patch
+        count from the vision encoder.  Query tokens use simple sequential 1-D positions on all 3
+        MRoPE axes – temporal semantics are already encoded by the timestamp text tokens, and spatial
+        structure is compressed away by the Q-Former, so there is no need for a 3-D layout.
+
+        Token layouts (per video in input_ids):
+          use_individual_frame_query=False  (default):
+            <t0> <VS> <vid×Qv> <VE>                            → one block, Qv tokens
+          use_individual_frame_query=True, append_global_query=False:
+            <t0> <VS> <vid×Qf> <VE>  …  <tT-1> <VS> <vid×Qf> <VE>  → T blocks, Qf tokens each
+          use_individual_frame_query=True, append_global_query=True:
+            <t0> <VS> <vid×Qf> <VE>  …  <tT-1> <VS> <vid×Qf> <VE>  <VS> <vid×Qv> <VE>
+                                                                     → T+1 blocks
+        """
+
+        # ------------------------------------------------------------------
+        # Build video_entry_q_lens: q_len for every <video> placeholder group
+        # encountered across the whole batch, in the order they appear.
+        # Also rebuild video_grid_thw so the loop iteration count matches
+        # the number of placeholder groups in input_ids.
+        # ------------------------------------------------------------------
+        video_entry_q_lens: list[int] = []
+
         if video_grid_thw is not None:
-            video_grid_thw = torch.repeat_interleave(video_grid_thw, video_grid_thw[:, 0], dim=0)
-            video_grid_thw[:, 0] = 1
+            Qf = self.timechat_num_frame_queries
+            Qv = self.timechat_num_video_queries
+            use_individual = self.use_individual_frame_query
+            append_global = self.append_global_query
+
+            if use_individual:
+                # Per-frame blocks (Qf tokens each) + optional global block (Qv tokens).
+                # Rebuild video_grid_thw with one row per placeholder group (T or T+1 per video).
+                interleaved_rows = []
+                for row in video_grid_thw:
+                    T_i = int(row[0].item())
+                    frame_row = row.clone()
+                    frame_row[0] = 1
+                    for _ in range(T_i):
+                        video_entry_q_lens.append(Qf)
+                        interleaved_rows.append(frame_row)
+                    if append_global:
+                        video_entry_q_lens.append(Qv)
+                        interleaved_rows.append(frame_row)  # dummy row, h/w not used
+                video_grid_thw = torch.stack(interleaved_rows) if interleaved_rows else None
+            else:
+                # Single global block per video (Qv tokens).
+                # video_nums in input_ids == number of videos; no interleaving needed.
+                for _ in video_grid_thw:
+                    video_entry_q_lens.append(Qv)
+                # Keep video_grid_thw as-is; h/w are not used for query-token positions.
 
         spatial_merge_size = self.config.vision_config.spatial_merge_size
         image_token_id = self.config.image_token_id
@@ -1364,7 +1436,11 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                         ed_video = input_tokens.index(video_token_id, st)
                     else:
                         ed_video = len(input_tokens) + 1
+
+                    st_idx = llm_pos_ids_list[-1].max() + 1 if len(llm_pos_ids_list) > 0 else 0
+
                     if ed_image < ed_video:
+                        # ---- Image: original Qwen3VL 3-D spatial positions ----
                         t, h, w = (
                             image_grid_thw[image_index][0],
                             image_grid_thw[image_index][1],
@@ -1374,31 +1450,37 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                         remain_images -= 1
                         ed = ed_image
 
-                    else:
-                        t, h, w = (
-                            video_grid_thw[video_index][0],
-                            video_grid_thw[video_index][1],
-                            video_grid_thw[video_index][2],
+                        llm_grid_t, llm_grid_h, llm_grid_w = (
+                            t.item(),
+                            h.item() // spatial_merge_size,
+                            w.item() // spatial_merge_size,
                         )
+                        text_len = ed - st
+                        llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
+
+                        t_index = torch.arange(llm_grid_t).view(-1, 1).expand(-1, llm_grid_h * llm_grid_w).flatten()
+                        h_index = torch.arange(llm_grid_h).view(1, -1, 1).expand(llm_grid_t, -1, llm_grid_w).flatten()
+                        w_index = torch.arange(llm_grid_w).view(1, 1, -1).expand(llm_grid_t, llm_grid_h, -1).flatten()
+                        llm_pos_ids_list.append(torch.stack([t_index, h_index, w_index]) + text_len + st_idx)
+                        st = ed + llm_grid_t * llm_grid_h * llm_grid_w
+
+                    else:
+                        # ---- Video query tokens: simple sequential 1-D positions ----
+                        # Temporal semantics live in the timestamp text tokens; the Q-Former
+                        # compresses spatial structure, so all 3 MRoPE axes share the same
+                        # monotonically increasing index.
                         video_index += 1
                         remain_videos -= 1
                         ed = ed_video
-                    llm_grid_t, llm_grid_h, llm_grid_w = (
-                        t.item(),
-                        h.item() // spatial_merge_size,
-                        w.item() // spatial_merge_size,
-                    )
-                    text_len = ed - st
 
-                    st_idx = llm_pos_ids_list[-1].max() + 1 if len(llm_pos_ids_list) > 0 else 0
-                    llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
+                        q_len = video_entry_q_lens[video_index - 1]  # video_index already incremented
+                        text_len = ed - st
+                        llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
 
-                    # t_index is always 0 because llm_grid_t is always 1 (we use timestamps to encode the temporal information for videos)
-                    t_index = torch.arange(llm_grid_t).view(-1, 1).expand(-1, llm_grid_h * llm_grid_w).flatten()
-                    h_index = torch.arange(llm_grid_h).view(1, -1, 1).expand(llm_grid_t, -1, llm_grid_w).flatten()
-                    w_index = torch.arange(llm_grid_w).view(1, 1, -1).expand(llm_grid_t, llm_grid_h, -1).flatten()
-                    llm_pos_ids_list.append(torch.stack([t_index, h_index, w_index]) + text_len + st_idx)
-                    st = ed + llm_grid_t * llm_grid_h * llm_grid_w
+                        q_idx = torch.arange(q_len, device=input_ids.device)
+                        # All 3 axes identical → 1-D positions for query tokens
+                        llm_pos_ids_list.append(torch.stack([q_idx, q_idx, q_idx]) + text_len + st_idx)
+                        st = ed + q_len
 
                 if st < len(input_tokens):
                     st_idx = llm_pos_ids_list[-1].max() + 1 if len(llm_pos_ids_list) > 0 else 0
@@ -1622,7 +1704,17 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
             out = self._call_video_resampler(q_pad, pad_mask)  # [B, Qv, Dq]
             out = self.timechat_mm_projector(out)              # [B, Qv, Dproj]
-            return [out[i] for i in range(B)]                  # each [Qv, Dproj]
+
+
+            # always also return per_frame queries (before video resampler) for use in video-level querying or other purposes
+            per_frame_queries = [q_list[i] for i in range(B)] # each [T*Qf, Dq]
+            per_video_out = [out[i] for i in range(B)]  # each [Qv, Dproj]
+
+
+            return {                  # each [Qv, Dproj]
+                "per_video_query": per_video_out,
+                "per_video_frame_queries": per_frame_queries
+            }                  # each [Qv, Dproj]
 
         # -------------------------
         # Case B: windowing enabled
@@ -1666,7 +1758,12 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             out_per_video.append(torch.cat(per_video[vid_idx], dim=0))
 
 
-        return out_per_video
+        per_frame_queries = [q_list[i] for i in range(B)] # each [T*Qf, Dq]
+
+        return {
+            "per_video_query": out_per_video,  # each [num_clips*Qv, Dproj]
+            "per_video_frame_queries": per_frame_queries  # each [T*Qf, Dq]
+        }
     
 
 
@@ -2066,7 +2163,19 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                     per_video.append(_compress_one_video(ds_tokens, thw, ts_ids, ts_mask))
                 deepstack_compressed_concat.append(torch.cat(per_video, dim=0))
 
-        vision_output.pooler_output = tuple(compressed_per_video)
+
+        per_video_pooled_features = compressed_per_video["per_video_query"] 
+        per_frame_queries = compressed_per_video["per_video_frame_queries"]
+        
+        compressed_out = per_frame_queries
+        if self.append_global_query and self.use_individual_frame_query:
+
+            #cat per_video_pooled_features and per_frame_queries along token dim
+            for i in range(len(per_video_pooled_features)):
+                compressed_out[i] = torch.cat([per_video_pooled_features[i], per_frame_queries[i]], dim=0)
+
+
+        vision_output.pooler_output = tuple(compressed_out)
         vision_output.deepstack_features = deepstack_compressed_concat
         return vision_output
 

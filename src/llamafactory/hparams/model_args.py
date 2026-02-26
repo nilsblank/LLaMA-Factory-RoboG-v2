@@ -597,6 +597,13 @@ class ModelArguments(
         metadata={"help": "The dimension of each slot in the model, used for CustomModel Architectures and custom processing."}
     )
 
+
+
+    timechat_num_frame_queries: int = field(default=32, metadata={"help": "Number of frame queries for TimeChat."})
+    timechat_num_video_queries: int = field(default=32, metadata={"help": "Number of video queries for TimeChat."})
+    append_global_query: bool = field(default=False, metadata={"help": "Whether to append a global video query for TimeChat."})
+    use_individual_frame_query: bool = field(default=False, metadata={"help": "Whether to use individual frame queries for TimeChat."})
+
     def __post_init__(self):
         BaseModelArguments.__post_init__(self)
         ProcessorArguments.__post_init__(self)

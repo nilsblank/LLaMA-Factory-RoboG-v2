@@ -54,6 +54,9 @@ class DatasetConverter:
         if self.dataset_attr.load_from in ["script", "file"]:
             if isinstance(medias[0], str):
                 for i in range(len(medias)):
+                    if medias[i].startswith("lerobot://"):
+                        continue  # lerobot:// references are resolved at collation time
+
                     media_path = os.path.join(self.data_args.media_dir, medias[i])
                     if os.path.isfile(media_path):
                         medias[i] = media_path

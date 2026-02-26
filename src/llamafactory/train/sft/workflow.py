@@ -1080,6 +1080,10 @@ def run_sft(
         custom_start_index = list(model_arg_dict.keys()).index("custom_model_architecture") + 1
         custom_model_args = {key: value for key, value in model_arg_dict.items() if list(model_arg_dict.keys()).index(key) >= custom_start_index}
 
+        #also add custom_args if not none
+        if custom_args is not None:
+            custom_model_args = {**custom_model_args, **custom_args}
+            
         tokenizer_module["processor"].custom_model_args = custom_model_args 
 
     tokenizer = tokenizer_module["tokenizer"]

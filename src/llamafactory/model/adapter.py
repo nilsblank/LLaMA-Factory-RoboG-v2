@@ -56,6 +56,9 @@ def _setup_full_tuning(
             param.requires_grad_(False)
 
 
+    
+
+
 def _setup_freeze_tuning(
     model: "PreTrainedModel",
     finetuning_args: "FinetuningArguments",
@@ -351,7 +354,6 @@ def init_adapter(
     else:
         logger.info_rank0("Upcasting trainable params to float32.")
         cast_trainable_params_to_fp32 = True
-
     if finetuning_args.finetuning_type == "full":
         _setup_full_tuning(model, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
     elif finetuning_args.finetuning_type == "freeze":
