@@ -602,12 +602,21 @@ def _run_slot_query_pretrain(
     if train_dataset is None:
         raise ValueError("No `train_dataset` found for slot-query pretraining.")
 
+    _num_workers = training_args.dataloader_num_workers
+    _prefetch = custom_args.get("slot_pretrain_prefetch_factor", 4) if _num_workers > 0 else None
+    from llamafactory.data.lerobot_bridge import lerobot_worker_init_fn
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=custom_args.get("slot_pretrain_batch_size", 32),
         shuffle=True,
         collate_fn=data_collator,
         drop_last=False,
+        num_workers=_num_workers,
+        persistent_workers=_num_workers > 0,  # keep workers + video decoders alive across epochs
+        pin_memory=True,
+        prefetch_factor=_prefetch,
+        worker_init_fn=lerobot_worker_init_fn,
     )
 
     eval_dataset = dataset_module.get("eval_dataset")
@@ -619,6 +628,11 @@ def _run_slot_query_pretrain(
             shuffle=False,
             collate_fn=data_collator,
             drop_last=False,
+            num_workers=_num_workers,
+            persistent_workers=_num_workers > 0,
+            pin_memory=True,
+            prefetch_factor=_prefetch,
+            worker_init_fn=lerobot_worker_init_fn,
         )
 
     total_steps_per_epoch = max(1, (len(train_loader) + custom_args["slot_pretrain_gradient_accumulation_steps"] - 1) // custom_args["slot_pretrain_gradient_accumulation_steps"])

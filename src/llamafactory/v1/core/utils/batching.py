@@ -143,6 +143,7 @@ class BatchGenerator(Iterator):
             num_workers=self.batching_workers,
             collate_fn=self.renderer.process_samples,
             worker_init_fn=lerobot_worker_init_fn,
+            persistent_workers=self.batching_workers > 0,  # keep workers + video decoders alive across epochs
             pin_memory=self.pin_memory,
             pin_memory_device=DistributedInterface().current_device.type,
             drop_last=self.drop_last,
