@@ -429,21 +429,30 @@ def load_lerobot_video_frames(
     else:
         indices = range(from_idx, to_idx)
 
-    frames = []
-    for idx in indices:
-        item = ds[int(idx)]
-        frame = item[camera_key]
-        if isinstance(frame, torch.Tensor):
-            if frame.dtype == torch.float32:
-                frame = (frame.clamp(0, 1) * 255).to(torch.uint8)
-            frame_np = frame.permute(1, 2, 0).cpu().numpy()
-            frames.append(Image.fromarray(frame_np, "RGB"))
-        elif isinstance(frame, Image.Image):
-            frames.append(frame)
-        else:
-            raise TypeError(f"Unexpected frame type: {type(frame)}")
+    # Batch-decode all frames in a single video read (one seek instead of N seeks).
+    # ds[idx] opens the MP4, seeks, decodes, and closes for every single frame.
+    # _query_videos accepts all timestamps at once: one open + one linear decode.
+    abs_indices_list = [int(i) for i in indices]
+    if ds._absolute_to_relative_idx is not None:
+        rel_indices = [ds._absolute_to_relative_idx[i] for i in abs_indices_list]
+        ts_raw = ds.hf_dataset[rel_indices]["timestamp"]
+    else:
+        ts_raw = ds.hf_dataset[abs_indices_list]["timestamp"]
 
-    return frames
+    if isinstance(ts_raw, torch.Tensor):
+        rel_timestamps = ts_raw.tolist()
+    elif hasattr(ts_raw, "__iter__") and len(ts_raw) > 0 and isinstance(ts_raw[0], torch.Tensor):
+        rel_timestamps = [t.item() for t in ts_raw]
+    else:
+        rel_timestamps = [float(t) for t in ts_raw]
+
+    frames_dict = ds._query_videos({camera_key: rel_timestamps}, episode_idx)
+    frames_tensor = frames_dict[camera_key]  # [N, C, H, W] float32 in [0, 1]
+    frames_uint8 = (frames_tensor.clamp(0, 1) * 255).to(torch.uint8)
+    return [
+        Image.fromarray(f.permute(1, 2, 0).cpu().numpy(), "RGB")
+        for f in frames_uint8
+    ]
 
 
 def get_lerobot_video_info(
