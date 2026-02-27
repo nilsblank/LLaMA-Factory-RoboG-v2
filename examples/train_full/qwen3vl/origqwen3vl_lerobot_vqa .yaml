@@ -41,7 +41,7 @@ cutoff_len: 4096
 max_samples: 512
 overwrite_cache: true
 preprocessing_num_workers: 1
-dataloader_num_workers: 8
+dataloader_num_workers: 16
 dataloader_prefetch_factor: 2
 
 ### output

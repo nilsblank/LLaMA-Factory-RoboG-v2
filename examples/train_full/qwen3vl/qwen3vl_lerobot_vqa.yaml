@@ -49,9 +49,9 @@ cutoff_len: 4096
 #max_samples: 512
 overwrite_cache: true
 preprocessing_num_workers: 1
-dataloader_num_workers: 4
+dataloader_num_workers: 16
 dataloader_prefetch_factor: 4
-dataloader_persistent_workers: true
+#dataloader_persistent_workers: true
 
 #streaming: true
 #max_steps: 100
