@@ -484,10 +484,18 @@ def load_lerobot_video_frames(
     _clear_video_decoder_cache()  # free FFmpeg decoders + file handles immediately
     frames_tensor = frames_dict.pop(camera_key)  # [N, C, H, W] float32 in [0, 1]
     del frames_dict  # free remaining dict data (other keys) immediately
+    # LeRobot's _query_videos calls .squeeze(0) on the result, collapsing single-frame
+    # episodes from [1, C, H, W] to [C, H, W].  Re-add the batch dim so permute works.
+    if frames_tensor.ndim == 3:
+        frames_tensor = frames_tensor.unsqueeze(0)
     frames_uint8 = (frames_tensor.clamp(0, 1) * 255).to(torch.uint8)
     del frames_tensor  # free float32 before PIL conversion — biggest source of peak RAM
     # Batch-permute to [N, H, W, C] in one contiguous numpy array; PIL copies each slice.
     np_frames = frames_uint8.permute(0, 2, 3, 1).contiguous().numpy()
+    #check if np frames is < len n_frames if so repeat frames until we have enough frames
+    if len(np_frames) < len(indices):
+        repeats = (len(indices) + len(np_frames) - 1) // len(np_frames)  # ceil division
+        np_frames = np.tile(np_frames, (repeats, 1, 1, 1))[: len(indices)]
     del frames_uint8
     return [Image.fromarray(np_frames[i], "RGB") for i in range(len(np_frames))]
 
