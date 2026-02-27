@@ -317,6 +317,8 @@ class MMPluginMixin:
                 else:
                     durations.append(float(video_stream.duration * video_stream.time_base))
 
+                container.close()
+
             frames = self._regularize_images(frames, **kwargs)["images"]
             results.append(frames)
 
@@ -1684,6 +1686,8 @@ class Qwen2VLPlugin(BasePlugin):
                 else:
                     fps_per_video.append(len(sample_indices) / float(video_stream.duration * video_stream.time_base))
                     durations.append(float(video_stream.duration * video_stream.time_base))
+
+                container.close()
 
             if len(frames) % 2 != 0:
                 frames.append(frames[-1])

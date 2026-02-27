@@ -67,6 +67,38 @@ LEROBOT_PREFIX = "lerobot://"
 _dataset_cache: dict[str, object] = {}
 _cache_lock = threading.Lock()
 
+# ── Video decoder cache cleanup ────────────────────────────────────────────
+# LeRobot's torchcodec backend uses a global VideoDecoderCache that never
+# evicts entries.  Each cached VideoDecoder holds FFmpeg state (reference
+# frames, seek tables, codec context) + an open fsspec file handle.  For
+# datasets with many chunk files this grows without bound and is the primary
+# source of the steady RAM increase during training.  We clear it after
+# every decode call so decoders are freed once their frames are extracted.
+_video_decoder_cache_ref: object | None = None  # lazy import, set on first use
+
+
+_VIDEO_DECODER_CACHE_MAX: int = 16  # evict once more than this many decoders are cached
+
+
+def _clear_video_decoder_cache() -> None:
+    """Clear LeRobot's global ``VideoDecoderCache`` when it exceeds the size threshold.
+
+    For datasets with few MP4 files the cache stays small and bounded, so we
+    leave it alone (avoiding expensive file re-opens for large videos).  For
+    datasets with many chunk files the cache grows without bound — we clear it
+    once it passes ``_VIDEO_DECODER_CACHE_MAX`` to free FFmpeg state and file
+    handles before they accumulate to gigabytes.
+    """
+    global _video_decoder_cache_ref
+    if _video_decoder_cache_ref is None:
+        try:
+            from lerobot.datasets.video_utils import _default_decoder_cache
+            _video_decoder_cache_ref = _default_decoder_cache
+        except (ImportError, AttributeError):
+            _video_decoder_cache_ref = False  # sentinel: unavailable
+    if _video_decoder_cache_ref and _video_decoder_cache_ref.size() > _VIDEO_DECODER_CACHE_MAX:
+        _video_decoder_cache_ref.clear()
+
 # ── One-shot preload trigger: fire preload_all_datasets() on first real use ─
 _preload_all_triggered: bool = False
 _preload_trigger_lock = threading.Lock()
@@ -324,6 +356,8 @@ def load_lerobot_frame(ref: str) -> "ImageObject":
     ds = _get_lerobot_dataset(dataset_id)
 
     item = ds[index]
+    _clear_video_decoder_cache()  # free FFmpeg decoders + file handles immediately
+
     if camera_key not in item:
         available = [k for k in item if k.startswith("observation.images")]
         raise KeyError(
@@ -339,7 +373,7 @@ def load_lerobot_frame(ref: str) -> "ImageObject":
             if frame.dtype == torch.float32:
                 frame = (frame.clamp(0, 1) * 255).to(torch.uint8)
             # C, H, W → H, W, C for PIL
-            frame_np = frame.permute(1, 2, 0).cpu().numpy()
+            frame_np = frame.permute(1, 2, 0).contiguous().cpu().numpy()
             return Image.fromarray(frame_np, "RGB")
         else:
             raise ValueError(f"Expected 3D tensor [C,H,W], got shape {frame.shape}")
@@ -447,6 +481,7 @@ def load_lerobot_video_frames(
         rel_timestamps = [float(t) for t in ts_raw]
 
     frames_dict = ds._query_videos({camera_key: rel_timestamps}, episode_idx)
+    _clear_video_decoder_cache()  # free FFmpeg decoders + file handles immediately
     frames_tensor = frames_dict.pop(camera_key)  # [N, C, H, W] float32 in [0, 1]
     del frames_dict  # free remaining dict data (other keys) immediately
     frames_uint8 = (frames_tensor.clamp(0, 1) * 255).to(torch.uint8)
