@@ -50,7 +50,6 @@ jiter==0.13.0
 joblib==1.5.3
 jsonlines==4.0.0
 kiwisolver==1.4.9
--e file:///data/lerobot
 liger-kernel==0.7.0
 lightning-utilities==0.15.3
 markdown-it-py==4.0.0
@@ -127,7 +126,7 @@ tokenizers==0.22.2
 toml==0.10.2
 torch==2.10.0
 torchaudio==2.10.0
-torchcodec==0.10.0
+#torchcodec==0.10.0
 torchmetrics==1.8.2
 torchvision==0.25.0
 tqdm==4.67.3
