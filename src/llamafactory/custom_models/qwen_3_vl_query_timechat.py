@@ -193,8 +193,12 @@ class QueryResampler(nn.Module):
         for m in self.modules():
             if m is self:
                 continue
-        if hasattr(m, "reset_parameters"):
-            m.reset_parameters()
+            if hasattr(m, "reset_parameters"):
+                m.reset_parameters()
+        #init queries
+        nn.init.normal_(self.queries, mean=0.0, std=self.queries.shape[-1] ** -0.5)
+
+
         
     
 
@@ -207,6 +211,15 @@ class QueryResampler(nn.Module):
         """
         Returns: q [B, Q, D] - compressed query tokens
         """
+
+        #print all module weights for debugging
+
+        # for name, param in self.named_parameters():
+        #     if param.requires_grad:
+        #         print(f"Parameter: {name}, Shape: {param.shape}, Mean: {param.mean().item():.4f}, Std: {param.std().item():.4f}")
+        # #print queries (actual values in weights)
+        # print(f"Learnable Queries - {self.queries.data}")
+
         B = x.shape[0]
         q = self.queries.unsqueeze(0).expand(B, -1, -1)  # [B, Q, D]
         
@@ -290,7 +303,12 @@ class QFormerLayer(nn.Module):
             )
             
             # Update only the query portion
-            hidden_states[:, :query_length, :] = query_states + cross_attn_out
+            updated_queries = query_states + cross_attn_out
+            if query_length < hidden_states.shape[1]:
+                # Stitch them back together if there are text tokens
+                hidden_states = torch.cat([updated_queries, hidden_states[:, query_length:, :]], dim=1)
+            else:
+                hidden_states = updated_queries
         
         # ════════════════════════════════���══════
         # 3. FFN
@@ -1226,7 +1244,9 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         self.timechat_query_heads = kwargs.get("timechat_query_heads", 8)
         self.timechat_max_frame_pos = kwargs.get("timechat_max_frame_pos", 128)
         
+        self.query_aggr_all_deepstack_layers = False
 
+        self.use_deepstack = kwargs.get("use_deepstack", True)
 
         self.tokens_per_frame = self.timechat_num_frame_queries
 
@@ -1261,6 +1281,13 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         # If dimensions allow, initialize the resampler attention from the Qwen3VL text attention weights.
         # This gives a reasonable "initialized from qwen3vl2b" starting point when loading from that checkpoint.
         self._init_timechat_query_modules_from_text()
+
+
+    def _init_weights(self, module):
+        super()._init_weights(module)
+
+        if isinstance(module, QueryResampler):
+            module.reset_parameters()  
 
     
     def get_input_embeddings(self):
@@ -1537,91 +1564,85 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                 )
             return self._unwrap_q(self.timechat_video_resampler(x))
     def compress_videos_frame_stage_batched(
-    self,
-    video_tokens_list: List[torch.Tensor],   # each [T_i*per_frame_i, D]
-    video_grid_thw: torch.Tensor,            # [B,3] = (T,H,W)
-    timestamps_input_ids: Optional[torch.Tensor] = None,
-    timestamps_attention_mask: Optional[torch.Tensor] = None,
-    frame_offsets: Optional[torch.Tensor] = None,
-):
-        """
-        Returns:
-        q_time_per_video: list of length B, each [1, T_i*Qf, Dq]
-        (this corresponds to your q_time before video-level resampler)
-        """
+        self,
+        video_tokens_list: List[torch.Tensor],   # each [T_i*per_frame_i, D]
+        video_grid_thw: torch.Tensor,            # [B,3] = (T,H,W)
+        timestamps_input_ids: Optional[torch.Tensor] = None,
+        timestamps_attention_mask: Optional[torch.Tensor] = None,
+        frame_offsets: Optional[torch.Tensor] = None,
+    ):
+        import torch.nn.functional as F
+        
         B = len(video_tokens_list)
         assert video_grid_thw.shape[0] == B
 
-        # ---- (1) reshape each video into [T_i, per_frame_i, D] ----
-        per_frame_list, T_list = [], []
-        tokens_tf_list = []
         D_in = video_tokens_list[0].shape[-1]
+        device = video_tokens_list[0].device
+        dtype = video_tokens_list[0].dtype
 
+        per_frame_list, T_list = [], []
+        
+        # ---- (1) Determine dimensions ----
         for vid_idx in range(B):
             thw = video_grid_thw[vid_idx]
             T = int(thw[0].item())
             H = int(thw[1].item())
             W = int(thw[2].item())
             per_frame = (H * W) // (self.visual.spatial_merge_size**2)
-
-            vt = video_tokens_list[vid_idx]
-            if vt.shape[-1] != D_in:
-                raise ValueError("All videos must have same token dim D to batch like this.")
-            if vt.shape[0] != T * per_frame:
-                raise ValueError(f"len mismatch vid={vid_idx}: got {vt.shape[0]}, expected {T*per_frame}")
-
-            tokens_tf = vt.view(T, per_frame, D_in)  # [T, per_frame, D]
-            tokens_tf_list.append(tokens_tf)
+            
             per_frame_list.append(per_frame)
             T_list.append(T)
 
-        # ---- (2) flatten frames across all videos into one big batch ----
-        # We'll keep frames in (vid0 frames, vid1 frames, ...) order for easy regrouping.
         Nframes = sum(T_list)
         Lmax = max(per_frame_list)
 
-        device = video_tokens_list[0].device
-        dtype = video_tokens_list[0].dtype
-
-        x_all = torch.zeros((Nframes, Lmax, D_in), device=device, dtype=dtype)
-        pad_mask_all = torch.ones((Nframes, Lmax), device=device, dtype=torch.bool)  # True=PAD
+        # ---- (2) Pad out-of-place and concatenate frames ----
+        padded_frames = []
+        pad_mask_all = torch.ones((Nframes, Lmax), device=device, dtype=torch.bool) # True=PAD
         owner_vid = torch.empty((Nframes,), device=device, dtype=torch.long)
         frame_idx = torch.empty((Nframes,), device=device, dtype=torch.long)
 
         cursor = 0
-        for vid_idx, (tokens_tf, T, L) in enumerate(zip(tokens_tf_list, T_list, per_frame_list)):
-            # tokens_tf: [T, L, D]
-            x_all[cursor:cursor+T, :L, :] = tokens_tf
-            pad_mask_all[cursor:cursor+T, :L] = False  # not pad
+        for vid_idx, (vt, T, L) in enumerate(zip(video_tokens_list, T_list, per_frame_list)):
+            # Reshape flat tokens to [T, L, D]
+            tokens_tf = vt.view(T, L, D_in) 
+            
+            # Pad the sequence length dimension if necessary
+            # F.pad pads from the last dim forward: (pad_last_dim_left, pad_last_dim_right, pad_second_to_last_left, pad_second_to_last_right)
+            # We want to pad dim 1 (L), leaving dim 2 (D) alone.
+            pad_amt = Lmax - L
+            if pad_amt > 0:
+                tokens_padded = F.pad(tokens_tf, (0, 0, 0, pad_amt))
+            else:
+                tokens_padded = tokens_tf
+                
+            padded_frames.append(tokens_padded)
+            pad_mask_all[cursor:cursor+T, :L] = False
             owner_vid[cursor:cursor+T] = vid_idx
             frame_idx[cursor:cursor+T] = torch.arange(T, device=device, dtype=torch.long)
             cursor += T
 
-        # ---- (3) optional timestamp conditioning (batched across frames) ----
-        # This assumes timestamps are per-frame (like TimeChat), not per-token.
+        # Concatenate along the batch dimension
+        x_all = torch.cat(padded_frames, dim=0) # [Nframes, Lmax, D_in]
+
+        # ---- (3) Optional timestamp conditioning ----
         if self.timechat_qformer_text_input and timestamps_input_ids is not None:
-            # Build ids per frame in the SAME order as x_all (vid-major, then time).
-            # We'll create ids_all: [Nframes, Ltxt] and mask_all: [Nframes, Ltxt] (or None).
             ids_chunks = []
             mask_chunks = [] if timestamps_attention_mask is not None else None
 
             for vid_idx in range(B):
                 T = T_list[vid_idx]
-                ts_ids = None
-                ts_mask = None
+                ts_ids, ts_mask = None, None
 
                 if timestamps_input_ids.dim() == 3:
-                    ts_ids = timestamps_input_ids[vid_idx]  # [T, Ltxt] (expected)
+                    ts_ids = timestamps_input_ids[vid_idx]
                     ts_mask = timestamps_attention_mask[vid_idx] if timestamps_attention_mask is not None else None
                 elif timestamps_input_ids.dim() == 2 and frame_offsets is not None:
                     off = int(frame_offsets[vid_idx].item())
                     ts_ids = timestamps_input_ids[off:off+T]
                     ts_mask = timestamps_attention_mask[off:off+T] if timestamps_attention_mask is not None else None
-                else:
-                    raise ValueError("Unsupported timestamp layout for batching.")
 
-                # allow broadcast if ts_ids is [Ltxt]
-                if ts_ids.dim() == 1:
+                if ts_ids is not None and ts_ids.dim() == 1:
                     ts_ids = ts_ids.unsqueeze(0).expand(T, -1)
                     if ts_mask is not None and ts_mask.dim() == 1:
                         ts_mask = ts_mask.unsqueeze(0).expand(T, -1)
@@ -1630,140 +1651,124 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                 if mask_chunks is not None:
                     mask_chunks.append(ts_mask)
 
-            ids_all = torch.cat(ids_chunks, dim=0).to(device)            # [Nframes, Ltxt]
-            emb = self.language_model.embed_tokens(ids_all)              # [Nframes, Ltxt, text_dim]
+            ids_all = torch.cat(ids_chunks, dim=0).to(device) # [Nframes, Ltxt]
+            emb = self.language_model.embed_tokens(ids_all)   # [Nframes, Ltxt, text_dim]
 
-            # Only inject if dims match current x dim (after any input projection you might have)
             if emb.shape[-1] == x_all.shape[-1]:
                 if mask_chunks is None:
-                    pooled = emb.mean(dim=1)                             # [Nframes, D]
+                    pooled = emb.mean(dim=1)
                 else:
-                    m_all = torch.cat(mask_chunks, dim=0).to(device).float()  # [Nframes, Ltxt]
+                    m_all = torch.cat(mask_chunks, dim=0).to(device).float()
                     denom = m_all.sum(dim=1, keepdim=True).clamp(min=1.0)
-                    pooled = (emb * m_all.unsqueeze(-1)).sum(dim=1) / denom   # [Nframes, D]
-                x_all = x_all + pooled.unsqueeze(1)                      # [Nframes, Lmax, D]
+                    pooled = (emb * m_all.unsqueeze(-1)).sum(dim=1) / denom
+                x_all = x_all + pooled.unsqueeze(1) # [Nframes, Lmax, D]
 
-        # ---- (4) run frame QueryResampler ONCE for all frames ----
-        # IMPORTANT: do NOT index [0] unless your module returns a tuple.
+        # ---- (4) Run frame QueryResampler ONCE for all frames ----
         q_all = self._unwrap_q(self.timechat_frame_resampler(x_all, x_key_padding_mask=pad_mask_all))
         # q_all: [Nframes, Qf, Dq]
 
-        # ---- (5) add frame position embedding (batched) ----
+        # ---- (5) Add frame position embedding ----
         pos = frame_idx.clamp(max=self.timechat_max_frame_pos - 1)
-        q_all = q_all + self.timechat_frame_pos_emb(pos).unsqueeze(1)  # [Nframes, Qf, Dq]
+        q_all = q_all + self.timechat_frame_pos_emb(pos).unsqueeze(1) # [Nframes, Qf, Dq]
 
-        # ---- (6) regroup back per video into q_time: [1, T*Qf, Dq] ----
-        q_time_per_video = [None] * B
-        cursor = 0
-        for vid_idx, T in enumerate(T_list):
-            q_vid = q_all[cursor:cursor+T]  # [T, Qf, Dq]
-            cursor += T
-            q_time_per_video[vid_idx] = q_vid.reshape(1, T * q_vid.shape[1], q_vid.shape[2])
-
-
-        
-
-
-
-        B = len(q_time_per_video)
-        device = q_time_per_video[0].device
-        dtype = q_time_per_video[0].dtype
-
-        # Normalize to [B, Li, Dq]
+        # ---- (6) Regroup back per video into 2D tensors [T*Qf, Dq] ----
         q_list = []
-        for i, qt in enumerate(q_time_per_video):
-            if qt.dim() == 3:
-                # [1, L, D]
-                q_list.append(qt.squeeze(0))
-            elif qt.dim() == 2:
-                q_list.append(qt)
-            else:
-                raise ValueError(f"q_time_per_video[{i}] has invalid shape {tuple(qt.shape)}")
+        cursor = 0
+        for T in T_list:
+            q_vid = q_all[cursor:cursor+T] # [T, Qf, Dq]
+            q_list.append(q_vid.reshape(T * q_vid.shape[1], q_vid.shape[2])) # [T*Qf, Dq]
+            cursor += T
 
-        Dq = q_list[0].shape[-1]
-        # Infer Qf from length / T (assumes consistent Qf across videos)
-        Qf = q_list[0].shape[0] // max(T_list[0], 1)
-        if any((q_list[i].shape[0] != T_list[i] * Qf) for i in range(B)):
-            raise ValueError("Inconsistent (T_i, Qf) vs q_time lengths. Check your frame-stage regrouping.")
-
+        Qf = q_all.shape[1]
+        Dq = q_all.shape[2]
         win = int(self.timechat_window_size)
         stride = int(self.timechat_stride) if int(self.timechat_stride) > 0 else win
 
-        # -------------------------
-        # Case A: no windowing
-        # -------------------------
+        # ---- (7) Video Level Processing ----
         if win <= 0 or all(win >= T for T in T_list):
-            Lmax = max(T_list) * Qf
-            q_pad = torch.zeros((B, Lmax, Dq), device=device, dtype=dtype)
-            pad_mask = torch.ones((B, Lmax), device=device, dtype=torch.bool)  # True=PAD
-
+            # -------------------------
+            # Case A: no windowing
+            # -------------------------
+            Lmax_q = max(T_list) * Qf
+            q_padded_list = []
+            pad_mask_q = torch.ones((B, Lmax_q), device=device, dtype=torch.bool)
+            
             for i in range(B):
                 Li = T_list[i] * Qf
-                q_pad[i, :Li, :] = q_list[i]
-                pad_mask[i, :Li] = False
+                pad_amt = Lmax_q - Li
+                if pad_amt > 0:
+                    q_padded = F.pad(q_list[i], (0, 0, 0, pad_amt))
+                else:
+                    q_padded = q_list[i]
+                    
+                q_padded_list.append(q_padded)
+                pad_mask_q[i, :Li] = False
 
-            out = self._call_video_resampler(q_pad, pad_mask)  # [B, Qv, Dq]
-            out = self.timechat_mm_projector(out)              # [B, Qv, Dproj]
+            q_pad = torch.stack(q_padded_list, dim=0) # [B, Lmax_q, Dq]
 
+            out = self._call_video_resampler(q_pad, pad_mask_q) # [B, Qv, Dq]
+            out = self.timechat_mm_projector(out)               # [B, Qv, Dproj]
 
-            # always also return per_frame queries (before video resampler) for use in video-level querying or other purposes
-            per_frame_queries = [q_list[i] for i in range(B)] # each [T*Qf, Dq]
-            per_video_out = [out[i] for i in range(B)]  # each [Qv, Dproj]
+            # Project q_list for the return dict
+            q_list_proj = [self.timechat_mm_projector(q) for q in q_list] 
 
+            return {
+                "per_video_query": [out[i] for i in range(B)],
+                "per_video_frame_queries": q_list_proj
+            }
+            
+        else:
+            # -------------------------
+            # Case B: windowing enabled
+            # -------------------------
+            clip_starts = []
+            clip_lens = []
+            for vid_idx, T in enumerate(T_list):
+                for st in range(0, T, stride):
+                    ed = min(st + win, T)
+                    clip_starts.append((vid_idx, st, ed))
+                    clip_lens.append((ed - st) * Qf)
+                    if ed == T:
+                        break
 
-            return {                  # each [Qv, Dproj]
-                "per_video_query": per_video_out,
-                "per_video_frame_queries": per_frame_queries
-            }                  # each [Qv, Dproj]
+            Nclips = len(clip_starts)
+            Lclip_max = max(clip_lens)
+            
+            clip_padded_list = []
+            clip_mask = torch.ones((Nclips, Lclip_max), device=device, dtype=torch.bool)
+            
+            for ci, (vid_idx, st, ed) in enumerate(clip_starts):
+                l0 = st * Qf
+                l1 = ed * Qf
+                seg = q_list[vid_idx][l0:l1, :] # [(ed-st)*Qf, Dq]
+                Lc = seg.shape[0]
+                
+                pad_amt = Lclip_max - Lc
+                if pad_amt > 0:
+                    seg_padded = F.pad(seg, (0, 0, 0, pad_amt))
+                else:
+                    seg_padded = seg
+                    
+                clip_padded_list.append(seg_padded)
+                clip_mask[ci, :Lc] = False
+                
+            clips = torch.stack(clip_padded_list, dim=0) # [Nclips, Lclip_max, Dq]
 
-        # -------------------------
-        # Case B: windowing enabled
-        # Batch across *clips* (all videos' clips together), then regroup.
-        # -------------------------
-        # Build all clips (ragged), pad to max clip length, resample in one call.
-        clip_starts = []     # (vid_idx, st, ed)
-        clip_lens = []
-        for vid_idx, T in enumerate(T_list):
-            for st in range(0, T, stride):
-                ed = min(st + win, T)
-                clip_starts.append((vid_idx, st, ed))
-                clip_lens.append((ed - st) * Qf)
-                if ed == T:
-                    break
+            clip_out = self._call_video_resampler(clips, clip_mask) # [Nclips, Qv, Dq]
+            clip_out = self.timechat_mm_projector(clip_out)          # [Nclips, Qv, Dproj]
 
-        Nclips = len(clip_starts)
-        Lclip_max = max(clip_lens)
+            # Regroup per video
+            per_video = [[] for _ in range(B)]
+            for ci, (vid_idx, st, ed) in enumerate(clip_starts):
+                per_video[vid_idx].append(clip_out[ci])
 
-        clips = torch.zeros((Nclips, Lclip_max, Dq), device=device, dtype=dtype)
-        clip_mask = torch.ones((Nclips, Lclip_max), device=device, dtype=torch.bool)
+            out_per_video = [torch.cat(per_video[vid_idx], dim=0) for vid_idx in range(B)]
+            q_list_proj = [self.timechat_mm_projector(q) for q in q_list]
 
-        for ci, (vid_idx, st, ed) in enumerate(clip_starts):
-            l0 = st * Qf
-            l1 = ed * Qf
-            seg = q_list[vid_idx][l0:l1, :]  # [(ed-st)*Qf, Dq]
-            Lc = seg.shape[0]
-            clips[ci, :Lc, :] = seg
-            clip_mask[ci, :Lc] = False
-
-        clip_out = self._call_video_resampler(clips, clip_mask)  # [Nclips, Qv, Dq]
-        clip_out = self.timechat_mm_projector(clip_out)          # [Nclips, Qv, Dproj]
-
-        # Regroup per video: concatenate clip outputs along token dimension (dim=0)
-        per_video = [[] for _ in range(B)]
-        for ci, (vid_idx, st, ed) in enumerate(clip_starts):
-            per_video[vid_idx].append(clip_out[ci])  # [Qv, Dproj]
-
-        out_per_video = []
-        for vid_idx in range(B):
-            out_per_video.append(torch.cat(per_video[vid_idx], dim=0))
-
-
-        per_frame_queries = [q_list[i] for i in range(B)] # each [T*Qf, Dq]
-
-        return {
-            "per_video_query": out_per_video,  # each [num_clips*Qv, Dproj]
-            "per_video_frame_queries": per_frame_queries  # each [T*Qf, Dq]
-        }
+            return {
+                "per_video_query": out_per_video,
+                "per_video_frame_queries": q_list_proj
+            }
     
 
 
@@ -1887,7 +1892,6 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         Qf = q_frames.shape[1]
         Dq = q_frames.shape[2]
 
-        self.query_aggr_all_deepstack_layers = False
 
         if self.query_aggr_all_deepstack_layers:
             # If True, we concatenate all S levels together before video resampling, and run ONE video resampler over the whole thing.
@@ -2135,33 +2139,36 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
         # Compress deepstack features (if present) so they stay aligned with the new visual token stream, batched
 
-        deepstack_compressed_concat = self.compress_deepstack_varT_samePerFrame(
-            deepstack_tokens_split=deepstack_tokens_split,
-            video_grid_thw=video_grid_thw,
-            timestamps_input_ids=timestamps_input_ids,
-            timestamps_attention_mask=timestamps_attention_mask,
-            frame_offsets=frame_offsets,
-        )
+        # deepstack_compressed_concat = self.compress_deepstack_varT_samePerFrame(
+        #     deepstack_tokens_split=deepstack_tokens_split,
+        #     video_grid_thw=video_grid_thw,
+        #     timestamps_input_ids=timestamps_input_ids,
+        #     timestamps_attention_mask=timestamps_attention_mask,
+        #     frame_offsets=frame_offsets,
+        # )
 
         deepstack_compressed_concat = None
-        if deepstack_tokens_split is not None:
+        if deepstack_tokens_split is not None and self.use_deepstack:
             deepstack_compressed_concat = []
             for ds_split in deepstack_tokens_split:
-                per_video = []
-                for vid_idx, (ds_tokens, thw) in enumerate(zip(ds_split, video_grid_thw)):
-                    ts_ids = None
-                    ts_mask = None
-                    if timestamps_input_ids is not None:
-                        if timestamps_input_ids.dim() == 3:
-                            ts_ids = timestamps_input_ids[vid_idx]
-                            ts_mask = timestamps_attention_mask[vid_idx] if timestamps_attention_mask is not None else None
-                        elif timestamps_input_ids.dim() == 2 and frame_offsets is not None:
-                            off = int(frame_offsets[vid_idx].item())
-                            T = int(thw[0].item())
-                            ts_ids = timestamps_input_ids[off : off + T]
-                            ts_mask = timestamps_attention_mask[off : off + T] if timestamps_attention_mask is not None else None
-                    per_video.append(_compress_one_video(ds_tokens, thw, ts_ids, ts_mask))
-                deepstack_compressed_concat.append(torch.cat(per_video, dim=0))
+                # Run deepstack features through the same pipeline as main path
+                # so each level produces T*Qf + Qv tokens per video (matching visual_pos_masks)
+                ds_compressed = self.compress_videos_frame_stage_batched(
+                    video_tokens_list=list(ds_split),
+                    video_grid_thw=video_grid_thw,
+                    timestamps_input_ids=timestamps_input_ids,
+                    timestamps_attention_mask=timestamps_attention_mask,
+                    frame_offsets=frame_offsets,
+                )
+                ds_per_video = ds_compressed["per_video_query"]
+                ds_per_frame = ds_compressed["per_video_frame_queries"]
+
+                ds_out = list(ds_per_frame)
+                if self.append_global_query and self.use_individual_frame_query:
+                    for i in range(len(ds_per_video)):
+                        ds_out[i] = torch.cat([ds_per_video[i], ds_per_frame[i]], dim=0)
+
+                deepstack_compressed_concat.append(torch.cat(ds_out, dim=0))
 
 
         per_video_pooled_features = compressed_per_video["per_video_query"] 
@@ -2177,6 +2184,13 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
         vision_output.pooler_output = tuple(compressed_out)
         vision_output.deepstack_features = deepstack_compressed_concat
+
+        #delete original uncompressed features to save memory
+        del video_tokens_list
+        #also delete vision_output.last_hidden_state if it exists, since it's no longer aligned with the new pooler_output
+        if hasattr(vision_output, "last_hidden_state"):
+            del vision_output.last_hidden_state
+
         return vision_output
 
     
@@ -2287,6 +2301,11 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             deepstack_image_embeds = image_outputs.deepstack_features
             image_embeds = torch.cat(image_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
 
+            image_mask, _ = self.get_placeholder_mask(
+                input_ids, inputs_embeds=inputs_embeds, image_features=image_embeds
+            )
+            inputs_embeds = inputs_embeds.masked_scatter(image_mask, image_embeds)
+
         if pixel_values_videos is not None:
             video_outputs: BaseModelOutputWithDeepstackFeatures = self.get_video_features(
                 pixel_values_videos, video_grid_thw, **kwargs
@@ -2299,12 +2318,14 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                 input_ids, inputs_embeds=inputs_embeds, video_features=video_embeds
             )
 
+            inputs_embeds = inputs_embeds.masked_scatter(video_mask, video_embeds)
+
         visual_pos_masks = None
         deepstack_visual_embeds = None
 
 
-        video_mask = None
-        image_mask = None
+        #video_mask = None
+        #image_mask = None
 
 
 
@@ -2329,6 +2350,52 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             video_mask = video_mask[..., 0]
             visual_pos_masks = video_mask
             deepstack_visual_embeds = deepstack_video_embeds
+
+        if position_ids is None:
+            attention_mask_tensor = (
+                attention_mask if not isinstance(attention_mask, dict) else attention_mask["full_attention"]
+            )
+            if attention_mask_tensor is not None and attention_mask_tensor.ndim == 4:
+                attention_mask_tensor = torch.diagonal(attention_mask_tensor[:, 0], dim1=1, dim2=2)
+                # Only apply conversion for floating point tensors (inverted masks)
+                if attention_mask_tensor.dtype.is_floating_point:
+                    attention_mask_tensor = attention_mask_tensor / torch.finfo(attention_mask_tensor.dtype).min
+                    attention_mask_tensor = (1.0 - attention_mask_tensor).int()
+
+            # Calculate RoPE index once per generation in the pre-fill stage only.
+            # When compiling, we can't check tensor values thus we check only input length
+            # It is safe to assume that `length!=1` means we're in pre-fill because compiled
+            # models currently cannot do asssisted decoding
+            prefill_compiled_stage = is_torchdynamo_compiling() and (
+                (input_ids is not None and input_ids.shape[1] != 1)
+                or (inputs_embeds is not None and inputs_embeds.shape[1] != 1)
+            )
+            prefill_noncompiled_stage = not is_torchdynamo_compiling() and (
+                (cache_position is not None and cache_position[0] == 0)
+                or (past_key_values is None or past_key_values.get_seq_length() == 0)
+            )
+            if (prefill_compiled_stage or prefill_noncompiled_stage) or self.rope_deltas is None:
+                position_ids, rope_deltas = self.get_rope_index(
+                    input_ids,
+                    image_grid_thw,
+                    video_grid_thw,
+                    attention_mask=attention_mask_tensor,
+                )
+                self.rope_deltas = rope_deltas
+            # then use the prev pre-calculated rope-deltas to get the correct position ids
+            else:
+                batch_size, seq_length, _ = inputs_embeds.shape
+                delta = (
+                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device)
+                    if cache_position is not None
+                    else 0
+                )
+                position_ids = torch.arange(seq_length, device=inputs_embeds.device)
+                position_ids = position_ids.view(1, -1).expand(batch_size, -1)
+                if cache_position is not None:  # otherwise `deltas` is an int `0`
+                    delta = delta.repeat_interleave(batch_size // delta.shape[0], dim=0)
+                position_ids = position_ids.add(delta)
+                position_ids = position_ids.unsqueeze(0).expand(3, -1, -1)
 
 
         outputs = self.language_model(

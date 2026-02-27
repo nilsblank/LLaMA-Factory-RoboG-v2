@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import copy
+import json
 import math
 import os
 import random
@@ -45,6 +46,8 @@ from .trainer import CustomSeq2SeqTrainer
 from ...eval.callback_adapters import BoundingBoxEvaluatorCallback,LabelEvaluatorCallback
 from dataclasses import asdict
 
+
+import json
 
 
 if TYPE_CHECKING:
@@ -1072,6 +1075,17 @@ def run_sft(
     callbacks: Optional[list["TrainerCallback"]] = None,
 ):
     tokenizer_module = load_tokenizer(model_args)
+
+
+    
+    #set env var LEROBOT_DATASETS  to json.dumps({"droid": "/e/home/jusers/blank4/jupiter/datasets/lerobot_3_0/DROID/droid_success", "bridge": "/e/scratch/m3/jnogga/bridge_data_v2_teleop",})
+
+    os.environ["LEROBOT_DATASETS"] = json.dumps({
+        "droid": "/e/home/jusers/blank4/jupiter/datasets/lerobot_3_0/DROID/droid_success",
+        "bridge": "/e/scratch/m3/jnogga/bridge_data_v2_teleop",
+    })
+
+
 
     #add custom model args for later use (everything after custom_model_architecture if not None)
 

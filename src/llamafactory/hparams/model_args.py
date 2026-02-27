@@ -603,6 +603,7 @@ class ModelArguments(
     timechat_num_video_queries: int = field(default=32, metadata={"help": "Number of video queries for TimeChat."})
     append_global_query: bool = field(default=False, metadata={"help": "Whether to append a global video query for TimeChat."})
     use_individual_frame_query: bool = field(default=False, metadata={"help": "Whether to use individual frame queries for TimeChat."})
+    use_deepstack: bool = field(default=True, metadata={"help": "Whether to use deepstack visual feature injection into early LLM layers."})
 
     def __post_init__(self):
         BaseModelArguments.__post_init__(self)

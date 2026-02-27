@@ -67,6 +67,10 @@ LEROBOT_PREFIX = "lerobot://"
 _dataset_cache: dict[str, object] = {}
 _cache_lock = threading.Lock()
 
+# ── One-shot preload trigger: fire preload_all_datasets() on first real use ─
+_preload_all_triggered: bool = False
+_preload_trigger_lock = threading.Lock()
+
 # ── Multi-dataset name → path mapping (parsed once from env) ───────────────
 _datasets_map: dict[str, str] | None = None
 _camera_keys_map: dict[str, str] | None = None
@@ -206,6 +210,7 @@ def _get_lerobot_dataset(dataset_id: str):
     (e.g. ``"bridge"``), a local filesystem path, or a Hub ``repo_id``.
     Short names are resolved via :func:`resolve_dataset_path` before loading.
     """
+    global _preload_all_triggered
     resolved = resolve_dataset_path(dataset_id)
 
     if resolved in _dataset_cache:
@@ -236,7 +241,71 @@ def _get_lerobot_dataset(dataset_id: str):
             f"LeRobot dataset loaded ({dataset_id}): {ds.num_episodes} episodes, "
             f"{ds.num_frames} frames, cameras: {ds.meta.camera_keys}"
         )
-        return ds
+        result = ds
+
+    # First real lerobot:// reference in this process: eagerly preload every
+    # other dataset listed in the mapping so all workers hit cache hits from
+    # here on.  Done *outside* _cache_lock to avoid deadlocks when
+    # preload_all_datasets → _get_lerobot_dataset re-enters this function.
+    if not _preload_all_triggered:
+        with _preload_trigger_lock:
+            if not _preload_all_triggered:
+                _preload_all_triggered = True
+                preload_all_datasets()
+
+    return result
+
+
+def preload_all_datasets() -> None:
+    """Eagerly load and cache all LeRobot datasets declared in env vars.
+
+    Reads every entry from ``LEROBOT_DATASETS`` (JSON name→path mapping) and,
+    if set, the single-dataset ``LEROBOT_DATASET`` variable, then calls
+    :func:`_get_lerobot_dataset` for each so the dataset instance is cached
+    before any batch arrives.
+
+    Call this function once in the **main process** before training starts (the
+    populated cache is inherited by fork-based DataLoader workers via COW
+    semantics on Linux) **and** pass :func:`lerobot_worker_init_fn` as the
+    ``worker_init_fn`` argument to ``DataLoader`` for robustness under spawn-
+    based multiprocessing.
+    """
+    errors: list[str] = []
+
+    # --- entries from LEROBOT_DATASETS JSON mapping ---
+    mapping = _get_datasets_map()
+    for name_or_path in mapping:
+        try:
+            _get_lerobot_dataset(name_or_path)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{name_or_path!r}: {exc}")
+
+    # --- single-dataset LEROBOT_DATASET env var ---
+    single = os.environ.get("LEROBOT_DATASET", "").strip()
+    if single:
+        resolved_single = resolve_dataset_path(single)
+        if resolved_single not in _dataset_cache:
+            try:
+                _get_lerobot_dataset(single)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{single!r}: {exc}")
+
+    if errors:
+        logger.warning_rank0(
+            f"preload_all_datasets: failed to load {len(errors)} dataset(s):\n"
+            + "\n".join(f"  - {e}" for e in errors)
+        )
+
+
+def lerobot_worker_init_fn(worker_id: int) -> None:  # noqa: ARG001
+    """DataLoader ``worker_init_fn`` that preloads all configured LeRobot datasets.
+
+    Pass this to ``torch.utils.data.DataLoader(worker_init_fn=lerobot_worker_init_fn)``
+    whenever ``num_workers > 0`` and the dataset contains ``lerobot://`` references.
+    Each spawned worker will eagerly initialise and cache every dataset listed in
+    ``LEROBOT_DATASETS`` / ``LEROBOT_DATASET`` before the first batch is requested.
+    """
+    preload_all_datasets()
 
 
 def load_lerobot_frame(ref: str) -> "ImageObject":
@@ -456,9 +525,10 @@ def get_lerobot_video_info(
 
 def clear_cache() -> None:
     """Clear all cached LeRobot dataset instances and parsed env-var mappings."""
-    global _datasets_map, _camera_keys_map, _video_keys_map
+    global _datasets_map, _camera_keys_map, _video_keys_map, _preload_all_triggered
     with _cache_lock:
         _dataset_cache.clear()
     _datasets_map = None
     _camera_keys_map = None
     _video_keys_map = None
+    _preload_all_triggered = False

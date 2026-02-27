@@ -18,6 +18,7 @@ uv pip install -r requirements.txt
 uv pip install -e ../lerobot
 
 # Install conda dependencies
+conda install "ffmpeg" -c conda-forge
 conda install -c conda-forge libnpp-dev -y
 conda install -c conda-forge cuda-nvrtc-dev -y
 

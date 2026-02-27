@@ -14,6 +14,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+import traceback
 from typing import TYPE_CHECKING, Any, Optional
 
 from tqdm import tqdm
@@ -122,6 +123,9 @@ class SupervisedDatasetProcessor(DatasetProcessor):
                     f"Dropped invalid example due to error {e}: "
                     f"{examples['_prompt'][i] + examples['_response'][i]}"
                 )
+                logger.warning_rank0(
+                    traceback.format_exc())
+                 
                 continue
             model_inputs["input_ids"].append(input_ids)
             model_inputs["attention_mask"].append([1] * len(input_ids))

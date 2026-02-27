@@ -141,6 +141,10 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+
+
+EXCLUDED_CAMERA_KEYS = ["wrist", "gripper"]
+
 def load_jsonl(path: str):
     """Load a JSONL file, yielding one dict per line."""
     with open(path) as f:
@@ -201,12 +205,17 @@ def resolve_camera_keys(ds, user_keys: list[str] | None) -> list[str]:
     if user_keys:
         return list(user_keys)
     keys = list(ds.meta.video_keys)
+
+    excluded_keys = [k for k in keys if any(excl in k for excl in EXCLUDED_CAMERA_KEYS)]
+
+    keys = [k for k in keys if k not in excluded_keys]
+
     if not keys:
         raise ValueError(
             "Dataset has no video_keys and no --camera-key was provided. "
             "Pass at least one key explicitly."
         )
-    print(f"  No camera keys specified — using all video_keys: {keys}")
+    print(f"  No camera keys specified — using all video_keys: {keys}. Filtered keys: {excluded_keys}")
     return keys
 
 
@@ -427,7 +436,7 @@ def get_episode_task(lerobot_ds, ep_idx: int) -> str:
         ep = lerobot_ds.meta.episodes[ep_idx]
         tasks = ep.get("tasks", []) if isinstance(ep, dict) else []
         if tasks:
-            return "; ".join(str(t) for t in tasks if t)
+            return tasks[0].strip().lower()  # take first task, normalise whitespace and case
     except Exception:
         pass
     return ""
@@ -525,6 +534,8 @@ def enumerate_lerobot_episodes(
     episodes: list[int] | None = None,
     dataset_name: str = "",
     num_workers: int = 16,
+    subsample_diverse_language: bool = False,
+    task_obj_dict = None
 ) -> list[dict]:
     """Create a VQA dataset with one row per episode, each treated as a video.
 
@@ -539,6 +550,62 @@ def enumerate_lerobot_episodes(
     """
     output = []
     episode_indices = list(episodes) if episodes is not None else range(lerobot_ds.num_episodes)
+
+    if subsample_diverse_language:
+        # Collect unique language instructions across episodes
+        lang_to_eps: dict[str, list[int]] = {}
+        obj_to_eps: dict[str, list[int]] = {}
+        for ep_idx in episode_indices:
+            lang = get_episode_task(lerobot_ds, ep_idx)
+
+            #get task obj from task_obj_dict if provided, else use the language instruction as the key for diversity
+            if task_obj_dict is not None:
+                if lang in task_obj_dict:
+                    task_obj = task_obj_dict[lang]
+                    if task_obj is not None:
+                        if isinstance(task_obj, list):
+                            task_obj = task_obj[0]["object"]
+                        else:
+                            task_obj = task_obj["object"]
+                        obj_to_eps.setdefault(task_obj, []).append(ep_idx)
+
+                    
+                    
+
+            lang_to_eps.setdefault(lang, []).append(ep_idx)
+
+
+        #count unique instructions and print stats
+        if task_obj_dict is not None:
+            print(f"Unique task objects: {len(obj_to_eps)}")
+            for obj, eps in obj_to_eps.items():
+                print(f"  Object '{obj}': {len(eps)} episodes")
+            
+            #subsample max 2k episodes per object to ensure diversity across objects
+            max_episodes_per_object = 300
+            for obj, eps in obj_to_eps.items():
+                if len(eps) > max_episodes_per_object:
+                    obj_to_eps[obj] = random.sample(eps, max_episodes_per_object)
+                    print(f"    Subsampled to {max_episodes_per_object} episodes for object '{obj}'")
+            episode_indices = [ep for eps in obj_to_eps.values() for ep in eps]
+        else:
+            max_episodes_per_lang = 50
+            counts = {lang: len(eps) for lang, eps in lang_to_eps.items()}
+            print(f"Unique language instructions: {len(lang_to_eps)}")
+            for lang, count in counts.items():
+                print(f"  '{lang}': {count} episodes")
+
+            lang_to_eps_subsampled = {}
+            for lang, eps in lang_to_eps.items():
+                if len(eps) > max_episodes_per_lang:
+                    lang_to_eps_subsampled[lang] = random.sample(eps, max_episodes_per_lang)
+                    print(f"    Subsampled to {max_episodes_per_lang} episodes for instruction '{lang}'")
+                else:
+                    lang_to_eps_subsampled[lang] = eps
+            episode_indices = [ep for eps in lang_to_eps_subsampled.values() for ep in eps]
+
+            
+        #max 50
 
     # Pre-compute per-episode availability in parallel
     ep_avail = build_episode_camera_availability(lerobot_ds, episode_indices, camera_keys, num_workers)
@@ -601,7 +668,21 @@ def _build_output_path(args) -> str:
     source = _source_name_from_args(args)
     mode = "scratch" if args.enumerate else "from_vqa"
     split = args.split
-    return str(Path(base) / source / mode / f"{split}.jsonl")
+    diverse_lang = "_diverse_lang" if getattr(args, "subsample_diverse_language", False) else ""
+    return str(Path(base) / source / mode / f"{split}{diverse_lang}.jsonl")
+
+
+def load_and_process_task_obj_dict(path: str) -> dict[int, str]:
+    """Load a pickled task-object dictionary and convert keys to ints if needed."""
+    import pickle
+    with open(path, "rb") as f:
+        data = pickle.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected a dict in task-obj dict file, got {type(data)}")
+    #clean the task obj dict by only taking the first entry. orig keys are tuple (lang, gripper_phases) but we only care about the language instruction for now, so we take the first entry of the tuple as the key.
+    cleaned_data = {key[0] if isinstance(key, tuple) else key: value for key, value in data.items()}
+
+    return cleaned_data
 
 
 def main():
@@ -619,7 +700,7 @@ def main():
     parser.add_argument(
         "--base-dir",
         type=str,
-        default="/data/robogrounder/processed_datasets",
+        default="/e/home/jusers/blank4/jupiter/blank4/robogrounder",
         help="Root directory for auto-generated output paths (default: /data/robogrounder/processed_datasets)",
     )
     parser.add_argument(
@@ -688,6 +769,7 @@ def main():
     parser.add_argument("--episodes", type=int, nargs="*", help="Specific episodes to enumerate")
     parser.add_argument("--max-frames", type=int, help="Maximum number of frames to include")
     parser.add_argument("--num-workers", type=int, default=16, help="Number of threads for parallel camera availability probing (default: 16)")
+    parser.add_argument("--subsample_diverse_language", action="store_true", help="Make sure to select a diverse subset of language instructions when enumerating frames. ")
     parser.add_argument(
         "--as-video",
         action="store_true",
@@ -709,15 +791,27 @@ def main():
         # --enumerate --as-video \\
         # --question-template "Describe what the robot is doing in this episode."
         
-    args.lerobot_datasets = json.dumps({"bridge": "/data/jnogga/bridge_data_v2_teleop"})
+    args.lerobot_datasets = json.dumps({"droid": "/e/home/jusers/blank4/jupiter/datasets/lerobot_3_0/DROID/droid_success", "bridge": "/e/scratch/m3/jnogga/bridge_data_v2_teleop",})
+    #args.lerobot_datasets = json.dumps({"bridge": "/e/scratch/m3/jnogga/bridge_data_v2_teleop",})
+
     #args.camera_keys = json.dumps({"bridge": "observation.images.camera_0"})
     args.enumerate = True
     args.as_video = True
     
     args.question_template = "What task did the robot perform in this video?"
     
-    
+    args.subsample_diverse_language = True
+
     args.output = _build_output_path(args)
+
+
+    args.task_obj_dict_paths = {
+        "droid": "/e/home/jusers/blank4/jupiter/blank4/task_obj_dicts/droid.pkl",
+        "bridge": "/e/home/jusers/blank4/jupiter/blank4/task_obj_dicts/bridge.pkl",
+    }
+
+
+
 
     #
 
@@ -761,14 +855,22 @@ def main():
             lerobot_ds = _load_ds(args.lerobot_dataset)
             print(f"LeRobot dataset: {lerobot_ds.num_episodes} episodes, {lerobot_ds.num_frames} frames")
 
+
+    
+
     # ── Enumeration mode ──────────────────────────────────────────────────
     if args.enumerate:
         if multi_mode:
             # Enumerate across all datasets
             output_data = []
             for name, path in datasets_map.items():
+                if name in args.task_obj_dict_paths:
+                    ds_task_obj_dict = load_and_process_task_obj_dict(args.task_obj_dict_paths[name])
                 ds = lerobot_datasets.get(name) or _load_ds(path)
                 cam_keys = resolve_camera_keys(ds, camera_keys_map.get(name) or args.camera_key)
+                #load task-obj dict for this dataset if needed
+                if name in args.task_obj_dict_paths:
+                    ds_task_obj_dict = load_and_process_task_obj_dict(args.task_obj_dict_paths[name])
                 if args.as_video:
                     rows = enumerate_lerobot_episodes(
                         ds,
@@ -778,6 +880,8 @@ def main():
                         episodes=args.episodes,
                         dataset_name=name,
                         num_workers=args.num_workers,
+                        subsample_diverse_language=args.subsample_diverse_language,
+                        task_obj_dict=ds_task_obj_dict if args.subsample_diverse_language else None
                     )
                 else:
                     rows = enumerate_lerobot_frames(
