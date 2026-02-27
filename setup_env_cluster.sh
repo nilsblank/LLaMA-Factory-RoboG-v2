@@ -25,4 +25,8 @@ conda install -c conda-forge cuda-nvrtc-dev -y
 # Install torchcodec from wheels for CUDA 13
 uv pip install torchcodec --extra-index-url https://download.pytorch.org/whl/cu130
 
+
+uv pip install flash_attn_3 --find-links https://windreamer.github.io/flash-attention3-wheels/cu130_torch2100
+
+
 echo "Environment setup complete!"

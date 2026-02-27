@@ -838,9 +838,9 @@ def main():
 
     def _load_ds(path_or_repo: str):
         if os.path.isdir(path_or_repo):
-            return LeRobotDataset(repo_id="local", root=path_or_repo)
+            return LeRobotDataset(repo_id="local", root=path_or_repo, vcodec="auto")
         else:
-            return LeRobotDataset(repo_id=path_or_repo)
+            return LeRobotDataset(repo_id=path_or_repo,vcodec="auto")
 
     if multi_mode:
         # as_video conversion needs no metadata (episode idx used directly); enumerate always does

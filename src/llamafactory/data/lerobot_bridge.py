@@ -232,9 +232,9 @@ def _get_lerobot_dataset(dataset_id: str):
         log_name = f"{dataset_id}" if dataset_id == resolved else f"{dataset_id} → {resolved}"
         logger.info_rank0(f"Initializing LeRobot dataset: {log_name}")
         if os.path.isdir(resolved):
-            ds = LeRobotDataset(repo_id="local", root=resolved)
+            ds = LeRobotDataset(repo_id="local", root=resolved, vcodec="auto")
         else:
-            ds = LeRobotDataset(repo_id=resolved)
+            ds = LeRobotDataset(repo_id=resolved, vcodec="auto")
 
         _dataset_cache[resolved] = ds
         logger.info_rank0(
