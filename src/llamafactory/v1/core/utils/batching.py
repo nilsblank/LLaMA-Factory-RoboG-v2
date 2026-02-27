@@ -134,12 +134,15 @@ class BatchGenerator(Iterator):
         else:
             raise NotImplementedError("Iterable dataset is not supported yet.")
 
+        from llamafactory.data.lerobot_bridge import lerobot_worker_init_fn
+
         self._data_provider = StatefulDataLoader(
             self.dataset,
             batch_size=self.micro_batch_size * self.num_micro_batch,
             sampler=sampler,
             num_workers=self.batching_workers,
             collate_fn=self.renderer.process_samples,
+            worker_init_fn=lerobot_worker_init_fn,
             pin_memory=self.pin_memory,
             pin_memory_device=DistributedInterface().current_device.type,
             drop_last=self.drop_last,

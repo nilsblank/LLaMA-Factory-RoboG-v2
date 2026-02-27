@@ -447,12 +447,14 @@ def load_lerobot_video_frames(
         rel_timestamps = [float(t) for t in ts_raw]
 
     frames_dict = ds._query_videos({camera_key: rel_timestamps}, episode_idx)
-    frames_tensor = frames_dict[camera_key]  # [N, C, H, W] float32 in [0, 1]
+    frames_tensor = frames_dict.pop(camera_key)  # [N, C, H, W] float32 in [0, 1]
+    del frames_dict  # free remaining dict data (other keys) immediately
     frames_uint8 = (frames_tensor.clamp(0, 1) * 255).to(torch.uint8)
-    return [
-        Image.fromarray(f.permute(1, 2, 0).cpu().numpy(), "RGB")
-        for f in frames_uint8
-    ]
+    del frames_tensor  # free float32 before PIL conversion — biggest source of peak RAM
+    # Batch-permute to [N, H, W, C] in one contiguous numpy array; PIL copies each slice.
+    np_frames = frames_uint8.permute(0, 2, 3, 1).contiguous().numpy()
+    del frames_uint8
+    return [Image.fromarray(np_frames[i], "RGB") for i in range(len(np_frames))]
 
 
 def get_lerobot_video_info(
@@ -472,8 +474,6 @@ def get_lerobot_video_info(
     Returns:
         A tuple ``(n_sampled_frames, duration, height, width)``.
     """
-    import numpy as np
-
     body = ref[len(LEROBOT_PREFIX):]
     parts = body.split("::")
 
