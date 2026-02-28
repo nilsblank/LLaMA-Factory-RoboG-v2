@@ -57,7 +57,7 @@ dataloader_prefetch_factor: 4
 #max_steps: 100
 
 ### output
-output_dir: saves/qwen3_5vl-4b/full/sft/${dataset}
+output_dir: saves/qwen3_5vl-4b/full/sft/${dataset}/fq${timechat_num_frame_queries}_vq${timechat_num_video_queries}_indiv${use_individual_frame_query}_global${append_global_query}_bsz${per_device_train_batch_size}x${gradient_accumulation_steps}_deepstack${use_deepstack}
 logging_steps: 10
 save_strategy: steps
 save_steps: 500
@@ -72,9 +72,9 @@ run_name: ${model_name_or_path}_${dataset}_${stage}
 per_device_train_batch_size: 16
 gradient_accumulation_steps: 1
 learning_rate: 9.0e-5
-num_train_epochs: 1.0
+num_train_epochs: 2.0
 lr_scheduler_type: cosine
-warmup_ratio: 0.04
+warmup_ratio: 0.03
 bf16: true
 ddp_timeout: 180000000
 resume_from_checkpoint: null
@@ -90,16 +90,16 @@ evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
+tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_frame_queries}_${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
 
 
 
 ### eval
-val_size: 20
+val_size: 512
 do_eval: true
 per_device_eval_batch_size: 2
 eval_strategy: steps
-eval_steps: 100
+eval_steps: 200
 #eval_dataset: roboG_stagepoc_grounding_only_video_train
 #predict_with_generate: true
 #do_predict: true

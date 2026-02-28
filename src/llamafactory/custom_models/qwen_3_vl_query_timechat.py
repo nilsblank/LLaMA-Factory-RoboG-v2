@@ -1237,7 +1237,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
         self.timechat_window_size = kwargs.get("timechat_window_size", 0)
         self.timechat_stride = kwargs.get("timechat_stride", 0)
-        self.timechat_num_frame_queries = kwargs.get("timechat_num_frame_queries", 32)
+        self.timechat_num_frame_queries = kwargs["timechat_num_frame_queries"]
         self.timechat_num_video_queries = kwargs.get("timechat_num_video_queries", 32)
         self.timechat_frame_query_layers = kwargs.get("timechat_frame_query_layers", 2)
         self.timechat_video_query_layers = kwargs.get("timechat_video_query_layers", 2)

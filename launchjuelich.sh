@@ -5,6 +5,7 @@
 #SBATCH -J RoboG
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=0
+##SBATCH --ntasks-per-node=1
 
 
 # Cluster Settings
@@ -45,7 +46,7 @@ export DISABLE_VERSION_CHECK=1
 # NODE_RANK=0
 # PORT=29500
 # MASTER_ADDR=127.0.0.1
-#CUDA_VISIBLE_DEVICES=0,1,2,3  
+export CUDA_VISIBLE_DEVICES=0,1,2,3  
 
 export PYTHONPATH=/e/home/jusers/blank4/jupiter/blank4/code/LLaMA-Factory-RoboG-v2/src:$PYTHONPATH
 #srun llamafactory-cli train examples/train_full/qwen2vl_NILS_full_droid.yaml
