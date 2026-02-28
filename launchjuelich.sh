@@ -40,7 +40,7 @@ conda activate roboG
 
 export LD_LIBRARY_PATH=/home/hk-project-sustainebot/bm3844/miniconda3/envs/vlm/lib/python3.12/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
 export TORCH_USE_CUDA_DSA=1
-export DISABLE_VERSION_CHECK=1
+#export DISABLE_VERSION_CHECK=1
 
 # NNODES=1
 # NODE_RANK=0
