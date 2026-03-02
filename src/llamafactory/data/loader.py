@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob as _glob_module
+import json as _json_module
 import os
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import numpy as np
-from datasets import Dataset, DatasetDict, load_dataset, load_from_disk
+from datasets import Dataset, DatasetDict, IterableDataset, load_dataset, load_from_disk
 
 from ..extras import logging
 from ..extras.constants import FILEEXT2TYPE
@@ -46,6 +48,74 @@ if TYPE_CHECKING:
 
 
 logger = logging.get_logger(__name__)
+
+# ---------------------------------------------------------------------------
+# WebDataset helpers
+# ---------------------------------------------------------------------------
+
+# File extensions that carry raw media bytes inside a WebDataset TAR shard.
+_WDS_MEDIA_EXTENSIONS: frozenset[str] = frozenset(
+    {
+        # images
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "tiff",
+        "webp",
+        "npy",
+        # video
+        "mp4",
+        "mov",
+        "avi",
+        "mkv",
+        "webm",
+        # audio
+        "wav",
+        "mp3",
+        "flac",
+        "m4a",
+        "ogg",
+    }
+)
+
+# Internal WebDataset columns that should not be forwarded downstream.
+_WDS_SKIP_COLUMNS: frozenset[str] = frozenset({"__key__", "__url__"})
+
+
+def _normalize_webdataset_sample(example: dict) -> dict:
+    """Flatten JSON metadata and wrap per-sample media into lists.
+
+    WebDataset TAR shards produce one column per file extension (e.g.
+    ``"jpg"``, ``"json"``, ``"mp4"``).  This function:
+
+    1. Promotes keys from the ``"json"`` column (parsed dict) into top-level
+       columns so the downstream ``columns`` mapping in *dataset_info.json*
+       works naturally.
+    2. Wraps scalar media values (bytes or HF ``{"bytes": …}`` dicts) in a
+       list because LLaMA Factory image/video columns expect sequences.
+    3. Drops WebDataset-internal columns (``__key__``, ``__url__``).
+    """
+    result: dict = {}
+    for key, value in example.items():
+        if key in _WDS_SKIP_COLUMNS:
+            continue
+        if key == "json":
+            # Promote all keys from the JSON metadata into the top level.
+            if isinstance(value, (bytes, bytearray)):
+                value = _json_module.loads(value)
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    result[k] = v
+            # String or None edge-cases are silently dropped.
+        elif key in _WDS_MEDIA_EXTENSIONS:
+            # Wrap scalar media as a one-element list.
+            if value is not None:
+                result[key] = [value] if not isinstance(value, list) else value
+        else:
+            result[key] = value
+    return result
 
 
 def _load_single_dataset(
@@ -87,6 +157,8 @@ def _load_single_dataset(
 
         if any(data_path != FILEEXT2TYPE.get(os.path.splitext(data_file)[-1][1:], None) for data_file in data_files):
             raise ValueError("File types should be identical.")
+    elif dataset_attr.load_from == "webdataset":
+        pass  # shard resolution and loading are handled in the block below
     else:
         raise NotImplementedError(f"Unknown load type: {dataset_attr.load_from}.")
 
@@ -127,6 +199,52 @@ def _load_single_dataset(
         )
     elif dataset_attr.load_from == "cloud_file":
         dataset = Dataset.from_list(read_cloud_json(data_path), split=dataset_attr.split)
+    elif dataset_attr.load_from == "webdataset":
+        # Resolve shard pattern: join with dataset_dir when it is a bare relative path.
+        shard_pattern = dataset_attr.dataset_name
+        _remote_prefixes = ("s3://", "gs://", "http://", "https://", "pipe:", "hf://")
+        if not os.path.isabs(shard_pattern) and not any(shard_pattern.startswith(p) for p in _remote_prefixes):
+            shard_pattern = os.path.join(data_args.dataset_dir, shard_pattern)
+
+        # Expand shell-style glob patterns (e.g. /data/shards-*.tar).
+        if any(c in shard_pattern for c in "*?[{"):
+            wds_files = sorted(_glob_module.glob(shard_pattern))
+        else:
+            wds_files = [shard_pattern]
+
+        if not wds_files:
+            raise ValueError(f"No WebDataset shard files found matching: {shard_pattern}")
+
+        # Shuffle shard order so different runs/workers see shards in different orders.
+        # This is done at load time (before the streaming pipeline is built) using the
+        # global training seed.  Per-step sample-level shuffling is applied below via
+        # a buffer shuffle, which is independent of -- and complements -- shard shuffling.
+        rng = np.random.default_rng(training_args.seed)
+        wds_files = [wds_files[i] for i in rng.permutation(len(wds_files))]
+
+        logger.info_rank0(f"Found {len(wds_files)} WebDataset shard(s) for dataset {dataset_attr}.")
+        if not data_args.streaming:
+            logger.warning_rank0(
+                f"Dataset {dataset_attr} is a WebDataset and will always be loaded as an IterableDataset. "
+                "Consider setting `streaming: true` in your training config."
+            )
+
+        dataset = load_dataset(
+            "webdataset",
+            data_files={dataset_attr.split: wds_files},
+            split=dataset_attr.split,
+            cache_dir=model_args.cache_dir,
+            token=model_args.hf_hub_token,
+            streaming=True,  # TAR shards are always loaded as IterableDataset
+        )
+        # Flatten JSON metadata columns and wrap media bytes into lists so that
+        # the downstream column-mapping and mm_plugin work without modification.
+        dataset = dataset.map(_normalize_webdataset_sample)
+        # Apply a sample-level buffer shuffle unconditionally.  When data_args.streaming
+        # is True, split_dataset() will call .shuffle() again (which is idempotent but
+        # refreshes the buffer seed); when streaming is False, split_dataset() skips the
+        # shuffle because it checks data_args.streaming -- so we must do it here.
+        dataset = dataset.shuffle(buffer_size=data_args.buffer_size, seed=training_args.seed)
     else:
         dataset = load_dataset(
             path=data_path,
@@ -142,7 +260,7 @@ def _load_single_dataset(
         if data_args.streaming and dataset_attr.load_from == "file":
             dataset = dataset.to_iterable_dataset(num_shards=training_args.dataloader_num_workers)
 
-    if dataset_attr.num_samples is not None and not data_args.streaming:
+    if dataset_attr.num_samples is not None and not isinstance(dataset, IterableDataset):
         target_num = dataset_attr.num_samples
         indexes = np.random.permutation(len(dataset))[:target_num]  # all samples should be included
         target_num -= len(indexes)
@@ -154,7 +272,7 @@ def _load_single_dataset(
         dataset = dataset.select(indexes)
         logger.info_rank0(f"Sampled {dataset_attr.num_samples} examples from dataset {dataset_attr}.")
 
-    if data_args.max_samples is not None:  # truncate dataset
+    if data_args.max_samples is not None and not isinstance(dataset, IterableDataset):  # truncate dataset
         max_samples = min(data_args.max_samples, len(dataset))
         dataset = dataset.select(range(max_samples))
 
@@ -249,13 +367,12 @@ def _get_preprocessed_dataset(
 
     column_names = list(next(iter(dataset)).keys())
     kwargs = {}
-    if not data_args.streaming:
+    if not isinstance(dataset, IterableDataset):
         kwargs = dict(
             num_proc=data_args.preprocessing_num_workers,
             load_from_cache_file=(not data_args.overwrite_cache) or (training_args.local_process_index != 0),
             desc="Running tokenizer on dataset",
         )
-       
 
 
     dataset = dataset.map(

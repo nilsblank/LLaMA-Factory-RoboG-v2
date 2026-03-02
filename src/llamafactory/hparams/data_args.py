@@ -57,7 +57,14 @@ class DataArguments:
     )
     streaming: bool = field(
         default=False,
-        metadata={"help": "Enable dataset streaming."},
+        metadata={
+            "help": (
+                "Enable dataset streaming. "
+                "WebDataset entries (TAR shards specified via `webdataset_files` in dataset_info.json) "
+                "always use streaming/IterableDataset regardless of this flag; setting this to `true` "
+                "is strongly recommended when any WebDataset is included in the training config."
+            )
+        },
     )
     buffer_size: int = field(
         default=16384,

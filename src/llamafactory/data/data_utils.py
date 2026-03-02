@@ -17,7 +17,7 @@ from enum import StrEnum, unique
 from typing import TYPE_CHECKING, Any, Optional, TypedDict, Union
 
 import fsspec
-from datasets import DatasetDict, concatenate_datasets, interleave_datasets
+from datasets import DatasetDict, IterableDataset, concatenate_datasets, interleave_datasets
 
 from ..extras import logging
 
@@ -103,11 +103,11 @@ def split_dataset(
     train_dict, eval_dict = {}, {}
 
     if dataset is not None:
-        if data_args.streaming:
+        if isinstance(dataset, IterableDataset):
             dataset = dataset.shuffle(buffer_size=data_args.buffer_size, seed=seed)
 
         if data_args.val_size > 1e-6:
-            if data_args.streaming:
+            if isinstance(dataset, IterableDataset):
                 eval_dict["validation"] = dataset.take(int(data_args.val_size))
                 train_dict["train"] = dataset.skip(int(data_args.val_size))
             else:
@@ -123,7 +123,7 @@ def split_dataset(
             for name, data in eval_dataset.items():
                 eval_dict[f"validation_{name}"] = data
         else:
-            if data_args.streaming:
+            if isinstance(eval_dataset, IterableDataset):
                 eval_dataset = eval_dataset.shuffle(buffer_size=data_args.buffer_size, seed=seed)
 
             eval_dict["validation"] = eval_dataset

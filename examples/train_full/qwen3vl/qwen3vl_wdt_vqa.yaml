@@ -43,7 +43,7 @@ use_unsloth_gc: true
 enable_liger_kernel: true
 
 ### dataset
-dataset: lerobot_vqa_bridge #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
+dataset: eo1m_wds #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
 template: qwen3_vl_nothink_timechat
 cutoff_len: 4096
 #max_samples: 512
@@ -90,7 +90,7 @@ evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_frame_queries}_${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
+#tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_frame_queries}_${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
 
 
 

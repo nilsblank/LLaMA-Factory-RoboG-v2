@@ -17,6 +17,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Union
 
+from datasets import IterableDataset as _IterableDataset
+
 from ..extras import logging
 from .data_utils import Role
 
@@ -217,7 +219,7 @@ class SharegptDatasetConverter(DatasetConverter):
         else:  # normal example
             prompt = aligned_messages[:-1]
             response = aligned_messages[-1:]
-        
+
 
         # if self.dataset_attr.images and not self.dataset_attr.images in example:
         #     #empty list
@@ -421,7 +423,7 @@ def align_dataset(
     """
     column_names = list(next(iter(dataset)).keys())
     kwargs = {}
-    if not data_args.streaming:
+    if not isinstance(dataset, _IterableDataset):
         kwargs = dict(
             num_proc=data_args.preprocessing_num_workers,
             load_from_cache_file=(not data_args.overwrite_cache) or (training_args.local_process_index != 0),

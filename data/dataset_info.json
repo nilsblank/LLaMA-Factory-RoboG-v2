@@ -1,4 +1,23 @@
 {
+  "_webdataset_example_sharegpt": {
+    "_comment": "EXAMPLE (remove leading underscore from key to activate). WebDataset format: TAR shards containing sample.json + sample.jpg (and/or sample.mp4). The 'json' column is automatically flattened into top-level columns; media extensions (jpg, mp4, …) are wrapped into one-element lists and mapped via 'columns'. Shard paths accept glob patterns. Always loaded as an IterableDataset; use streaming:true in training config for best performance.",
+    "webdataset_files": "/path/to/shards-{0000..0127}.tar",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "images": "jpg",
+      "videos": "mp4"
+    }
+  },
+  "_webdataset_example_alpaca": {
+    "_comment": "EXAMPLE (alpaca format). TAR shards where each sample has sample.json with 'instruction', 'output' keys. No media.",
+    "webdataset_files": "/path/to/text-shards-*.tar",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "response": "output"
+    }
+  },
   "identity": {
     "file_name": "identity.json"
   },
@@ -1193,24 +1212,6 @@
     "assistant_tag": "assistant"
   }
 },
-
-
-
-"roboG_qwen3_vl_ablation_two_frames_train": {
-  "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_ablation_two_frames_train.jsonl",
-  "formatting": "sharegpt",
-  "columns": {
-    "messages": "messages",
-    "videos": "videos",
-    "images": "images"
-  },
-  "tags": {
-    "role_tag": "role",
-    "content_tag": "content",
-    "user_tag": "user",
-    "assistant_tag": "assistant"
-  }
-},
 "roboG_qwen3_vl_ablation_two_frames_eval": {
   "file_name": "/home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/roboG_stagepoc_ablation_two_frames_eval.jsonl",
   "formatting": "sharegpt",
@@ -1486,7 +1487,23 @@
             "user_tag": "user",
             "assistant_tag": "assistant"
         }
-    }
+    },
+
+  "eo1m_wds": {
+  "webdataset_files": "/e/scratch/m3/pretrain_data/wds/eo1m_wds/*.tar",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "messages",
+    "videos": "mp4"
+  },
+  "tags": {
+    "role_tag": "from",
+    "content_tag": "value",
+    "user_tag": "human",
+    "assistant_tag": "gpt"
+  }
+
+}
 
 
 }
