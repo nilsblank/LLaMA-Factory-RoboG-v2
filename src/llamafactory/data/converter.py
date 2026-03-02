@@ -129,9 +129,9 @@ class AlpacaDatasetConverter(DatasetConverter):
             "_response": response,
             "_system": example[self.dataset_attr.system] if self.dataset_attr.system else "",
             "_tools": example[self.dataset_attr.tools] if self.dataset_attr.tools else "",
-            "_images": self._find_medias(example[self.dataset_attr.images]) if self.dataset_attr.images else None,
-            "_videos": self._find_medias(example[self.dataset_attr.videos]) if self.dataset_attr.videos else None,
-            "_audios": self._find_medias(example[self.dataset_attr.audios]) if self.dataset_attr.audios else None,
+            "_images": self._find_medias(example.get(self.dataset_attr.images)) if self.dataset_attr.images else None,
+            "_videos": self._find_medias(example.get(self.dataset_attr.videos)) if self.dataset_attr.videos else None,
+            "_audios": self._find_medias(example.get(self.dataset_attr.audios)) if self.dataset_attr.audios else None,
         }
         return output
 
@@ -234,9 +234,9 @@ class SharegptDatasetConverter(DatasetConverter):
             "_response": response,
             "_system": system,
             "_tools": example[self.dataset_attr.tools] if self.dataset_attr.tools else "",
-            "_images": self._find_medias(example[self.dataset_attr.images]) if self.dataset_attr.images else None,
-            "_videos": self._find_medias(example[self.dataset_attr.videos]) if self.dataset_attr.videos else None,
-            "_audios": self._find_medias(example[self.dataset_attr.audios]) if self.dataset_attr.audios else None,
+            "_images": self._find_medias(example.get(self.dataset_attr.images)) if self.dataset_attr.images else None,
+            "_videos": self._find_medias(example.get(self.dataset_attr.videos)) if self.dataset_attr.videos else None,
+            "_audios": self._find_medias(example.get(self.dataset_attr.audios)) if self.dataset_attr.audios else None,
         }
         return output
 
@@ -374,9 +374,9 @@ class OpenAIDatasetConverter(DatasetConverter):
             "_response": response,
             "_system": system,
             "_tools": tools,
-            "_images": self._find_medias(example[self.dataset_attr.images]) if self.dataset_attr.images else None,
-            "_videos": self._find_medias(example[self.dataset_attr.videos]) if self.dataset_attr.videos else None,
-            "_audios": self._find_medias(example[self.dataset_attr.audios]) if self.dataset_attr.audios else None,
+            "_images": self._find_medias(example.get(self.dataset_attr.images)) if self.dataset_attr.images else None,
+            "_videos": self._find_medias(example.get(self.dataset_attr.videos)) if self.dataset_attr.videos else None,
+            "_audios": self._find_medias(example.get(self.dataset_attr.audios)) if self.dataset_attr.audios else None,
         }
         return output
 
