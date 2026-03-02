@@ -1494,6 +1494,7 @@
   "formatting": "sharegpt",
   "columns": {
     "messages": "messages",
+    "images": "jpg",
     "videos": "mp4"
   },
   "tags": {
