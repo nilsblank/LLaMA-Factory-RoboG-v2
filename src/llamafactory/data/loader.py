@@ -85,19 +85,24 @@ _WDS_SKIP_COLUMNS: frozenset[str] = frozenset({"__key__", "__url__"})
 
 
 def _normalize_webdataset_sample(example: dict) -> dict:
-    """Flatten JSON metadata and wrap per-sample media into lists.
+    """Flatten JSON metadata and group per-sample media into extension-keyed lists.
 
-    WebDataset TAR shards produce one column per file extension (e.g.
-    ``"jpg"``, ``"json"``, ``"mp4"``).  This function:
+    WebDataset TAR shards produce one column per file in the sample.  The HF
+    datasets WebDataset loader uses the **full filename** as the column key
+    (e.g. ``"0.jpg"``, ``"1.jpg"``, ``"0.mp4"``), not just the bare extension.
+    This function:
 
-    1. Promotes keys from the ``"json"`` column (parsed dict) into top-level
-       columns so the downstream ``columns`` mapping in *dataset_info.json*
-       works naturally.
-    2. Wraps scalar media values (bytes or HF ``{"bytes": …}`` dicts) in a
-       list because LLaMA Factory image/video columns expect sequences.
+    1. Groups all files whose extension is in ``_WDS_MEDIA_EXTENSIONS`` into
+       lists keyed by extension only (e.g. ``"jpg": [PIL0, PIL1]``).  This lets
+       the ``columns`` mapping in *dataset_info.json* use ``"images": "jpg"``
+       regardless of how many images each sample contains.
+    2. Promotes keys from the ``"json"`` column (parsed dict) into top-level
+       columns so the downstream ``columns`` mapping works naturally.
     3. Drops WebDataset-internal columns (``__key__``, ``__url__``).
     """
     result: dict = {}
+    media_by_ext: dict[str, list] = {}
+
     for key, value in example.items():
         if key in _WDS_SKIP_COLUMNS:
             continue
@@ -109,12 +114,18 @@ def _normalize_webdataset_sample(example: dict) -> dict:
                 for k, v in value.items():
                     result[k] = v
             # String or None edge-cases are silently dropped.
-        elif key in _WDS_MEDIA_EXTENSIONS:
-            # Wrap scalar media as a one-element list.
-            if value is not None:
-                result[key] = [value] if not isinstance(value, list) else value
         else:
-            result[key] = value
+            # Derive the extension: "0.jpg" → "jpg", "mp4" → "mp4"
+            ext = key.rsplit(".", 1)[-1].lower() if "." in key else key
+            if ext in _WDS_MEDIA_EXTENSIONS:
+                # Accumulate into a list so multiple images/videos are ordered.
+                if value is not None:
+                    media_by_ext.setdefault(ext, []).append(value)
+            else:
+                result[key] = value
+
+    # Merge grouped media lists into the result (overrides any same-named JSON key).
+    result.update(media_by_ext)
     return result
 
 
