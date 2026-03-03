@@ -28,7 +28,7 @@ class DatasetAttr:
     r"""Dataset attributes."""
 
     # basic configs
-    load_from: Literal["hf_hub", "ms_hub", "om_hub", "script", "file", "webdataset"]
+    load_from: Literal["hf_hub", "ms_hub", "om_hub", "script", "file", "webdataset", "lerobot"]
     dataset_name: str
     formatting: Literal["alpaca", "sharegpt", "openai"] = "alpaca"
     ranking: bool = False
@@ -54,6 +54,9 @@ class DatasetAttr:
     history: str | None = None
     # sharegpt columns
     messages: str | None = "conversations"
+    # lerobot configs
+    lerobot_default_dataset: str | None = None
+    lerobot_default_camera: str | None = None
     # sharegpt tags
     role_tag: str | None = "from"
     content_tag: str | None = "value"
@@ -76,6 +79,9 @@ class DatasetAttr:
         self.set_attr("split", attr, default="train")
         self.set_attr("folder", attr)
         self.set_attr("num_samples", attr)
+
+        self.set_attr("lerobot_default_dataset", attr)
+        self.set_attr("lerobot_default_camera", attr)
 
         if "columns" in attr:
             column_names = ["prompt", "query", "response", "history", "messages", "system", "tools"]
@@ -142,6 +148,8 @@ def get_dataset_list(dataset_names: list[str] | None, dataset_dir: str | dict) -
             dataset_attr = DatasetAttr("cloud_file", dataset_name=dataset_info[name]["cloud_file_name"])
         elif "webdataset_files" in dataset_info[name]:
             dataset_attr = DatasetAttr("webdataset", dataset_name=dataset_info[name]["webdataset_files"])
+        elif "lerobot_files" in dataset_info[name]:
+            dataset_attr = DatasetAttr("lerobot", dataset_name=dataset_info[name]["lerobot_files"])
         else:
             dataset_attr = DatasetAttr("file", dataset_name=dataset_info[name]["file_name"])
 

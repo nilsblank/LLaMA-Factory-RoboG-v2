@@ -292,6 +292,8 @@ def _load_single_dataset(
             raise ValueError("File types should be identical.")
     elif dataset_attr.load_from == "webdataset":
         pass  # shard resolution and loading are handled in the block below
+    elif dataset_attr.load_from == "lerobot":
+        pass  # JSONL resolution and loading are handled in the block below
     else:
         raise NotImplementedError(f"Unknown load type: {dataset_attr.load_from}.")
 
@@ -385,6 +387,50 @@ def _load_single_dataset(
         # refreshes the buffer seed); when streaming is False, split_dataset() skips the
         # shuffle because it checks data_args.streaming -- so we must do it here.
         dataset = dataset.shuffle(buffer_size=data_args.buffer_size, seed=training_args.seed)
+    elif dataset_attr.load_from == "lerobot":
+        from .lerobot_loader import load_lerobot_jsonl_as_dataset, make_lerobot_transform
+
+        # Resolve JSONL file pattern: join with dataset_dir when relative.
+        jsonl_pattern = dataset_attr.dataset_name
+        if not os.path.isabs(jsonl_pattern):
+            jsonl_pattern = os.path.join(data_args.dataset_dir, jsonl_pattern)
+
+        # Expand glob patterns (e.g. /data/lerobot-*.jsonl).
+        if any(c in jsonl_pattern for c in "*?[{"):
+            jsonl_files = sorted(_glob_module.glob(jsonl_pattern))
+        else:
+            jsonl_files = [jsonl_pattern]
+
+        if not jsonl_files:
+            raise ValueError(f"No LeRobot JSONL files found matching: {jsonl_pattern}")
+
+        default_dataset = dataset_attr.lerobot_default_dataset or ""
+        default_camera = dataset_attr.lerobot_default_camera or "observation.images.front"
+
+        # 1. Load JSONL as a cheap map-style Dataset (just text, no media).
+        dataset = load_lerobot_jsonl_as_dataset(jsonl_files)
+        logger.info_rank0(
+            f"LeRobot dataset {dataset_attr}: loaded {len(dataset)} samples "
+            f"from {len(jsonl_files)} JSONL file(s) as map-style Dataset."
+        )
+
+        # 2. Shuffle globally on the map-style dataset (true random access).
+        dataset = dataset.shuffle(seed=training_args.seed)
+
+        # 3. Convert to IterableDataset with enough shards for multi-GPU/worker.
+        num_shards = max(
+            training_args.dataloader_num_workers * max(training_args.world_size, 1),
+            max(training_args.world_size, 1),
+            1,
+        )
+        # Identify lerobot_* columns to drop after the transform.
+        lerobot_cols = [c for c in dataset.column_names if c.startswith("lerobot_")]
+        dataset = dataset.to_iterable_dataset(num_shards=num_shards)
+
+        # 4. Apply lazy per-sample transform that resolves LeRobot refs → bytes.
+        #    The heavy I/O (video decode, ffmpeg) runs in DataLoader workers.
+        transform_fn = make_lerobot_transform(default_dataset, default_camera)
+        dataset = dataset.map(transform_fn, remove_columns=lerobot_cols)
     else:
         dataset = load_dataset(
             path=data_path,
@@ -569,20 +615,18 @@ def get_dataset(
             raise ValueError("Turn off `streaming` when saving dataset to disk.")
 
     # -----------------------------------------------------------------------
-    # Auto-compute max_steps for WebDataset (IterableDataset has no __len__).
+    # Auto-compute max_steps for WebDataset / LeRobot (IterableDataset has no __len__).
     # HF Trainer raises ValueError when train_dataset is an IterableDataset
     # and max_steps == -1.  We resolve this by probing the TAR shard headers
-    # (fast — no image data is read) and computing max_steps from the sample
-    # count, num_train_epochs, and effective batch size.
+    # or counting JSONL lines (fast — no media data is read) and computing
+    # max_steps from the sample count, num_train_epochs, and effective batch size.
     # -----------------------------------------------------------------------
     if training_args.max_steps == -1 and data_args.dataset:
         _remote_prefixes = ("s3://", "gs://", "http://", "https://", "pipe:", "hf://")
-        wds_attrs = [
-            attr
-            for attr in get_dataset_list(data_args.dataset, data_args.dataset_dir)
-            if attr.load_from == "webdataset"
-        ]
-        if wds_attrs:
+        all_attrs = get_dataset_list(data_args.dataset, data_args.dataset_dir)
+        wds_attrs = [attr for attr in all_attrs if attr.load_from == "webdataset"]
+        lerobot_attrs = [attr for attr in all_attrs if attr.load_from == "lerobot"]
+        if wds_attrs or lerobot_attrs:
             total_samples = 0
             has_remote = False
             for attr in wds_attrs:
@@ -608,6 +652,27 @@ def get_dataset(
                     f"across {len(wds_files)} shard(s)."
                 )
 
+            # --- LeRobot JSONL sample counting ---
+            from .lerobot_loader import _count_lerobot_samples
+
+            for attr in lerobot_attrs:
+                jsonl_pattern = attr.dataset_name
+                if not os.path.isabs(jsonl_pattern):
+                    jsonl_pattern = os.path.join(data_args.dataset_dir, jsonl_pattern)
+                jsonl_files = (
+                    sorted(_glob_module.glob(jsonl_pattern))
+                    if any(c in jsonl_pattern for c in "*?[{")
+                    else [jsonl_pattern]
+                )
+                n = _count_lerobot_samples(jsonl_files)
+                if attr.num_samples is not None:
+                    n = min(n, attr.num_samples)
+                total_samples += n
+                logger.info_rank0(
+                    f"LeRobot '{attr.dataset_name}': estimated {n} samples "
+                    f"across {len(jsonl_files)} file(s)."
+                )
+
             if total_samples > 0:
                 if data_args.max_samples is not None:
                     total_samples = min(total_samples, data_args.max_samples)
@@ -619,7 +684,7 @@ def get_dataset(
                 max_steps = math.ceil(training_args.num_train_epochs * total_samples / eff_batch)
                 training_args.max_steps = max_steps
                 logger.info_rank0(
-                    f"WebDataset auto max_steps={max_steps} "
+                    f"IterableDataset auto max_steps={max_steps} "
                     f"({total_samples} samples × {training_args.num_train_epochs} epoch(s) "
                     f"÷ effective batch {eff_batch}). "
                     "Override with 'max_steps' in your training config."
@@ -640,7 +705,7 @@ def get_dataset(
                     "Please set 'max_steps' explicitly in your training config."
                 )
 
-            # ── Disable dispatch_batches for WebDataset ──────────────────
+            # ── Disable dispatch_batches for IterableDataset ─────────────
             # With IterableDataset, accelerate defaults dispatch_batches=True
             # which makes the main process fetch N batches and torch.cat them
             # before dispatching to workers.  VLM batches have variable-length
@@ -650,7 +715,7 @@ def get_dataset(
             if training_args.accelerator_config.dispatch_batches is None:
                 training_args.accelerator_config.dispatch_batches = False
                 logger.info_rank0(
-                    "WebDataset: set dispatch_batches=False (variable-length VLM batches "
+                    "IterableDataset: set dispatch_batches=False (variable-length VLM batches "
                     "are incompatible with accelerate's batch dispatching)."
                 )
 

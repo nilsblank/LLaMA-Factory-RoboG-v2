@@ -18,6 +18,18 @@
       "response": "output"
     }
   },
+  "_lerobot_example": {
+    "_comment": "EXAMPLE (remove leading underscore from key to activate). LeRobot IterableDataset: JSONL files with lerobot_images/lerobot_videos references that are resolved to JPEG/MP4 bytes at load time. Output format matches WebDataset (jpg/mp4 byte lists), enabling trivial co-training. Always loaded as an IterableDataset; use streaming:true.",
+    "lerobot_files": "/path/to/lerobot_vqa.jsonl",
+    "formatting": "sharegpt",
+    "lerobot_default_dataset": "bridge",
+    "lerobot_default_camera": "observation.images.front",
+    "columns": {
+      "messages": "messages",
+      "images": "jpg",
+      "videos": "mp4"
+    }
+  },
   "identity": {
     "file_name": "identity.json"
   },
