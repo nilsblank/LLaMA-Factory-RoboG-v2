@@ -1474,7 +1474,7 @@
 
 },
 
-    "lerobot_vqa_bridge": {
+    "lerobot_vqa_bridge_droid": {
         "file_name": "/e/home/jusers/blank4/jupiter/blank4/robogrounder/bridge_droid/scratch/train_diverse_lang.jsonl",
         "formatting": "sharegpt",
         "columns": {
@@ -1490,22 +1490,49 @@
     },
 
   "eo1m_wds": {
-  "webdataset_files": "/e/scratch/m3/pretrain_data/wds/eo1m_wds/*.tar",
-  "formatting": "sharegpt",
-  "columns": {
-    "messages": "messages",
-    "images": "jpg",
-    "videos": "mp4"
+    "webdataset_files": "/e/scratch/m3/pretrain_data/wds/eo1m_wds/*.tar",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "jpg",
+      "videos": "mp4"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
   },
-  "tags": {
-    "role_tag": "from",
-    "content_tag": "value",
-    "user_tag": "human",
-    "assistant_tag": "gpt"
+  "fsd_wds": {
+    "webdataset_files": "/e/scratch/m3/pretrain_data/wds/fsd_wds/*.tar",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "jpg",
+      "videos": "mp4"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    }
+  },
+    "sav_wds": {
+    "webdataset_files": "/e/scratch/m3/pretrain_data/wds/sav_wds/*.tar",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "jpg",
+      "videos": "mp4"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    }
   }
-
-}
-
-
 }
 

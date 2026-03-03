@@ -12,19 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import json
 from enum import StrEnum, unique
 from typing import TYPE_CHECKING, Any, Optional, TypedDict, Union
 
+import numpy as np
 import fsspec
-from datasets import DatasetDict, IterableDataset, concatenate_datasets, interleave_datasets
+from datasets import Dataset, DatasetDict, DatasetInfo, IterableDataset, concatenate_datasets, interleave_datasets
+from datasets.iterable_dataset import (
+    CyclingMultiSourcesExamplesIterable,
+    RandomlyCyclingMultiSourcesExamplesIterable,
+    VerticallyConcatenatedMultiSourcesExamplesIterable,
+)
 
 from ..extras import logging
 
 
 if TYPE_CHECKING:
-    from datasets import Dataset, IterableDataset
-
     from ..hparams import DataArguments
 
 
@@ -48,6 +53,112 @@ class DatasetModule(TypedDict):
     eval_dataset: Optional[Union["Dataset", "IterableDataset", dict[str, "Dataset"]]]
 
 
+def _features_compatible(all_datasets: list[Union["Dataset", "IterableDataset"]]) -> bool:
+    r"""Return True if all dataset feature schemas can be aligned by HF."""
+    try:
+        from datasets.features.features import _check_if_features_can_be_aligned
+
+        features_list = []
+        for ds in all_datasets:
+            if isinstance(ds, IterableDataset):
+                resolved = ds._resolve_features()
+                feats = resolved.features
+            else:
+                feats = ds.features
+            if feats is not None:
+                features_list.append(feats)
+
+        if len(features_list) < 2:
+            return True
+        _check_if_features_can_be_aligned(features_list)
+        return True
+    except Exception:
+        return False
+
+
+def _interleave_iterable_featureless(
+    datasets: list["IterableDataset"],
+    probabilities: Optional[list[float]] = None,
+    seed: Optional[int] = None,
+    stopping_strategy: str = "first_exhausted",
+) -> "IterableDataset":
+    r"""Interleave ``IterableDataset`` objects **without** Arrow feature alignment.
+
+    Uses the same HF ``CyclingMultiSourcesExamplesIterable`` /
+    ``RandomlyCyclingMultiSourcesExamplesIterable`` classes that
+    ``interleave_datasets`` uses internally, so multi-worker sharding, shard
+    shuffling, etc. are fully preserved.  The only difference is that the
+    ``_check_if_features_can_be_aligned`` check is skipped and the resulting
+    dataset has ``features=None`` — ``mm_plugin`` handles type dispatch at
+    runtime.
+    """
+    resolved = [ds._resolve_features() for ds in datasets]
+    ex_iterables = [copy.deepcopy(ds._ex_iterable) for ds in resolved]
+
+    if probabilities is None:
+        ex_iterable = CyclingMultiSourcesExamplesIterable(
+            ex_iterables, stopping_strategy=stopping_strategy
+        )
+    else:
+        generator = np.random.default_rng(seed)
+        ex_iterable = RandomlyCyclingMultiSourcesExamplesIterable(
+            ex_iterables,
+            generator=generator,
+            probabilities=probabilities,
+            stopping_strategy=stopping_strategy,
+        )
+
+    info = DatasetInfo.from_merge([ds.info for ds in resolved])
+    info.features = None  # skip feature encoding/decoding
+    token_per_repo_id = {
+        repo_id: token
+        for ds in resolved
+        for repo_id, token in ds._token_per_repo_id.items()
+    }
+    return IterableDataset(
+        ex_iterable=ex_iterable, info=info, split=None, token_per_repo_id=token_per_repo_id
+    )
+
+
+def _concatenate_iterable_featureless(
+    datasets: list["IterableDataset"],
+) -> "IterableDataset":
+    r"""Concatenate ``IterableDataset`` objects **without** Arrow feature alignment.
+
+    Same idea as :func:`_interleave_iterable_featureless` — uses HF's
+    ``VerticallyConcatenatedMultiSourcesExamplesIterable`` directly.
+    """
+    resolved = [ds._resolve_features() for ds in datasets]
+    ex_iterables = [copy.deepcopy(ds._ex_iterable) for ds in resolved]
+    ex_iterable = VerticallyConcatenatedMultiSourcesExamplesIterable(ex_iterables)
+
+    info = DatasetInfo.from_merge([ds.info for ds in resolved])
+    info.features = None
+    token_per_repo_id = {
+        repo_id: token
+        for ds in resolved
+        for repo_id, token in ds._token_per_repo_id.items()
+    }
+    return IterableDataset(
+        ex_iterable=ex_iterable, info=info, split=None, token_per_repo_id=token_per_repo_id
+    )
+
+
+def _promote_to_iterable(
+    all_datasets: list[Union["Dataset", "IterableDataset"]],
+) -> list[Union["Dataset", "IterableDataset"]]:
+    r"""Promote any map-style Dataset to IterableDataset when the list is mixed."""
+    has_iterable = any(isinstance(ds, IterableDataset) for ds in all_datasets)
+    has_map = any(isinstance(ds, Dataset) for ds in all_datasets)
+    if has_iterable and has_map:
+        logger.warning_rank0_once(
+            "Detected a mix of map-style Dataset and IterableDataset (e.g. WebDataset). "
+            "Converting all map-style datasets to IterableDataset for compatibility."
+        )
+        return [ds.to_iterable_dataset() if isinstance(ds, Dataset) else ds for ds in all_datasets]
+    return all_datasets
+
+
 def merge_dataset(
     all_datasets: list[Union["Dataset", "IterableDataset"]], data_args: "DataArguments", seed: int
 ) -> Union["Dataset", "IterableDataset"]:
@@ -55,11 +166,26 @@ def merge_dataset(
     if len(all_datasets) == 1:
         return all_datasets[0]
 
-    elif data_args.mix_strategy == "concat":
-        if data_args.streaming:
-            logger.warning_rank0_once("The samples between different datasets will not be mixed in streaming mode.")
+    all_datasets = _promote_to_iterable(all_datasets)
+    compatible = _features_compatible(all_datasets)
 
-        return concatenate_datasets(all_datasets)
+    if not compatible:
+        logger.warning_rank0_once(
+            "Datasets have incompatible Arrow feature schemas (e.g. `_videos` is "
+            "List(Value('binary')) in WebDataset but List(Value('string')) in a path-based "
+            "dataset). Using featureless merge — mm_plugin handles both bytes and "
+            "string paths at runtime."
+        )
+
+    if data_args.mix_strategy == "concat":
+        if data_args.streaming:
+            logger.warning_rank0_once(
+                "The samples between different datasets will not be mixed in streaming mode."
+            )
+        if compatible:
+            return concatenate_datasets(all_datasets)
+        else:
+            return _concatenate_iterable_featureless(all_datasets)
 
     elif data_args.mix_strategy.startswith("interleave"):
         if not data_args.streaming:
@@ -71,12 +197,20 @@ def merge_dataset(
             "interleave_once": "all_exhausted_without_replacement",
         }[data_args.mix_strategy]
 
-        return interleave_datasets(
-            datasets=all_datasets,
-            probabilities=data_args.interleave_probs,
-            seed=seed,
-            stopping_strategy=strategy_map,  # type: ignore
-        )
+        if compatible:
+            return interleave_datasets(
+                datasets=all_datasets,
+                probabilities=data_args.interleave_probs,
+                seed=seed,
+                stopping_strategy=strategy_map,  # type: ignore
+            )
+        else:
+            return _interleave_iterable_featureless(
+                datasets=all_datasets,
+                probabilities=data_args.interleave_probs,
+                seed=seed,
+                stopping_strategy=strategy_map,
+            )
 
     else:
         raise ValueError(f"Unknown mixing strategy: {data_args.mix_strategy}.")

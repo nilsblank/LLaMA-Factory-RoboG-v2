@@ -603,6 +603,19 @@ class ModelArguments(
     timechat_num_video_queries: int = field(default=32, metadata={"help": "Number of video queries for TimeChat."})
     append_global_query: bool = field(default=False, metadata={"help": "Whether to append a global video query for TimeChat."})
     use_individual_frame_query: bool = field(default=False, metadata={"help": "Whether to use individual frame queries for TimeChat."})
+    encode_images_with_frame_resampler: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Whether to compress static images through the same timechat_frame_resampler used for video frames. "
+                "When True, each image is treated as a single-frame (T=1) video: raw ViT patch tokens are fed into "
+                "timechat_frame_resampler and timechat_mm_projector, producing exactly `timechat_num_frame_queries` "
+                "tokens per image instead of the variable-length raw patch token sequence. "
+                "This gives a consistent token budget across images and videos, shares projector weights, "
+                "and significantly reduces sequence length for high-resolution images."
+            )
+        },
+    )
     use_deepstack: bool = field(default=True, metadata={"help": "Whether to use deepstack visual feature injection into early LLM layers."})
 
     def __post_init__(self):

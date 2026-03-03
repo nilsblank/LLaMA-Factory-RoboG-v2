@@ -435,6 +435,26 @@ def get_train_args(args: dict[str, Any] | list[str] | None = None) -> _TRAIN_CLS
         logger.info_rank0("Set `ddp_find_unused_parameters` to False in DDP training since LoRA is enabled.")
         training_args.ddp_find_unused_parameters = False
 
+    if (
+        training_args.parallel_mode == ParallelMode.DISTRIBUTED
+        and training_args.ddp_find_unused_parameters is None
+        and finetuning_args.finetuning_type in ["full", "freeze"]
+        and (
+            finetuning_args.freeze_vision_tower
+            or finetuning_args.freeze_multi_modal_projector
+            or finetuning_args.freeze_language_model
+        )
+        and not (
+            finetuning_args.freeze_vision_tower
+            and finetuning_args.freeze_multi_modal_projector
+            and finetuning_args.freeze_language_model
+        )
+    ):
+        logger.info_rank0(
+            "Set `ddp_find_unused_parameters` to True in DDP training since partial multimodal freezing is enabled."
+        )
+        training_args.ddp_find_unused_parameters = True
+
     if finetuning_args.stage in ["rm", "ppo"] and finetuning_args.finetuning_type in ["full", "freeze"]:
         can_resume_from_checkpoint = False
         if training_args.resume_from_checkpoint is not None:

@@ -14,8 +14,9 @@
 
 import glob as _glob_module
 import json as _json_module
+import math
 import os
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Literal, Optional, Union
 
 import numpy as np
 from datasets import Dataset, DatasetDict, IterableDataset, load_dataset, load_from_disk
@@ -84,6 +85,128 @@ _WDS_MEDIA_EXTENSIONS: frozenset[str] = frozenset(
 _WDS_SKIP_COLUMNS: frozenset[str] = frozenset({"__key__", "__url__"})
 
 
+def _iter_webdataset_tars(wds_files: list[str]) -> Iterator[dict]:
+    """Iterate WebDataset TAR shards using the ``webdataset`` package.
+
+    Why not ``load_dataset("webdataset", ...)`` from HF datasets?
+    ---------------------------------------------------------------
+    HF's implementation infers a **fixed Arrow schema** from the first
+    ``NUM_EXAMPLES_FOR_FEATURES_INFERENCE`` (= 5) examples of the first shard
+    only.  When shards mix single-image and multi-image samples the extra image
+    columns (e.g. ``1.jpg``) are absent from those first examples and get
+    **silently dropped** in every subsequent sample via the ``all_field_names``
+    filter in ``_generate_examples``.
+
+    The standard ``webdataset`` package is **schema-free**: it streams every
+    file in every TAR sample exactly as stored, regardless of how many images
+    or other media files are present.  It also natively handles remote URLs
+    (``s3://``, ``gs://``, ``http://``, ``pipe:…``) and pipe-based streaming,
+    which HF's loader does not support.
+
+    Memory-efficient raw-bytes streaming
+    ------------------------------------
+    Images are kept as **raw compressed bytes** (JPEG/PNG) throughout the entire
+    pipeline — shuffle buffer, DataLoader workers, and prefetch queues.  A
+    compressed JPEG is typically ~25 KB while its decoded PIL RGB equivalent is
+    ~275 KB+ (10× larger).  Eagerly decoding via ``wds.decode("pil")`` would
+    inflate every sample in the shuffle buffer and cause OOM when ``buffer_size``
+    and ``num_workers`` are large.  Instead, the downstream
+    ``_regularize_images()`` in ``mm_plugin.py`` lazily decodes bytes → PIL only
+    when the sample is actually tokenised, keeping peak memory bounded.
+
+    Column naming
+    -------------
+    Follows WebDataset's own ``base_plus_ext`` convention, identical to HF's:
+        ``samplekey.0.jpg``  →  field ``"0.jpg"``  (raw bytes)
+        ``samplekey.1.jpg``  →  field ``"1.jpg"``  (raw bytes)
+        ``samplekey.json``   →  field ``"json"``   (decoded to dict by normaliser)
+
+    Corrupted samples are skipped with a warning via ``wds.warn_and_continue``.
+    """
+    try:
+        import webdataset as wds
+    except ImportError:
+        raise ImportError(
+            "The 'webdataset' package is required for load_from='webdataset'. "
+            "Install it with: pip install webdataset"
+        )
+
+    pipeline = wds.DataPipeline(
+        wds.SimpleShardList(wds_files),
+        wds.tarfile_to_samples(handler=wds.warn_and_continue),
+        # NOTE: **no** wds.decode("pil") here — images stay as raw compressed
+        # JPEG/PNG bytes throughout the shuffle buffer, DataLoader workers, and
+        # prefetch queues.  This cuts per-sample memory by ~10× compared to
+        # eagerly decompressing to PIL, preventing OOM when buffer_size and
+        # num_workers are large.  The downstream _regularize_images() in
+        # mm_plugin lazily decodes bytes→PIL only when the sample is actually
+        # tokenised.  JSON columns are decoded to dict inside
+        # _normalize_webdataset_sample().
+    )
+    # Normalize inside the generator — NOT via IterableDataset.map() which
+    # merges return dicts with the original and leaks 0.jpg / 1.jpg / __key__
+    # etc. as extra columns that later crash the collator.
+    for sample in pipeline:
+        yield _normalize_webdataset_sample(sample)
+
+
+def _iter_webdataset_single_tar(wds_file: str) -> Iterator[dict]:
+    """Iterate a single WebDataset TAR shard.
+
+    This is the per-shard entry point used with ``IterableDataset.from_generator``
+    when ``gen_kwargs={"wds_file": [shard0, shard1, ...]}``.  HF datasets
+    treats list values in *gen_kwargs* as shards, creating one logical shard
+    per element.  Accelerate then calls ``dataset.shard(num_shards=N,
+    index=rank)`` to assign different TAR files to different ranks so each
+    GPU only reads its own subset — no redundant I/O.
+    """
+    yield from _iter_webdataset_tars([wds_file] if isinstance(wds_file, str) else list(wds_file))
+
+
+def _count_wds_samples(wds_files: list[str], probe_shards: int = 5) -> int:
+    """Estimate total WebDataset sample count without loading any media.
+
+    Probes up to ``probe_shards`` representative shards (spread evenly across
+    the list) by reading only their TAR member *headers* (512 B each, no image
+    data extracted).  Each WDS sample has exactly one ``.json`` file, so the
+    count equals the number of ``.json`` members.  The per-shard average is
+    then scaled to the full shard list.
+
+    This is intentionally approximate (assumes uniform shard sizes), which is
+    sufficient for ``max_steps`` computation.  Remote URLs (``s3://``, etc.)
+    are skipped; only local paths are probed.
+    """
+    import tarfile
+
+    _remote_prefixes = ("s3://", "gs://", "http://", "https://", "pipe:", "hf://")
+    local_files = [f for f in wds_files if not any(f.startswith(p) for p in _remote_prefixes)]
+    if not local_files:
+        return 0
+
+    # Pick evenly-spaced probe shards to handle datasets where shard sizes vary
+    # (e.g. the last shard is smaller).
+    n = len(local_files)
+    indices = sorted(set(round(i * (n - 1) / max(probe_shards - 1, 1)) for i in range(probe_shards)))
+    probe_files = [local_files[i] for i in indices]
+
+    counts: list[int] = []
+    for path in probe_files:
+        try:
+            # 'r' mode allows seeking on uncompressed .tar (reads only headers,
+            # seeks past file data — very fast on local disk).  Falls back to
+            # sequential decompression for .tar.gz / .tar.bz2.
+            with tarfile.open(path, "r") as tf:
+                counts.append(sum(1 for m in tf.getmembers() if m.name.lower().endswith(".json")))
+        except Exception as exc:
+            logger.warning_rank0(f"Could not probe shard {path} for sample count: {exc}")
+
+    if not counts:
+        return 0
+
+    avg_per_shard = sum(counts) / len(counts)
+    return round(avg_per_shard * n)
+
+
 def _normalize_webdataset_sample(example: dict) -> dict:
     """Flatten JSON metadata and group per-sample media into extension-keyed lists.
 
@@ -93,9 +216,9 @@ def _normalize_webdataset_sample(example: dict) -> dict:
     This function:
 
     1. Groups all files whose extension is in ``_WDS_MEDIA_EXTENSIONS`` into
-       lists keyed by extension only (e.g. ``"jpg": [PIL0, PIL1]``).  This lets
-       the ``columns`` mapping in *dataset_info.json* use ``"images": "jpg"``
-       regardless of how many images each sample contains.
+       lists keyed by extension only (e.g. ``"jpg": [bytes0, bytes1]``).  This
+       lets the ``columns`` mapping in *dataset_info.json* use
+       ``"images": "jpg"`` regardless of how many images each sample contains.
     2. Promotes keys from the ``"json"`` column (parsed dict) into top-level
        columns so the downstream ``columns`` mapping works naturally.
     3. Drops WebDataset-internal columns (``__key__``, ``__url__``).
@@ -124,7 +247,6 @@ def _normalize_webdataset_sample(example: dict) -> dict:
             else:
                 result[key] = value
 
-    # Merge grouped media lists into the result (overrides any same-named JSON key).
     result.update(media_by_ext)
     return result
 
@@ -240,17 +362,24 @@ def _load_single_dataset(
                 "Consider setting `streaming: true` in your training config."
             )
 
-        dataset = load_dataset(
-            "webdataset",
-            data_files={dataset_attr.split: wds_files},
-            split=dataset_attr.split,
-            cache_dir=model_args.cache_dir,
-            token=model_args.hf_hub_token,
-            streaming=True,  # TAR shards are always loaded as IterableDataset
+        dataset = IterableDataset.from_generator(
+            _iter_webdataset_single_tar,
+            # Passing wds_files as a list value in gen_kwargs tells HF datasets
+            # to create one logical shard per TAR file (n_shards=len(wds_files)).
+            # Accelerate then uses dataset.shard(num_shards=num_processes,
+            # index=rank) when n_shards > num_processes, assigning different
+            # TARs to different ranks — each GPU reads only its own shards.
+            # With a single shard (the default), accelerate falls back to
+            # IterableDatasetShard which skips elements at the Python level
+            # after reading them, wasting I/O on all ranks.
+            gen_kwargs={"wds_file": wds_files},
         )
-        # Flatten JSON metadata columns and wrap media bytes into lists so that
-        # the downstream column-mapping and mm_plugin work without modification.
-        dataset = dataset.map(_normalize_webdataset_sample)
+        # Normalization (JSON flattening + media grouping) is done inside
+        # _iter_webdataset_tars itself.  Using .map() here would only MERGE
+        # the returned dict on top of the original, leaking raw WDS columns
+        # (0.jpg, 1.jpg, __key__, __url__, json) that later crash the
+        # collator or get inconsistent remove_columns treatment.
+        #
         # Apply a sample-level buffer shuffle unconditionally.  When data_args.streaming
         # is True, split_dataset() will call .shuffle() again (which is idempotent but
         # refreshes the buffer seed); when streaming is False, split_dataset() skips the
@@ -271,17 +400,24 @@ def _load_single_dataset(
         if data_args.streaming and dataset_attr.load_from == "file":
             dataset = dataset.to_iterable_dataset(num_shards=training_args.dataloader_num_workers)
 
-    if dataset_attr.num_samples is not None and not isinstance(dataset, IterableDataset):
-        target_num = dataset_attr.num_samples
-        indexes = np.random.permutation(len(dataset))[:target_num]  # all samples should be included
-        target_num -= len(indexes)
-        if target_num > 0:
-            expand_indexes = np.random.choice(len(dataset), target_num)
-            indexes = np.concatenate((indexes, expand_indexes), axis=0)
+    if dataset_attr.num_samples is not None:
+        if isinstance(dataset, IterableDataset):
+            dataset = dataset.take(dataset_attr.num_samples)
+            logger.info_rank0(
+                f"Took first {dataset_attr.num_samples} examples from IterableDataset {dataset_attr} "
+                f"(shuffle beforehand if random subsetting is needed)."
+            )
+        else:
+            target_num = dataset_attr.num_samples
+            indexes = np.random.permutation(len(dataset))[:target_num]  # all samples should be included
+            target_num -= len(indexes)
+            if target_num > 0:
+                expand_indexes = np.random.choice(len(dataset), target_num)
+                indexes = np.concatenate((indexes, expand_indexes), axis=0)
 
-        assert len(indexes) == dataset_attr.num_samples, "Sample num mismatched."
-        dataset = dataset.select(indexes)
-        logger.info_rank0(f"Sampled {dataset_attr.num_samples} examples from dataset {dataset_attr}.")
+            assert len(indexes) == dataset_attr.num_samples, "Sample num mismatched."
+            dataset = dataset.select(indexes)
+            logger.info_rank0(f"Sampled {dataset_attr.num_samples} examples from dataset {dataset_attr}.")
 
     if data_args.max_samples is not None and not isinstance(dataset, IterableDataset):  # truncate dataset
         max_samples = min(data_args.max_samples, len(dataset))
@@ -431,6 +567,92 @@ def get_dataset(
 
         if data_args.streaming:
             raise ValueError("Turn off `streaming` when saving dataset to disk.")
+
+    # -----------------------------------------------------------------------
+    # Auto-compute max_steps for WebDataset (IterableDataset has no __len__).
+    # HF Trainer raises ValueError when train_dataset is an IterableDataset
+    # and max_steps == -1.  We resolve this by probing the TAR shard headers
+    # (fast — no image data is read) and computing max_steps from the sample
+    # count, num_train_epochs, and effective batch size.
+    # -----------------------------------------------------------------------
+    if training_args.max_steps == -1 and data_args.dataset:
+        _remote_prefixes = ("s3://", "gs://", "http://", "https://", "pipe:", "hf://")
+        wds_attrs = [
+            attr
+            for attr in get_dataset_list(data_args.dataset, data_args.dataset_dir)
+            if attr.load_from == "webdataset"
+        ]
+        if wds_attrs:
+            total_samples = 0
+            has_remote = False
+            for attr in wds_attrs:
+                shard_pattern = attr.dataset_name
+                if not os.path.isabs(shard_pattern) and not any(
+                    shard_pattern.startswith(p) for p in _remote_prefixes
+                ):
+                    shard_pattern = os.path.join(data_args.dataset_dir, shard_pattern)
+                if any(shard_pattern.startswith(p) for p in _remote_prefixes):
+                    has_remote = True
+                    continue
+                wds_files = (
+                    sorted(_glob_module.glob(shard_pattern))
+                    if any(c in shard_pattern for c in "*?[{")
+                    else [shard_pattern]
+                )
+                n = _count_wds_samples(wds_files)
+                if attr.num_samples is not None:
+                    n = min(n, attr.num_samples)
+                total_samples += n
+                logger.info_rank0(
+                    f"WebDataset '{attr.dataset_name}': estimated {n} samples "
+                    f"across {len(wds_files)} shard(s)."
+                )
+
+            if total_samples > 0:
+                if data_args.max_samples is not None:
+                    total_samples = min(total_samples, data_args.max_samples)
+                eff_batch = (
+                    training_args.per_device_train_batch_size
+                    * training_args.gradient_accumulation_steps
+                    * max(training_args.world_size, 1)
+                )
+                max_steps = math.ceil(training_args.num_train_epochs * total_samples / eff_batch)
+                training_args.max_steps = max_steps
+                logger.info_rank0(
+                    f"WebDataset auto max_steps={max_steps} "
+                    f"({total_samples} samples × {training_args.num_train_epochs} epoch(s) "
+                    f"÷ effective batch {eff_batch}). "
+                    "Override with 'max_steps' in your training config."
+                )
+                if has_remote:
+                    logger.warning_rank0(
+                        "Some WebDataset shards are remote URLs and were excluded from the "
+                        "sample count. Set 'max_steps' manually for accurate scheduling."
+                    )
+                if data_args.packing:
+                    logger.warning_rank0(
+                        "'packing' is enabled: the actual number of packed sequences will "
+                        "differ from the raw sample count. Consider setting 'max_steps' manually."
+                    )
+            elif has_remote:
+                raise ValueError(
+                    "All WebDataset shards are remote URLs; cannot estimate sample count. "
+                    "Please set 'max_steps' explicitly in your training config."
+                )
+
+            # ── Disable dispatch_batches for WebDataset ──────────────────
+            # With IterableDataset, accelerate defaults dispatch_batches=True
+            # which makes the main process fetch N batches and torch.cat them
+            # before dispatching to workers.  VLM batches have variable-length
+            # pixel_values / input_ids, so cat fails with size mismatch.
+            # Setting dispatch_batches=False lets each process fetch its own
+            # batch independently (standard DDP behaviour).
+            if training_args.accelerator_config.dispatch_batches is None:
+                training_args.accelerator_config.dispatch_batches = False
+                logger.info_rank0(
+                    "WebDataset: set dispatch_batches=False (variable-length VLM batches "
+                    "are incompatible with accelerate's batch dispatching)."
+                )
 
     # Load and preprocess dataset
     with training_args.main_process_first(desc="load dataset", local=(not data_args.data_shared_file_system)):

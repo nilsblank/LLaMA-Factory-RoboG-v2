@@ -1252,6 +1252,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
         self.append_global_query = kwargs.get("append_global_query",True)
         self.use_individual_frame_query = kwargs.get("use_individual_frame_query", True)
+        self.encode_images_with_frame_resampler = kwargs.get("encode_images_with_frame_resampler", False)
 
         vision_dim = config.vision_config.out_hidden_size
         text_dim = config.text_config.hidden_size
@@ -1467,29 +1468,45 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                     st_idx = llm_pos_ids_list[-1].max() + 1 if len(llm_pos_ids_list) > 0 else 0
 
                     if ed_image < ed_video:
-                        # ---- Image: original Qwen3VL 3-D spatial positions ----
-                        t, h, w = (
-                            image_grid_thw[image_index][0],
-                            image_grid_thw[image_index][1],
-                            image_grid_thw[image_index][2],
-                        )
-                        image_index += 1
-                        remain_images -= 1
-                        ed = ed_image
+                        # ---- Image handling ----
+                        if getattr(self, "encode_images_with_frame_resampler", False):
+                            # Image was compressed by timechat_frame_resampler → exactly Qf tokens,
+                            # spatial structure removed. Mirror the video branch: 1-D sequential
+                            # positions on all 3 MRoPE axes.
+                            image_index += 1
+                            remain_images -= 1
+                            ed = ed_image
 
-                        llm_grid_t, llm_grid_h, llm_grid_w = (
-                            t.item(),
-                            h.item() // spatial_merge_size,
-                            w.item() // spatial_merge_size,
-                        )
-                        text_len = ed - st
-                        llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
+                            q_len = self.timechat_num_frame_queries
+                            text_len = ed - st
+                            llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
+                            q_idx = torch.arange(q_len, device=input_ids.device)
+                            llm_pos_ids_list.append(torch.stack([q_idx, q_idx, q_idx]) + text_len + st_idx)
+                            st = ed + q_len
+                        else:
+                            # ---- Image: original Qwen3VL 3-D spatial positions ----
+                            t, h, w = (
+                                image_grid_thw[image_index][0],
+                                image_grid_thw[image_index][1],
+                                image_grid_thw[image_index][2],
+                            )
+                            image_index += 1
+                            remain_images -= 1
+                            ed = ed_image
 
-                        t_index = torch.arange(llm_grid_t).view(-1, 1).expand(-1, llm_grid_h * llm_grid_w).flatten()
-                        h_index = torch.arange(llm_grid_h).view(1, -1, 1).expand(llm_grid_t, -1, llm_grid_w).flatten()
-                        w_index = torch.arange(llm_grid_w).view(1, 1, -1).expand(llm_grid_t, llm_grid_h, -1).flatten()
-                        llm_pos_ids_list.append(torch.stack([t_index, h_index, w_index]) + text_len + st_idx)
-                        st = ed + llm_grid_t * llm_grid_h * llm_grid_w
+                            llm_grid_t, llm_grid_h, llm_grid_w = (
+                                t.item(),
+                                h.item() // spatial_merge_size,
+                                w.item() // spatial_merge_size,
+                            )
+                            text_len = ed - st
+                            llm_pos_ids_list.append(torch.arange(text_len).view(1, -1).expand(3, -1) + st_idx)
+
+                            t_index = torch.arange(llm_grid_t).view(-1, 1).expand(-1, llm_grid_h * llm_grid_w).flatten()
+                            h_index = torch.arange(llm_grid_h).view(1, -1, 1).expand(llm_grid_t, -1, llm_grid_w).flatten()
+                            w_index = torch.arange(llm_grid_w).view(1, 1, -1).expand(llm_grid_t, llm_grid_h, -1).flatten()
+                            llm_pos_ids_list.append(torch.stack([t_index, h_index, w_index]) + text_len + st_idx)
+                            st = ed + llm_grid_t * llm_grid_h * llm_grid_w
 
                     else:
                         # ---- Video query tokens: simple sequential 1-D positions ----
@@ -1996,10 +2013,17 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             return self.get_image_features(pixel_values_videos, video_grid_thw, **kwargs)
 
         # Forward all frames through the vision encoder in one pass.
+        # torch.no_grad(): vision tower is frozen (requires_grad=False throughout), so this
+        # is a no-op for gradients but lets the CUDA allocator reclaim ViT-internal FFN/attn
+        # activations immediately rather than holding them until the autograd engine confirms
+        # no backward path exists.  The output pooler_output is still used as input to the
+        # trainable resamplers — that part of the graph IS tracked normally.
         pixel_values_videos = pixel_values_videos.type(self.visual.dtype)
-        vision_output: BaseModelOutputWithDeepstackFeatures = self.visual(
-            pixel_values_videos, grid_thw=video_grid_thw, **kwargs
-        )
+        with torch.no_grad():
+            vision_output: BaseModelOutputWithDeepstackFeatures = self.visual(
+                pixel_values_videos, grid_thw=video_grid_thw, **kwargs
+            )
+        vision_output.pooler_output = vision_output.pooler_output.detach()
 
         spatial_merge = self.visual.spatial_merge_size
         split_sizes = (video_grid_thw.prod(-1) // (spatial_merge**2)).tolist()
@@ -2208,13 +2232,60 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             The temporal, height and width of feature shape of each image in LLM.
         """
         pixel_values = pixel_values.type(self.visual.dtype)
-        vision_output: BaseModelOutputWithDeepstackFeatures = self.visual(
-            pixel_values, grid_thw=image_grid_thw, **kwargs
-        )
+        with torch.no_grad():
+            vision_output: BaseModelOutputWithDeepstackFeatures = self.visual(
+                pixel_values, grid_thw=image_grid_thw, **kwargs
+            )
+        vision_output.pooler_output = vision_output.pooler_output.detach()
         image_embeds = vision_output.pooler_output
         split_sizes = (image_grid_thw.prod(-1) // self.visual.spatial_merge_size**2).tolist()
         image_embeds = torch.split(image_embeds, split_sizes)
-        vision_output.pooler_output = image_embeds
+
+        if getattr(self, "encode_images_with_frame_resampler", False):
+            # Treat each image as a single-frame (T=1) video and compress it with the
+            # same frame resampler used for individual video frames.  This produces
+            # exactly `timechat_num_frame_queries` tokens per image.
+            #
+            # VRAM note: we process all images in one batched resampler call (same as
+            # the video path does across T frames) so the ViT output tensor can be freed
+            # immediately after stacking — not held alive across a per-image loop.
+            split_sizes_int = [int(s) for s in split_sizes]
+            max_tokens = max(split_sizes_int)
+            B = len(split_sizes_int)
+            D = image_embeds[0].shape[-1] if len(split_sizes_int) > 0 else vision_output.pooler_output.shape[-1]
+
+            # Pad to uniform length and build a boolean padding mask (True = pad position).
+            x_batched = image_embeds[0].new_zeros(B, max_tokens, D)
+            pad_mask = torch.ones(B, max_tokens, dtype=torch.bool, device=image_embeds[0].device)
+            for idx, (img_tok, length) in enumerate(zip(image_embeds, split_sizes_int)):
+                x_batched[idx, :length] = img_tok
+                pad_mask[idx, :length] = False
+
+            # Free the big ViT output tensor before the resampler forward.
+            del image_embeds
+            del vision_output.pooler_output
+
+            # Batched resampler: [B, max_tokens, D] → [B, Qf, D]
+            q = self._unwrap_q(self.timechat_frame_resampler(x_batched, x_key_padding_mask=pad_mask))
+            del x_batched, pad_mask
+
+            q = self.timechat_mm_projector(q)  # [B, Qf, D_text]
+            # Return as a list of per-image tensors [Qf, D_text], matching the non-resampler shape.
+            vision_output.pooler_output = list(q.unbind(0))
+        else:
+            vision_output.pooler_output = image_embeds
+
+        # Mirror the video path: free memory for unused outputs.
+        # last_hidden_state is the full pre-merge ViT hidden states — large and
+        # never consumed downstream.  deepstack_features are only needed when
+        # use_deepstack is enabled; setting them to None prevents the language
+        # model from running _deepstack_process (which clones the full hidden
+        # states at each deepstack layer).
+        if hasattr(vision_output, "last_hidden_state"):
+            del vision_output.last_hidden_state
+
+        if not self.use_deepstack:
+            vision_output.deepstack_features = None
 
         return vision_output
 
@@ -2298,20 +2369,23 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
                 pixel_values, image_grid_thw, **kwargs
             )
             image_embeds = image_outputs.pooler_output
-            deepstack_image_embeds = image_outputs.deepstack_features
+            deepstack_image_embeds = image_outputs.deepstack_features  # None when use_deepstack=False
+            del image_outputs  # free vision tower intermediates early
             image_embeds = torch.cat(image_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
 
             image_mask, _ = self.get_placeholder_mask(
                 input_ids, inputs_embeds=inputs_embeds, image_features=image_embeds
             )
             inputs_embeds = inputs_embeds.masked_scatter(image_mask, image_embeds)
+            del image_embeds  # already scattered into inputs_embeds
 
         if pixel_values_videos is not None:
             video_outputs: BaseModelOutputWithDeepstackFeatures = self.get_video_features(
                 pixel_values_videos, video_grid_thw, **kwargs
             )
             video_embeds = video_outputs.pooler_output
-            deepstack_video_embeds = video_outputs.deepstack_features
+            deepstack_video_embeds = video_outputs.deepstack_features  # None when use_deepstack=False
+            del video_outputs  # free vision tower intermediates early
             video_embeds = torch.cat(video_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
 
             _, video_mask = self.get_placeholder_mask(
@@ -2319,6 +2393,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             )
 
             inputs_embeds = inputs_embeds.masked_scatter(video_mask, video_embeds)
+            del video_embeds  # already scattered into inputs_embeds
 
         visual_pos_masks = None
         deepstack_visual_embeds = None
@@ -2334,17 +2409,22 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             image_mask = image_mask[..., 0]
             video_mask = video_mask[..., 0]
             visual_pos_masks = image_mask | video_mask
-            deepstack_visual_embeds = []
-            image_mask_joint = image_mask[visual_pos_masks]
-            video_mask_joint = video_mask[visual_pos_masks]
-            for img_embed, vid_embed in zip(deepstack_image_embeds, deepstack_video_embeds):
-                embed_joint = img_embed.new_zeros(visual_pos_masks.sum(), img_embed.shape[-1]).to(img_embed.device)
-                embed_joint[image_mask_joint, :] = img_embed
-                embed_joint[video_mask_joint, :] = vid_embed
-                deepstack_visual_embeds.append(embed_joint)
+            if deepstack_image_embeds is not None and deepstack_video_embeds is not None:
+                deepstack_visual_embeds = []
+                image_mask_joint = image_mask[visual_pos_masks]
+                video_mask_joint = video_mask[visual_pos_masks]
+                for img_embed, vid_embed in zip(deepstack_image_embeds, deepstack_video_embeds):
+                    embed_joint = img_embed.new_zeros(visual_pos_masks.sum(), img_embed.shape[-1]).to(img_embed.device)
+                    embed_joint[image_mask_joint, :] = img_embed
+                    embed_joint[video_mask_joint, :] = vid_embed
+                    deepstack_visual_embeds.append(embed_joint)
+            elif deepstack_image_embeds is not None:
+                deepstack_visual_embeds = deepstack_image_embeds
+            elif deepstack_video_embeds is not None:
+                deepstack_visual_embeds = deepstack_video_embeds
         elif image_mask is not None:
             image_mask = image_mask[..., 0]
-            visual_pos_masks = image_mask
+            visual_pos_masks = image_mask 
             deepstack_visual_embeds = deepstack_image_embeds
         elif video_mask is not None:
             video_mask = video_mask[..., 0]

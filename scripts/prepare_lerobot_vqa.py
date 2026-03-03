@@ -134,12 +134,32 @@ Then train with::
 """
 
 import argparse
+import io
 import json
 import random
 import sys
+import tarfile
 from pathlib import Path
+import multiprocessing
+from multiprocessing import cpu_count
+from functools import partial
 
+import numpy as np
 from tqdm import tqdm
+
+# Module-level dataset reference used by forked worker processes.
+# Set by create_webdataset_from_episodes before the Pool is spawned so that
+# fork-inherited workers can access it without re-loading from disk.
+_worker_lerobot_ds = None
+
+try:
+    import webdataset as wds
+    import cv2
+    WEBDATASET_AVAILABLE = True
+except ImportError:
+    WEBDATASET_AVAILABLE = False
+    print("Warning: webdataset or cv2 not available. --export-webdataset will not work.")
+    print("Install with: pip install webdataset opencv-python")
 
 
 
@@ -636,6 +656,332 @@ def enumerate_lerobot_episodes(
     return output
 
 
+def extract_episode_video_bytes(
+    lerobot_ds,
+    ep_idx: int,
+    camera_key: str,
+    fps: int = 10,
+    codec: str = "mp4v",
+) -> bytes:
+    """Extract video frames from a LeRobot episode and encode as MP4 bytes.
+    
+    Uses LeRobot's efficient decode_video_frames to load all frames at once
+    instead of loading frame by frame.
+    
+    Args:
+        lerobot_ds: LeRobot dataset instance
+        ep_idx: Episode index
+        camera_key: Camera key to extract frames from
+        fps: Frames per second for the output video
+        codec: Video codec (default: mp4v)
+    
+    Returns:
+        MP4 video as bytes
+    """
+    from lerobot.datasets.video_utils import decode_video_frames
+    
+    ep = lerobot_ds.meta.episodes[ep_idx]
+    from_idx = ep["dataset_from_index"]
+    to_idx = ep["dataset_to_index"]
+    
+    # Get the video file path for this episode and camera
+    video_path = lerobot_ds.root / lerobot_ds.meta.get_video_file_path(ep_idx, camera_key)
+    
+    # Build timestamps for all frames in the episode
+    # Use the hf_dataset to get actual timestamps
+    if lerobot_ds._absolute_to_relative_idx is not None:
+        # Map absolute indices to relative indices for filtered datasets
+        relative_indices = [lerobot_ds._absolute_to_relative_idx.get(i) for i in range(from_idx, to_idx)]
+        relative_indices = [i for i in relative_indices if i is not None]
+        timestamps = [lerobot_ds.hf_dataset[i]["timestamp"].item() for i in relative_indices]
+    else:
+        timestamps = [lerobot_ds.hf_dataset[i]["timestamp"].item() for i in range(from_idx, to_idx)]
+    
+    # Shift timestamps by the episode's video start timestamp
+    # (episodes are stored sequentially in the same MP4 file)
+    from_timestamp = ep[f"videos/{camera_key}/from_timestamp"]
+    shifted_timestamps = [from_timestamp + ts for ts in timestamps]
+    
+    # Load all frames at once using LeRobot's efficient decoder
+    frames_tensor = decode_video_frames(
+        video_path, 
+        shifted_timestamps, 
+        lerobot_ds.tolerance_s, 
+        "torchcodec"
+    )
+    
+    # frames_tensor shape: (1, num_frames, C, H, W) or (num_frames, C, H, W)
+    if frames_tensor.dim() == 5:
+        frames_tensor = frames_tensor.squeeze(0)  # Remove batch dimension
+    
+    # Convert to numpy and prepare for OpenCV (expects H, W, C in BGR)
+    frames = []
+    for i in range(frames_tensor.shape[0]):
+        frame = frames_tensor[i]  # (C, H, W)
+        
+        # Convert to numpy
+        if hasattr(frame, "numpy"):
+            frame = frame.numpy()
+        else:
+            frame = np.array(frame)
+        
+        # Transpose from (C, H, W) to (H, W, C)
+        frame = frame.transpose(1, 2, 0)
+        
+        # Ensure uint8 format
+        if frame.dtype != np.uint8:
+            if frame.max() <= 1.0:
+                frame = (frame * 255).astype(np.uint8)
+            else:
+                frame = frame.astype(np.uint8)
+        
+        # Convert RGB to BGR for OpenCV
+        if len(frame.shape) == 3 and frame.shape[-1] == 3:
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        
+        frames.append(frame)
+    
+    if not frames:
+        raise ValueError(f"No frames extracted for episode {ep_idx}")
+    
+    # Create video in memory
+    h, w = frames[0].shape[:2]
+    
+    # Write to temporary file (OpenCV doesn't support writing to BytesIO directly)
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp_file:
+        tmp_path = tmp_file.name
+    
+    try:
+        # Write video to temp file
+        fourcc = cv2.VideoWriter_fourcc(*codec)
+        writer = cv2.VideoWriter(tmp_path, fourcc, fps, (w, h))
+        
+        for frame in frames:
+            writer.write(frame)
+        
+        writer.release()
+        
+        # Read back as bytes
+        with open(tmp_path, "rb") as f:
+            video_bytes = f.read()
+    finally:
+        # Clean up temp file
+        Path(tmp_path).unlink(missing_ok=True)
+    
+    return video_bytes
+
+
+def process_episode_for_webdataset(args_tuple):
+    """Process a single episode for webdataset creation (multiprocessing worker).
+
+    Workers inherit the dataset from the parent process via fork (copy-on-write).
+    The dataset object is stored in the module-level ``_worker_lerobot_ds`` global
+    by :func:`create_webdataset_from_episodes` before the pool is created.
+
+    Args:
+        args_tuple: Tuple of (ep_idx, camera_key, question_template,
+                             vqa_data_for_ep, dataset_name, fps)
+
+    Returns:
+        Tuple of (sample_dict, success_flag)
+    """
+    ep_idx, camera_key, question_template, vqa_data, dataset_name, fps = args_tuple
+
+    try:
+        lerobot_ds = _worker_lerobot_ds
+        if lerobot_ds is None:
+            raise RuntimeError(
+                "_worker_lerobot_ds is None — pool must be created after setting the global."
+            )
+        
+        # Extract video
+        video_bytes = extract_episode_video_bytes(lerobot_ds, ep_idx, camera_key, fps=fps)
+        
+        # Build conversations
+        conversations = []
+        
+        if vqa_data and len(vqa_data) > 0:
+            # Use VQA data for questions/answers
+            for qa_pair in vqa_data:
+                conversation = [
+                    {"role": "user", "content": qa_pair.get("question", question_template)},
+                    {"role": "assistant", "content": qa_pair.get("answer", "")}
+                ]
+                conversations.append(conversation)
+        else:
+            # Use default question template with task language
+            language_instruction = get_episode_task(lerobot_ds, ep_idx)
+            conversation = [
+                {"role": "user", "content": f"<video>\n{question_template}"}
+            ]
+            if language_instruction:
+                conversation.append({"role": "assistant", "content": language_instruction})
+            conversations.append(conversation)
+        
+        # Create sample key
+        key_prefix = f"{dataset_name}_" if dataset_name else ""
+        sample_key = f"{key_prefix}episode_{ep_idx:06d}_{camera_key.replace('.', '_')}"
+        
+        sample = {
+            "__key__": sample_key,
+            "mp4": video_bytes,
+            "json": json.dumps({
+                "conversations": conversations,
+                "episode_idx": ep_idx,
+                "camera_key": camera_key,
+                "dataset": dataset_name
+            })
+        }
+        
+        return sample, True
+        
+    except Exception as e:
+        print(f"Error processing episode {ep_idx}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, False
+
+
+def create_webdataset_from_episodes(
+    lerobot_ds,
+    output_dir: str,
+    camera_keys: list[str],
+    camera_key_mode: str = "sample",
+    question_template: str = "What task did the robot perform in this video?",
+    episodes: list[int] | None = None,
+    vqa_data: dict[int, list[dict]] | None = None,
+    dataset_name: str = "",
+    num_workers: int = 8,
+    samples_per_shard: int = 100,
+    fps: int = 10,
+    subsample_diverse_language: bool = False,
+    task_obj_dict = None,
+) -> int:
+    """Create webdataset tar files from LeRobot episodes.
+    
+    Args:
+        lerobot_ds: LeRobot dataset instance
+        output_dir: Directory to save tar files
+        camera_keys: List of camera keys to use
+        camera_key_mode: "all" or "sample" - how to handle multiple cameras
+        question_template: Default question if no VQA data
+        episodes: List of episode indices (None = all episodes)
+        vqa_data: Dict mapping episode_idx to list of {question, answer} dicts
+        dataset_name: Name of the dataset for the key prefix
+        num_workers: Number of parallel workers
+        samples_per_shard: Number of samples per tar file
+        fps: Video frames per second
+        subsample_diverse_language: Whether to subsample for diverse language
+        task_obj_dict: Task object dictionary for diverse subsampling
+    
+    Returns:
+        Total number of samples created
+    """
+    if not WEBDATASET_AVAILABLE:
+        raise ImportError("webdataset and cv2 are required. Install with: pip install webdataset opencv-python")
+    
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    # Get episode indices
+    episode_indices = list(episodes) if episodes is not None else range(lerobot_ds.num_episodes)
+    
+    # Subsample for diverse language if requested
+    if subsample_diverse_language:
+        lang_to_eps: dict[str, list[int]] = {}
+        obj_to_eps: dict[str, list[int]] = {}
+        
+        for ep_idx in episode_indices:
+            lang = get_episode_task(lerobot_ds, ep_idx)
+            
+            if task_obj_dict is not None and lang in task_obj_dict:
+                task_obj = task_obj_dict[lang]
+                if task_obj is not None:
+                    if isinstance(task_obj, list):
+                        task_obj = task_obj[0]["object"]
+                    else:
+                        task_obj = task_obj["object"]
+                    obj_to_eps.setdefault(task_obj, []).append(ep_idx)
+            
+            lang_to_eps.setdefault(lang, []).append(ep_idx)
+        
+        if task_obj_dict is not None:
+            print(f"Unique task objects: {len(obj_to_eps)}")
+            max_episodes_per_object = 300
+            for obj, eps in obj_to_eps.items():
+                if len(eps) > max_episodes_per_object:
+                    obj_to_eps[obj] = random.sample(eps, max_episodes_per_object)
+            episode_indices = [ep for eps in obj_to_eps.values() for ep in eps]
+        else:
+            print(f"Unique language instructions: {len(lang_to_eps)}")
+            max_episodes_per_lang = 50
+            lang_to_eps_subsampled = {}
+            for lang, eps in lang_to_eps.items():
+                if len(eps) > max_episodes_per_lang:
+                    lang_to_eps_subsampled[lang] = random.sample(eps, max_episodes_per_lang)
+                else:
+                    lang_to_eps_subsampled[lang] = eps
+            episode_indices = [ep for eps in lang_to_eps_subsampled.values() for ep in eps]
+    
+    # Pre-compute camera availability
+    ep_avail = build_episode_camera_availability(lerobot_ds, episode_indices, camera_keys, num_workers)
+    
+    # Prepare processing args — no ds_path; workers use the forked global.
+    processing_args = []
+    for ep_idx in episode_indices:
+        avail_keys = ep_avail.get(ep_idx, camera_keys)
+
+        if camera_key_mode == "sample":
+            keys_for_ep = [random.choice(avail_keys)]
+        else:  # "all"
+            keys_for_ep = avail_keys
+
+        for cam in keys_for_ep:
+            ep_vqa = vqa_data.get(ep_idx, []) if vqa_data else []
+            processing_args.append((
+                ep_idx, cam, question_template, ep_vqa, dataset_name, fps
+            ))
+
+    print(f"Processing {len(processing_args)} episode-camera combinations...")
+
+    # Expose the dataset to workers via the module-level global *before* forking.
+    global _worker_lerobot_ds
+    _worker_lerobot_ds = lerobot_ds
+
+    # Write samples directly to shards as they are produced — no in-memory accumulation.
+    shard_pattern = str(
+        output_path / f"{dataset_name}_shard-%06d.tar" if dataset_name else output_path / "shard-%06d.tar"
+    )
+    success_count = 0
+
+    with wds.ShardWriter(shard_pattern, maxcount=samples_per_shard) as sink:
+        if num_workers > 1:
+            # Use fork so workers inherit the already-loaded dataset via COW — zero
+            # re-loading cost and no dataset serialisation over IPC.
+            ctx = multiprocessing.get_context("fork")
+            with ctx.Pool(processes=num_workers) as pool:
+                for sample, success in tqdm(
+                    pool.imap(process_episode_for_webdataset, processing_args),
+                    total=len(processing_args),
+                    desc="Extracting & writing episodes",
+                ):
+                    if success and sample is not None:
+                        sink.write(sample)
+                        success_count += 1
+        else:
+            for args_tuple in tqdm(processing_args, desc="Extracting & writing episodes"):
+                sample, success = process_episode_for_webdataset(args_tuple)
+                if success and sample is not None:
+                    sink.write(sample)
+                    success_count += 1
+
+    print(f"Successfully wrote {success_count}/{len(processing_args)} samples to {output_dir}")
+    print(f"Shard pattern: {shard_pattern}")
+
+    return success_count
+
+
 def _source_name_from_args(args) -> str:
     """Derive a short, filesystem-safe source name from dataset arguments."""
     ds_map_raw = getattr(args, "lerobot_datasets", None)
@@ -728,7 +1074,7 @@ def main():
         "--camera-key-mode",
         type=str,
         choices=["all", "sample"],
-        default="sample",
+        default="all",
         help=(
             "How to handle multiple camera keys per frame/episode. "
             "'all': one row per (frame × key). "
@@ -768,7 +1114,7 @@ def main():
     parser.add_argument("--question-template", type=str, default="Describe what is happening in this image.")
     parser.add_argument("--episodes", type=int, nargs="*", help="Specific episodes to enumerate")
     parser.add_argument("--max-frames", type=int, help="Maximum number of frames to include")
-    parser.add_argument("--num-workers", type=int, default=16, help="Number of threads for parallel camera availability probing (default: 16)")
+    parser.add_argument("--num-workers", type=int, default=32, help="Number of threads for parallel camera availability probing (default: 16)")
     parser.add_argument("--subsample_diverse_language", action="store_true", help="Make sure to select a diverse subset of language instructions when enumerating frames. ")
     parser.add_argument(
         "--as-video",
@@ -780,6 +1126,35 @@ def main():
             "With --vqa-input and --episode-field, converts episode indices to video URIs "
             "without needing to load the LeRobot dataset."
         ),
+    )
+    
+    # Webdataset export
+    parser.add_argument(
+        "--export-webdataset",
+        action="store_true",
+        help="Export episodes as webdataset tar files with actual video bytes (requires --enumerate and --as-video)"
+    )
+    parser.add_argument(
+        "--webdataset-dir",
+        type=str,
+        help="Output directory for webdataset tar files (defaults to <output>_webdataset)"
+    )
+    parser.add_argument(
+        "--samples-per-shard",
+        type=int,
+        default=1000,
+        help="Number of samples per tar shard (default: 100)"
+    )
+    parser.add_argument(
+        "--video-fps",
+        type=int,
+        default=10,
+        help="Frames per second for exported videos (default: 10)"
+    )
+    parser.add_argument(
+        "--vqa-dataset",
+        type=str,
+        help="Path to VQA dataset JSONL with episode_id and Q&A pairs to merge with videos"
     )
 
     args = parser.parse_args()
@@ -803,6 +1178,9 @@ def main():
     args.subsample_diverse_language = True
 
     args.output = _build_output_path(args)
+
+    args.export_webdataset = True
+    args.webdataset_dir = args.output.replace(".jsonl", "_webdataset")
 
 
     args.task_obj_dict_paths = {
@@ -920,6 +1298,99 @@ def main():
                     num_workers=args.num_workers,
                 )
 
+    # ── Webdataset export mode ────────────────────────────────────────────
+    if args.enumerate and args.export_webdataset:
+        if not args.as_video:
+            parser.error("--export-webdataset requires --as-video")
+        
+        # Load VQA dataset if provided
+        vqa_episode_data = {}
+        if args.vqa_dataset:
+            print(f"Loading VQA dataset from {args.vqa_dataset}")
+            vqa_rows = load_json_or_jsonl(args.vqa_dataset)
+            # Group by episode_id
+            for row in vqa_rows:
+                ep_id = row.get("episode_id", row.get("episode_idx"))
+                if ep_id is not None:
+                    if ep_id not in vqa_episode_data:
+                        vqa_episode_data[ep_id] = []
+                    # Extract question and answer from messages/conversations
+                    messages = row.get("messages", row.get("conversations", []))
+                    if len(messages) >= 2:
+                        question = messages[0].get("content", messages[0].get("value", "")).replace("<video>", "").replace("<image>", "").strip()
+                        answer = messages[1].get("content", messages[1].get("value", "")).strip()
+                        vqa_episode_data[ep_id].append({"question": question, "answer": answer})
+            print(f"Loaded VQA data for {len(vqa_episode_data)} episodes")
+        
+        # Determine output directory
+        webdataset_dir = args.webdataset_dir
+        if not webdataset_dir:
+            if args.output:
+                webdataset_dir = str(Path(args.output).parent / f"{Path(args.output).stem}_webdataset")
+            else:
+                webdataset_dir = str(Path(args.base_dir) / "webdataset_output")
+        
+        if multi_mode:
+            # Export each dataset separately
+            total_samples = 0
+            for name, path in datasets_map.items():
+                ds = lerobot_datasets.get(name) or _load_ds(path)
+                cam_keys = resolve_camera_keys(ds, camera_keys_map.get(name) or args.camera_key)
+                
+                # Load task-obj dict if needed
+                ds_task_obj_dict = None
+                if args.subsample_diverse_language and hasattr(args, "task_obj_dict_paths") and name in args.task_obj_dict_paths:
+                    ds_task_obj_dict = load_and_process_task_obj_dict(args.task_obj_dict_paths[name])
+                
+                ds_output_dir = str(Path(webdataset_dir) / name)
+                
+                num_samples = create_webdataset_from_episodes(
+                    ds,
+                    output_dir=ds_output_dir,
+                    camera_keys=cam_keys,
+                    camera_key_mode=args.camera_key_mode,
+                    question_template=args.question_template,
+                    episodes=args.episodes,
+                    vqa_data=vqa_episode_data,
+                    dataset_name=name,
+                    num_workers=args.num_workers,
+                    samples_per_shard=args.samples_per_shard,
+                    fps=args.video_fps,
+                    subsample_diverse_language=args.subsample_diverse_language,
+                    task_obj_dict=ds_task_obj_dict,
+                )
+                total_samples += num_samples
+                print(f"  {name}: {num_samples} samples exported to {ds_output_dir}")
+            
+            print(f"\nTotal: {total_samples} samples exported to {webdataset_dir}")
+        else:
+            # Single dataset export
+            if not lerobot_ds:
+                parser.error("--lerobot-dataset or --lerobot-datasets is required for --export-webdataset.")
+            
+            cam_keys = resolve_camera_keys(lerobot_ds, args.camera_key)
+            
+            num_samples = create_webdataset_from_episodes(
+                lerobot_ds,
+                output_dir=webdataset_dir,
+                camera_keys=cam_keys,
+                camera_key_mode=args.camera_key_mode,
+                question_template=args.question_template,
+                episodes=args.episodes,
+                vqa_data=vqa_episode_data,
+                dataset_name=_source_name_from_args(args),
+                num_workers=args.num_workers,
+                samples_per_shard=args.samples_per_shard,
+                fps=args.video_fps,
+            )
+            
+            print(f"\n{num_samples} samples exported to {webdataset_dir}")
+        
+        # Skip writing JSONL if only exporting webdataset
+        if not args.output or args.export_webdataset:
+            print("Webdataset export complete!")
+            return
+
     # ── Conversion mode ───────────────────────────────────────────────────
     elif args.vqa_input:
         vqa_data = load_json_or_jsonl(args.vqa_input)
@@ -945,13 +1416,14 @@ def main():
         parser.error("Either --vqa-input or --enumerate is required.")
         sys.exit(1)
 
-    # Write output
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w") as f:
-        for row in output_data:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    # Write output (skip if we only exported webdataset)
+    if 'output_data' in locals() and output_data and args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.output, "w") as f:
+            for row in output_data:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    print(f"Written {len(output_data)} rows to {args.output}")
+        print(f"Written {len(output_data)} rows to {args.output}")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from io import BytesIO
 from typing import TYPE_CHECKING, BinaryIO, Literal, NotRequired, Optional, TypedDict, Union
+from transformers import Qwen2VLImageProcessorFast
 
 import numpy as np
 import torch
@@ -304,7 +305,7 @@ class MMPluginMixin:
                 frames = video
                 durations.append(len(frames) / kwargs.get("video_fps", 2.0))
             else:
-                container = av.open(video, "r")
+                container = av.open(BytesIO(video) if isinstance(video, (bytes, bytearray)) else video, "r")
                 video_stream = next(stream for stream in container.streams if stream.type == "video")
                 sample_indices = self._get_video_sample_indices(video_stream, **kwargs)
                 container.seek(0)
@@ -1562,6 +1563,12 @@ def _compute_qwen2vl_image_grid_thw(
     min_pixels: int = size_cfg.get("min_pixels", getattr(image_processor, "min_pixels", 256 * 256))
     max_pixels: int = size_cfg.get("max_pixels", getattr(image_processor, "max_pixels", 1280 * 28 * 28))
 
+    if min_pixels is None:
+        min_pixels = size_cfg["shortest_edge"]
+    if max_pixels is None:
+        max_pixels = size_cfg["shortest_edge"] * size_cfg["longest_edge"]
+        
+    
     h_bar = round(h / factor) * factor
     w_bar = round(w / factor) * factor
     if h_bar * w_bar > max_pixels:
@@ -1608,7 +1615,7 @@ def _get_video_info_no_decode(
         return n_frames, n_frames / video_fps, h, w
 
     # Regular video file — probe header only
-    container = av.open(video, "r")
+    container = av.open(BytesIO(video) if isinstance(video, (bytes, bytearray)) else video, "r")
     vs = next(s for s in container.streams if s.type == "video")
     h, w = vs.codec_context.height, vs.codec_context.width
     total_frames = vs.frames
@@ -1672,7 +1679,7 @@ class Qwen2VLPlugin(BasePlugin):
                 fps_per_video.append(kwargs.get("video_fps", 2.0))
                 durations.append(len(frames) / kwargs.get("video_fps", 2.0))
             else:
-                container = av.open(video, "r")
+                container = av.open(BytesIO(video) if isinstance(video, (bytes, bytearray)) else video, "r")
                 video_stream = next(stream for stream in container.streams if stream.type == "video")
                 sample_indices = self._get_video_sample_indices(video_stream, **kwargs)
                 container.seek(0)
@@ -2282,6 +2289,16 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
                     content = content.replace(
                         IMAGE_PLACEHOLDER,
                         f"{self.vision_bos_token}{self.video_token * total_per_frame}{self.vision_eos_token}",
+                        1,
+                    )
+                    num_image_tokens += 1
+                elif processor.custom_model_args.get("encode_images_with_frame_resampler", False):
+                    # Compress image through the timechat frame resampler → fixed token count.
+                    # Must match what Qwen3VLModel.get_image_features produces when this flag is set.
+                    n_frame_queries = processor.custom_model_args["timechat_num_frame_queries"]
+                    content = content.replace(
+                        IMAGE_PLACEHOLDER,
+                        f"{self.vision_bos_token}{self.image_token * n_frame_queries}{self.vision_eos_token}",
                         1,
                     )
                     num_image_tokens += 1

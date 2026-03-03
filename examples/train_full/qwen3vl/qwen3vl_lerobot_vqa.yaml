@@ -10,6 +10,7 @@ timechat_num_frame_queries: 32
 timechat_num_video_queries: 32
 append_global_query: true
 use_individual_frame_query: true
+encode_images_with_frame_resampler: false  # set true to compress images via frame resampler (same Qf tokens as video frames)
 
 pass_individual_frames: true
 
@@ -43,7 +44,7 @@ use_unsloth_gc: true
 enable_liger_kernel: true
 
 ### dataset
-dataset: lerobot_vqa_bridge #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
+dataset: lerobot_vqa_bridge_droid #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
 template: qwen3_vl_nothink_timechat
 cutoff_len: 4096
 #max_samples: 512
@@ -77,6 +78,7 @@ lr_scheduler_type: cosine
 warmup_ratio: 0.03
 bf16: true
 ddp_timeout: 180000000
+ddp_find_unused_parameters: true
 resume_from_checkpoint: null
 
 ##optimizationspip

@@ -77,7 +77,7 @@ _cache_lock = threading.Lock()
 _video_decoder_cache_ref: object | None = None  # lazy import, set on first use
 
 
-_VIDEO_DECODER_CACHE_MAX: int = 16  # evict once more than this many decoders are cached
+_VIDEO_DECODER_CACHE_MAX: int = 4  # evict once more than this many decoders are cached
 
 
 def _clear_video_decoder_cache() -> None:
@@ -98,6 +98,14 @@ def _clear_video_decoder_cache() -> None:
             _video_decoder_cache_ref = False  # sentinel: unavailable
     if _video_decoder_cache_ref and _video_decoder_cache_ref.size() > _VIDEO_DECODER_CACHE_MAX:
         _video_decoder_cache_ref.clear()
+
+    # Also free any torch CUDA cache that torchcodec may have used
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
 
 # ── One-shot preload trigger: fire preload_all_datasets() on first real use ─
 _preload_all_triggered: bool = False
