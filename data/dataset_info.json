@@ -30,6 +30,24 @@
       "videos": "mp4"
     }
   },
+  "_lance_example_image": {
+    "_comment": "EXAMPLE (remove leading underscore to activate). Lance dataset with inline image bytes. The 'image' column holds raw JPEG/PNG bytes (pa.large_binary); 'caption' and other scalars are plain text. Lance path can be a local *.lance directory or an hf:// Hub URI. Always loaded as an IterableDataset; use streaming:true.",
+    "lance_files": "/path/to/images.lance",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "images": "image"
+    }
+  },
+  "_lance_example_video_blob": {
+    "_comment": "EXAMPLE (remove leading underscore to activate). Lance dataset with a blob v2 video column (field metadata lance-encoding:blob=true). The loader uses take_blobs() for memory-efficient streaming of large video files. Map the blob column name under 'videos'; mm_plugin decodes bytes via PyAV at collation time.",
+    "lance_files": "hf://datasets/lance-format/Openvid-1M/data/train.lance",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "videos": "video_blob"
+    }
+  },
   "identity": {
     "file_name": "identity.json"
   },

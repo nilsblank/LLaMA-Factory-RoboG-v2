@@ -28,7 +28,7 @@ class DatasetAttr:
     r"""Dataset attributes."""
 
     # basic configs
-    load_from: Literal["hf_hub", "ms_hub", "om_hub", "script", "file", "webdataset", "lerobot"]
+    load_from: Literal["hf_hub", "ms_hub", "om_hub", "script", "file", "webdataset", "lerobot", "lance"]
     dataset_name: str
     formatting: Literal["alpaca", "sharegpt", "openai"] = "alpaca"
     ranking: bool = False
@@ -150,6 +150,8 @@ def get_dataset_list(dataset_names: list[str] | None, dataset_dir: str | dict) -
             dataset_attr = DatasetAttr("webdataset", dataset_name=dataset_info[name]["webdataset_files"])
         elif "lerobot_files" in dataset_info[name]:
             dataset_attr = DatasetAttr("lerobot", dataset_name=dataset_info[name]["lerobot_files"])
+        elif "lance_files" in dataset_info[name]:
+            dataset_attr = DatasetAttr("lance", dataset_name=dataset_info[name]["lance_files"])
         else:
             dataset_attr = DatasetAttr("file", dataset_name=dataset_info[name]["file_name"])
 

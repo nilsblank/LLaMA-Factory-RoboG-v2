@@ -261,7 +261,11 @@ class MMPluginMixin:
         """
         results = []
         for image in images:
-            if isinstance(image, str) and image.startswith("lerobot://"):
+            if isinstance(image, str) and image.startswith("lance://"):
+                from .lance_utils import resolve_lance_uri
+
+                image = Image.open(BytesIO(resolve_lance_uri(image)))
+            elif isinstance(image, str) and image.startswith("lerobot://"):
                 from .lerobot_bridge import load_lerobot_frame
 
                 image = load_lerobot_frame(image)
@@ -285,14 +289,32 @@ class MMPluginMixin:
     def _regularize_videos(self, videos: list["VideoInput"], **kwargs) -> "RegularizedVideoOutput":
         r"""Regularizes videos to avoid error. Including reading, resizing and converting.
 
-        Supports ``lerobot://episode:<ep_idx>::<camera_key>`` references for loading
-        full episode frame sequences from LeRobot datasets without writing to disk.
+        Supports ``lance://`` and ``lerobot://episode:<ep_idx>::<camera_key>`` references
+        for loading full episode frame sequences without writing to disk.
         """
         results = []
         durations = []
         for video in videos:
             frames: list[ImageObject] = []
-            if isinstance(video, str) and video.startswith("lerobot://"):
+            if isinstance(video, str) and video.startswith("lance://"):
+                from .lance_utils import resolve_lance_uri
+
+                raw = resolve_lance_uri(video)
+                container = av.open(BytesIO(raw), "r")
+                video_stream = next(stream for stream in container.streams if stream.type == "video")
+                sample_indices = self._get_video_sample_indices(video_stream, **kwargs)
+                container.seek(0)
+                for frame_idx, frame in enumerate(container.decode(video_stream)):
+                    if frame_idx in sample_indices:
+                        frames.append(frame.to_image())
+
+                if video_stream.duration is None:
+                    durations.append(len(frames) / kwargs.get("video_fps", 2.0))
+                else:
+                    durations.append(float(video_stream.duration * video_stream.time_base))
+
+                container.close()
+            elif isinstance(video, str) and video.startswith("lerobot://"):
                 from .lerobot_bridge import load_lerobot_video_frames
 
                 video_maxlen = kwargs.get("video_maxlen", None)

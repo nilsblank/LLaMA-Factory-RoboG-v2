@@ -251,6 +251,73 @@ def _normalize_webdataset_sample(example: dict) -> dict:
     return result
 
 
+# ---------------------------------------------------------------------------
+# Lance dataset helpers
+# ---------------------------------------------------------------------------
+
+
+def _load_lance_dataset(lance_path: str) -> "Dataset":
+    """Load a Lance dataset as a map-style HF Dataset with lazy media access.
+
+    Only scalar / text columns are read from Lance into the Arrow table.
+    Binary columns (images, videos, audio) are replaced with lightweight
+    ``lance://<path>#<column>#<row>`` URI strings.  These URIs are resolved
+    to raw bytes on-demand by ``lance_utils.resolve_lance_bytes()`` when the
+    mm_plugin actually needs to decode the media (inside
+    ``_regularize_images`` / ``_regularize_videos``).
+
+    This means **no media bytes are materialised into Arrow** — the HF cache
+    stores only text and tiny URI strings.  Media is fetched from the original
+    Lance file via ``take()`` each time a sample is accessed, which is
+    sub-millisecond for images on a local SSD.
+
+    DDP and multi-worker DataLoader work automatically because the returned
+    object is a normal map-style ``Dataset`` with ``__len__`` / ``__getitem__``.
+    """
+    try:
+        import lance
+    except ImportError:
+        raise ImportError(
+            "The 'lance' (pylance) package is required for load_from='lance'. "
+            "Install it with: pip install pylance"
+        )
+
+    import pyarrow as pa
+
+    ds = lance.dataset(lance_path)
+    schema: pa.Schema = ds.schema
+    n_rows = ds.count_rows()
+
+    # Partition columns into scalar (text, int, float, …) vs binary (media).
+    binary_cols: list[str] = [
+        f.name
+        for f in schema
+        if pa.types.is_binary(f.type) or pa.types.is_large_binary(f.type)
+    ]
+    binary_col_set: frozenset[str] = frozenset(binary_cols)
+    text_cols: list[str] = [f.name for f in schema if f.name not in binary_col_set]
+
+    # Read only the lightweight text / scalar columns.
+    table: pa.Table = ds.to_table(columns=text_cols) if text_cols else pa.table({"_dummy": [None] * n_rows})
+
+    # For each binary column, create a lance:// URI reference column.
+    for col in binary_cols:
+        uris = [f"lance://{lance_path}#{col}#{i}" for i in range(n_rows)]
+        table = table.append_column(col, pa.array(uris, type=pa.utf8()))
+
+    # Drop the dummy column if we had to create one (no text columns).
+    if "_dummy" in table.column_names:
+        table = table.drop(["_dummy"])
+
+    dataset = Dataset(table)
+    logger.info_rank0(
+        f"Lance dataset loaded: {n_rows} rows, "
+        f"{len(text_cols)} scalar column(s), "
+        f"{len(binary_cols)} binary column(s) (lazy lance:// URIs)."
+    )
+    return dataset
+
+
 def _load_single_dataset(
     dataset_attr: "DatasetAttr",
     model_args: "ModelArguments",
@@ -294,6 +361,8 @@ def _load_single_dataset(
         pass  # shard resolution and loading are handled in the block below
     elif dataset_attr.load_from == "lerobot":
         pass  # JSONL resolution and loading are handled in the block below
+    elif dataset_attr.load_from == "lance":
+        pass  # path resolution and loading are handled in the block below
     else:
         raise NotImplementedError(f"Unknown load type: {dataset_attr.load_from}.")
 
@@ -431,6 +500,19 @@ def _load_single_dataset(
         #    The heavy I/O (video decode, ffmpeg) runs in DataLoader workers.
         transform_fn = make_lerobot_transform(default_dataset, default_camera)
         dataset = dataset.map(transform_fn, remove_columns=lerobot_cols)
+    elif dataset_attr.load_from == "lance":
+        # Resolve path: join with dataset_dir for relative paths.  Remote
+        # ``hf://`` paths are forwarded to the lance library directly.
+        _remote_prefixes = ("s3://", "gs://", "http://", "https://", "hf://")
+        lance_path = dataset_attr.dataset_name
+        if not os.path.isabs(lance_path) and not any(lance_path.startswith(p) for p in _remote_prefixes):
+            lance_path = os.path.join(data_args.dataset_dir, lance_path)
+
+        logger.info_rank0(f"Loading Lance dataset from: {lance_path}")
+
+        # Returns a map-style HF Dataset.  Binary columns are stored as
+        # lightweight lance:// URI strings — no media bytes in Arrow.
+        dataset = _load_lance_dataset(lance_path)
     else:
         dataset = load_dataset(
             path=data_path,

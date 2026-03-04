@@ -16,9 +16,10 @@
 LeRobot dataset loader.
 
 Reads JSONL files containing ``lerobot_images`` / ``lerobot_videos`` references
-and produces samples in the **same bytes-based format as WebDataset** (JPEG bytes
-for images, MP4 bytes for videos).  This makes co-training with WebDataset
-trivial — identical schemas, no special-casing in ``mm_plugin.py``.
+and produces samples with ``lerobot://`` URI strings in the ``jpg`` / ``mp4``
+columns.  These URIs match the ``utf8`` Arrow schema used by lance datasets,
+enabling ``concatenate_datasets()`` across both dataset types without schema
+conflicts.  Media is decoded lazily in ``mm_plugin.py`` at training time.
 
 Architecture
 ~~~~~~~~~~~~
@@ -253,10 +254,12 @@ def _normalize_lerobot_sample(
     default_dataset: str,
     default_camera: str,
 ) -> dict:
-    """Convert a JSONL row with ``lerobot_images`` / ``lerobot_videos`` into bytes-based columns.
+    """Convert a JSONL row with ``lerobot_images`` / ``lerobot_videos`` into URI string columns.
 
-    Output schema matches WebDataset: ``jpg`` is a list of JPEG bytes,
-    ``mp4`` is a list of MP4 bytes (or nested JPEG lists on fallback).
+    Output schema: ``jpg`` is a list of ``lerobot://`` URI strings,
+    ``mp4`` is a list of ``lerobot://episode:`` URI strings.
+    Arrow type is ``utf8``, matching ``lance://`` URI columns — enabling
+    ``concatenate_datasets()`` across lance and lerobot datasets.
     ``messages`` and other text columns pass through unchanged.
 
     Args:
@@ -280,27 +283,28 @@ def _normalize_lerobot_sample(
     # --- Images ---
     lerobot_images = row.get("lerobot_images")
     if lerobot_images:
-        jpg_list: list[bytes] = []
+        jpg_list: list[str] = []
         for img_ref in lerobot_images:
             ds_name = img_ref.get("dataset", row_dataset)
             ds_path = resolve_dataset_path(ds_name)
             ds = _get_lerobot_dataset(ds_path)
             camera = img_ref.get("camera", default_camera)
-            jpeg_bytes = _frame_to_jpeg_bytes(ds, img_ref["episode"], img_ref["frame"], camera)
-            jpg_list.append(jpeg_bytes)
+            # Fast metadata lookup — no media decode at dataset-build time.
+            abs_idx = ds.meta.episodes[img_ref["episode"]]["dataset_from_index"] + img_ref["frame"]
+            uri = f"lerobot://{ds_name}::{abs_idx}::{camera}"
+            jpg_list.append(uri)
         result["jpg"] = jpg_list
 
     # --- Videos ---
     lerobot_videos = row.get("lerobot_videos")
     if lerobot_videos:
-        mp4_list: list = []
+        mp4_list: list[str] = []
         for vid_ref in lerobot_videos:
             ds_name = vid_ref.get("dataset", row_dataset)
-            ds_path = resolve_dataset_path(ds_name)
-            ds = _get_lerobot_dataset(ds_path)
             camera = vid_ref.get("camera", default_camera)
-            mp4_bytes = _episode_to_mp4_bytes(ds, vid_ref["episode"], camera)
-            mp4_list.append(mp4_bytes)
+            episode = vid_ref["episode"]
+            uri = f"lerobot://episode:{episode}::{camera}"
+            mp4_list.append(uri)
         result["mp4"] = mp4_list
 
     return result
