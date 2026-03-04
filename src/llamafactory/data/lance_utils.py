@@ -47,11 +47,28 @@ def _get_lance_dataset(path: str) -> Any:
         return _LANCE_HANDLES[path]
 
 
+def _is_blob_column(ds, col: str) -> bool:
+    """Return True if *col* is a Lance blob extension column (lance.blob.v2)."""
+    try:
+        import pyarrow as pa
+        field = ds.schema.field(col)
+        return isinstance(field.type, pa.ExtensionType) and "blob" in getattr(field.type, "extension_name", "").lower()
+    except Exception:
+        return False
+
+
 def resolve_lance_uri(uri: str) -> bytes:
     """Fetch binary blob for a ``lance://`` URI.
 
+    Dispatches to ``take_blobs()`` for Lance blob extension columns
+    (``lance.blob.v2``) and falls back to ``take()`` for plain binary columns.
     O(1) after the first open per (path, process).
     """
     path, col, row = _parse_lance_uri(uri)
     ds = _get_lance_dataset(path)
+    if _is_blob_column(ds, col):
+        blobs = ds.take_blobs(col, indices=[row])
+        data = blobs[0].read()
+        blobs[0].close()
+        return data
     return ds.take([row], columns=[col]).to_pylist()[0][col]

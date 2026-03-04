@@ -289,11 +289,20 @@ def _load_lance_dataset(lance_path: str) -> "Dataset":
     n_rows = ds.count_rows()
 
     # Partition columns into scalar (text, int, float, …) vs binary (media).
-    binary_cols: list[str] = [
-        f.name
-        for f in schema
-        if pa.types.is_binary(f.type) or pa.types.is_large_binary(f.type)
-    ]
+    # Detects both plain binary/large_binary columns AND Lance-specific blob
+    # extension types (lance.blob.v2), which are stored as a struct with
+    # extension metadata rather than a plain binary type.
+    def _is_binary_col(field: pa.Field) -> bool:
+        if pa.types.is_binary(field.type) or pa.types.is_large_binary(field.type):
+            return True
+        # Lance blob extension type: extension_name contains "blob"
+        if isinstance(field.type, pa.ExtensionType):
+            ext_name: str = getattr(field.type, "extension_name", "")
+            if "blob" in ext_name.lower():
+                return True
+        return False
+
+    binary_cols: list[str] = [f.name for f in schema if _is_binary_col(f)]
     binary_col_set: frozenset[str] = frozenset(binary_cols)
     text_cols: list[str] = [f.name for f in schema if f.name not in binary_col_set]
 
