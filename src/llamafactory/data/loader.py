@@ -256,7 +256,7 @@ def _normalize_webdataset_sample(example: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _load_lance_dataset(lance_path: str) -> "Dataset":
+def _load_lance_dataset(lance_path: str, data_args: "DataArguments") -> "Dataset":
     """Load a Lance dataset as a map-style HF Dataset with lazy media access.
 
     Only scalar / text columns are read from Lance into the Arrow table.
@@ -287,6 +287,7 @@ def _load_lance_dataset(lance_path: str) -> "Dataset":
     ds = lance.dataset(lance_path)
     schema: pa.Schema = ds.schema
     n_rows = ds.count_rows()
+    
 
     # Partition columns into scalar (text, int, float, …) vs binary (media).
     # Detects both plain binary/large_binary columns AND Lance-specific blob
@@ -309,8 +310,18 @@ def _load_lance_dataset(lance_path: str) -> "Dataset":
     # Read only the lightweight text / scalar columns.
     table: pa.Table = ds.to_table(columns=text_cols) if text_cols else pa.table({"_dummy": [None] * n_rows})
 
+    
+    #filter table where we have multiple images for nwop 
+    counts = pa.compute.count_substring_regex(table["messages"], "<image>")
+    mask = pa.compute.less(counts, 2)
+    table = table.filter(mask)
+    n_rows = table.num_rows
+
+
+    
     # For each binary column, create a lance:// URI reference column.
     for col in binary_cols:
+        # could be multiple images per sample, so we need to create a list of URIs for each row
         uris = [f"lance://{lance_path}#{col}#{i}" for i in range(n_rows)]
         table = table.append_column(col, pa.array(uris, type=pa.utf8()))
 
@@ -318,6 +329,12 @@ def _load_lance_dataset(lance_path: str) -> "Dataset":
     if "_dummy" in table.column_names:
         table = table.drop(["_dummy"])
 
+    
+    
+    if data_args.max_samples is not None:
+        n_rows = min(n_rows, data_args.max_samples)
+        #sample n_rows
+        table = table.slice(0, n_rows)
     dataset = Dataset(table)
     logger.info_rank0(
         f"Lance dataset loaded: {n_rows} rows, "
@@ -503,12 +520,21 @@ def _load_single_dataset(
         )
         # Identify lerobot_* columns to drop after the transform.
         lerobot_cols = [c for c in dataset.column_names if c.startswith("lerobot_")]
-        dataset = dataset.to_iterable_dataset(num_shards=num_shards)
+        # dataset = dataset.to_iterable_dataset(num_shards=num_shards)
 
-        # 4. Apply lazy per-sample transform that resolves LeRobot refs → bytes.
-        #    The heavy I/O (video decode, ffmpeg) runs in DataLoader workers.
+        # # 4. Apply lazy per-sample transform that resolves LeRobot refs → bytes.
+        # #    The heavy I/O (video decode, ffmpeg) runs in DataLoader workers.
         transform_fn = make_lerobot_transform(default_dataset, default_camera)
-        dataset = dataset.map(transform_fn, remove_columns=lerobot_cols)
+        # dataset = dataset.map(transform_fn, remove_columns=lerobot_cols)
+        
+        
+        dataset = dataset.map(
+            transform_fn,
+            batched=False, # Your transform handles one dict at a time
+            num_proc=data_args.preprocessing_num_workers,
+            remove_columns=lerobot_cols,
+            desc="Generating LeRobot URIs"
+        )
     elif dataset_attr.load_from == "lance":
         # Resolve path: join with dataset_dir for relative paths.  Remote
         # ``hf://`` paths are forwarded to the lance library directly.
@@ -521,7 +547,12 @@ def _load_single_dataset(
 
         # Returns a map-style HF Dataset.  Binary columns are stored as
         # lightweight lance:// URI strings — no media bytes in Arrow.
-        dataset = _load_lance_dataset(lance_path)
+        dataset = _load_lance_dataset(lance_path,data_args)
+        
+        #map dataset_attr.messages to json
+        if dataset_attr.messages is not None:
+            dataset = dataset.map(lambda x: {"messages": _json_module.loads(x["messages"])}, batched=False)
+
     else:
         dataset = load_dataset(
             path=data_path,

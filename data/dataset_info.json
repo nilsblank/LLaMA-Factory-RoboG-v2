@@ -48,6 +48,8 @@
       "videos": "video_blob"
     }
   },
+
+
   "identity": {
     "file_name": "identity.json"
   },
@@ -1504,6 +1506,24 @@
 
 },
 
+  "lerobot_vqa_bridge_droid_ex": {
+    "_comment": "EXAMPLE (remove leading underscore from key to activate). LeRobot IterableDataset: JSONL files with lerobot_images/lerobot_videos references that are resolved to JPEG/MP4 bytes at load time. Output format matches WebDataset (jpg/mp4 byte lists), enabling trivial co-training. Always loaded as an IterableDataset; use streaming:true.",
+    "lerobot_files": "/e/home/jusers/blank4/jupiter/blank4/robogrounder/bridge_droid/scratch/train_diverse_lang.jsonl",
+    "formatting": "sharegpt",
+    
+    "columns": {
+      "messages": "messages",
+      "images": "images",
+      "videos": "videos"
+    },
+          "tags": {
+            "role_tag": "role",
+            "content_tag": "content",
+            "user_tag": "user",
+            "assistant_tag": "assistant"
+        }
+  },
+
     "lerobot_vqa_bridge_droid": {
         "file_name": "/e/home/jusers/blank4/jupiter/blank4/robogrounder/bridge_droid/scratch/train_diverse_lang.jsonl",
         "formatting": "sharegpt",
@@ -1562,6 +1582,16 @@
       "content_tag": "content",
       "user_tag": "user",
       "assistant_tag": "assistant"
+    }
+  },
+
+    "eo1m_lance": {
+    "_comment": "",
+    "lance_files": "/e/scratch/m3/pretrain_data/lance/eo1m.lance",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "image_blob"
     }
   }
 }

@@ -32,6 +32,7 @@ export TRANSFORMERS_OFFLINE=1
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
 export LD_LIBRARY_PATH=/e/home/jusers/blank4/jupiter/blank4/envs/miniforge3/envs/roboG/lib/python3.12/site-packages/nvidia/cu13/lib:$LD_LIBRARY_PATH
 export WANDB_MODE="offline"
+export DISABLE_VERSION_CHECK=1
 
 
 source ~/blank4/envs/miniforge3/etc/profile.d/conda.sh

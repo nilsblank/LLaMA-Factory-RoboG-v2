@@ -10,7 +10,7 @@ timechat_num_frame_queries: 32
 timechat_num_video_queries: 32
 append_global_query: true
 use_individual_frame_query: true
-encode_images_with_frame_resampler: false  # set true to compress images via frame resampler (same Qf tokens as video frames)
+encode_images_with_frame_resampler: true  # set true to compress images via frame resampler (same Qf tokens as video frames)
 
 pass_individual_frames: true
 
@@ -35,7 +35,7 @@ do_train: true
 finetuning_type: full
 #lora_target: q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj
 freeze_vision_tower: true
-freeze_multi_modal_projector: true
+freeze_multi_modal_projector: false
 freeze_language_model: true
 #deepspeed: examples/deepspeed/ds_z2_config.json
 disable_gradient_checkpointing: false
@@ -44,15 +44,15 @@ use_unsloth_gc: true
 enable_liger_kernel: true
 
 ### dataset
-dataset: lerobot_vqa_bridge_droid #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
+dataset: eo1m_lance, lerobot_vqa_bridge_droid #lerobot_vqa_bridge_droid #lerobot_vqa_bridge  #,eo1m,sav,video_espresso,fsd
 template: qwen3_vl_nothink_timechat
 cutoff_len: 4096
-#max_samples: 512
+max_samples: 2048
 overwrite_cache: true
 preprocessing_num_workers: 1
 dataloader_num_workers: 16
 dataloader_prefetch_factor: 4
-#dataloader_persistent_workers: true
+dataloader_persistent_workers: true
 
 #streaming: true
 #max_steps: 100
@@ -70,8 +70,8 @@ report_to: wandb
 run_name: ${model_name_or_path}_${dataset}_${stage}
 
 ### train
-per_device_train_batch_size: 16
-gradient_accumulation_steps: 2
+per_device_train_batch_size: 8
+gradient_accumulation_steps: 4
 learning_rate: 9.0e-5
 num_train_epochs: 2.0
 lr_scheduler_type: cosine
@@ -92,7 +92,7 @@ evaluators:
   - bbox_evaluator
   - label_evaluator
 
-tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_frame_queries}_${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
+#tokenized_path: /e/home/jusers/blank4/jupiter/blank4/tokenized_datasets/roboG_debug/${dataset}/${timechat_num_frame_queries}_${timechat_num_video_queries}_pass_individual_frames_${use_individual_frame_query}_append_global_query_${append_global_query}/tokenized
 
 
 

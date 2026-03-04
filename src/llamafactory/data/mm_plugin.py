@@ -2275,23 +2275,32 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
         video_merge_length: int = getattr(video_processor, "merge_size") ** 2
 
         if self.expand_mm_tokens:
-            # ── Images: cheap path — PIL header-only size read, no pixel decode ──
-            image_grid_thw = [
-                _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
-                for img in images
-            ]
-            # ── Videos: metadata-only path — seqlen comes from custom_model_args,
-            #    so we only need frame count + fps for timestamps (no pixel decode). ──
-            video_fps = getattr(processor, "video_fps", 2.0)
-            video_maxlen = 8  # match _get_mm_inputs hardcode
-            video_metadata_list: list[VideoMetadata] = []
-            for vid in videos:
-                n_frames, _, _h, _w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
-                meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
-                meta.frames_indices = np.arange(n_frames)
-                video_metadata_list.append(meta)
-            num_frames = video_metadata_list[0].total_num_frames if video_metadata_list else 0
-            video_metadata = video_metadata_list
+            
+            if len(images) > 0 and ("lance" in images[0]) or (len(videos) > 0 and "lance" in videos[0]):
+                # we need to call _get_mm_inputs to get the correct image/video grid thw and video metadata for lance input, since we can not get image dims from str alone.
+                mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
+                image_grid_thw = mm_inputs.get("image_grid_thw", [])
+                video_grid_thw = mm_inputs.get("video_grid_thw", [])
+                num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
+                video_metadata = mm_inputs.get("video_metadata", {})
+            else:
+                # ── Images: cheap path — PIL header-only size read, no pixel decode ──
+                image_grid_thw = [
+                    _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(img), image_processor, processor)
+                    for img in images
+                ]
+                # ── Videos: metadata-only path — seqlen comes from custom_model_args,
+                #    so we only need frame count + fps for timestamps (no pixel decode). ──
+                video_fps = getattr(processor, "video_fps", 2.0)
+                video_maxlen = 8  # match _get_mm_inputs hardcode
+                video_metadata_list: list[VideoMetadata] = []
+                for vid in videos:
+                    n_frames, _, _h, _w = _get_video_info_no_decode(vid, video_fps, video_maxlen)
+                    meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
+                    meta.frames_indices = np.arange(n_frames)
+                    video_metadata_list.append(meta)
+                num_frames = video_metadata_list[0].total_num_frames if video_metadata_list else 0
+                video_metadata = video_metadata_list
         else:
             image_grid_thw = [None] * len(images)
             num_frames = 0
