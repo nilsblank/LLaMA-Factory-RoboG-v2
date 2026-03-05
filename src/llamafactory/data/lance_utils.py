@@ -16,9 +16,10 @@
 
 URI format: ``lance://<path>#<column>#<row>``
 
-The handle cache is per-process (empty after fork), so each DataLoader
-worker opens its own lance dataset handle and then reuses it for all
-subsequent lookups — O(1) per sample after the first access.
+The handle cache is per-process (empty after fork).  Each DataLoader worker
+opens its own fresh lance handle on first access (lance C++ state is not
+fork-safe to share).  Opens are staggered by worker_id to avoid the
+thundering-herd problem when many workers hit the same file simultaneously.
 """
 
 from __future__ import annotations
@@ -39,7 +40,24 @@ def _parse_lance_uri(uri: str) -> tuple[str, str, int]:
 
 
 def _get_lance_dataset(path: str) -> Any:
-    """Return cached lance dataset handle for this process, opening fresh if needed."""
+    """Return cached lance dataset handle for this process, opening fresh if needed.
+
+    Stagger the first open by DataLoader worker_id to prevent thundering-herd:
+    with fork-based workers each process starts with an empty cache and all N
+    workers would otherwise call lance.dataset() simultaneously, contending on
+    the lance file lock / NFS metadata server.  The sleep is done before
+    acquiring _cache_lock so multiple distinct lance paths don't serialize.
+    """
+    if path in _LANCE_HANDLES:
+        return _LANCE_HANDLES[path]
+    try:
+        import time
+        import torch.utils.data
+        info = torch.utils.data.get_worker_info()
+        if info is not None:
+            time.sleep(info.id * 0.3)  # stagger: worker N waits N*300ms
+    except Exception:
+        pass
     with _cache_lock:
         if path not in _LANCE_HANDLES:
             import lance

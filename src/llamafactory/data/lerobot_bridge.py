@@ -337,14 +337,24 @@ def preload_all_datasets() -> None:
         )
 
 
-def lerobot_worker_init_fn(worker_id: int) -> None:  # noqa: ARG001
+def lerobot_worker_init_fn(worker_id: int) -> None:
     """DataLoader ``worker_init_fn`` that preloads all configured LeRobot datasets.
 
     Pass this to ``torch.utils.data.DataLoader(worker_init_fn=lerobot_worker_init_fn)``
     whenever ``num_workers > 0`` and the dataset contains ``lerobot://`` references.
     Each spawned worker will eagerly initialise and cache every dataset listed in
     ``LEROBOT_DATASETS`` / ``LEROBOT_DATASET`` before the first batch is requested.
+
+    Staggered by worker_id to avoid thundering-herd on LeRobot dataset validation
+    (DROID has 14M frames; N workers opening simultaneously saturates the filesystem).
+    Validation is skipped in workers — the dataset was already validated when first
+    cached (in the main process or previous training run).
     """
+    import os
+    import time
+
+    os.environ.setdefault("LEROBOT_SKIP_DATA_VALIDATION", "True")
+    time.sleep(worker_id * 0.5)  # stagger: worker N waits N*500ms before opening
     preload_all_datasets()
 
 
