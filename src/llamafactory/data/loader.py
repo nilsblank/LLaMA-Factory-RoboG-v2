@@ -726,8 +726,8 @@ def _get_preprocessed_dataset(
             if has_lance_uris:
                 break
         if has_lance_uris and effective_num_workers is not None:
-            # import multiprocess
-            # multiprocess.set_start_method("spawn", force=True)
+            import multiprocess
+            multiprocess.set_start_method("spawn", force=True)
             logger.warning_rank0(
                 "Detected lance URIs in the dataset. Using 'spawn' start method for multiprocessing safety "
                 "(lance's Tokio/C++ runtime is not fork-safe)."
