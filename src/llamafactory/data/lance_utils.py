@@ -47,11 +47,30 @@ def _get_lance_dataset(path: str) -> Any:
         return _LANCE_HANDLES[path]
 
 
+def clear_lance_handles() -> None:
+    """Close and remove all cached Lance dataset handles.
+
+    Call this in the *main process* right before ``dataset.map()`` forks worker
+    processes.  Lance dataset objects wrap Rust/C++ file descriptors that are not
+    fork-safe: if a handle is open at fork time the child and parent share the
+    same underlying file descriptor, which can cause silent data corruption or
+    a hard crash (SIGSEGV/SIGABRT) in the worker subprocess.
+
+    Each forked worker will re-open its own fresh handle on first access.
+    """
+    with _cache_lock:
+        _LANCE_HANDLES.clear()
+
+
 def _is_blob_column(ds, col: str) -> bool:
-    """Return True if *col* is a Lance blob extension column (lance.blob.v2)."""
+    """Return True if *col* is a Lance blob extension column (lance.blob.v2) or large binary column, False otherwise."""
     try:
         import pyarrow as pa
         field = ds.schema.field(col)
+        #DataType(large_binary)
+        is_blob = "blob" in field.name
+        if is_blob:
+            return True
         return isinstance(field.type, pa.ExtensionType) and "blob" in getattr(field.type, "extension_name", "").lower()
     except Exception:
         return False

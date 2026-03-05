@@ -202,35 +202,20 @@ def _decode_bytes(data: bytes) -> None:
         Image.open(io.BytesIO(data)).convert("RGB")
 
 
-def _decode_video(data: bytes, num_frames: int = 8) -> None:
-    """Decode *num_frames* equally-spaced frames from raw MP4 bytes.
+def _decode_video(data: bytes) -> None:
+    """Decode all frames of raw MP4 bytes.
 
     Uses torchcodec if available, otherwise falls back to PyAV.
     No-op if neither is installed.
     """
-    import numpy as np
     if HAS_TORCHCODEC:
         decoder = _VideoDecoder(data)
-        total = len(decoder)
-        nf = min(num_frames, total)
-        if nf <= 0:
-            return
-        indices = np.linspace(0, total - 1, nf, dtype=int).tolist()
-        for i in indices:
-            _ = decoder[i]
+        _ = decoder.get_frames_in_range(start=0, stop=len(decoder))
     elif HAS_AV:
         with _av.open(io.BytesIO(data)) as container:
             stream = container.streams.video[0]
-            total = stream.frames or 0
-            all_frames = list(container.decode(stream))
-            total = len(all_frames)
-            nf = min(num_frames, total)
-            if nf <= 0:
-                return
-            indices = set(np.linspace(0, total - 1, nf, dtype=int).tolist())
-            for i, frame in enumerate(all_frames):
-                if i in indices:
-                    _ = frame.to_ndarray(format="rgb24")
+            for frame in container.decode(stream):
+                pass  # force full decode of every frame
 
 
 def _count_bytes(v) -> int:
@@ -256,7 +241,6 @@ def bench_wds(
     shuffle_buffer: int,
     decode_images: bool,
     decode_video: bool = False,
-    num_frames: int = 8,
     seed: int = 42,
 ) -> BenchResult:
     import glob
@@ -314,7 +298,7 @@ def bench_wds(
                 total_bytes += len(raw)
                 if decode_video:
                     try:
-                        _decode_video(raw, num_frames)
+                        _decode_video(raw)
                     except Exception as e:
                         print(f"  Video decode error: {e}")
                         errors += 1
@@ -520,7 +504,6 @@ class _LanceMapDataset(torch.utils.data.Dataset):
         blob_cols: list[str],
         decode_images: bool,
         decode_video: bool = False,
-        num_frames: int = 8,
     ):
         self.lance_path = lance_path
         self.indices = indices
@@ -530,7 +513,6 @@ class _LanceMapDataset(torch.utils.data.Dataset):
         self.video_blob_cols  = [c for c in blob_cols if _is_video_col(c)]
         self.decode_images = decode_images
         self.decode_video  = decode_video
-        self.num_frames    = num_frames
 
     def __len__(self):
         return len(self.indices)
@@ -577,7 +559,7 @@ class _LanceMapDataset(torch.utils.data.Dataset):
                 total_bytes += len(raw)
                 if self.decode_video:
                     try:
-                        _decode_video(raw, self.num_frames)
+                        _decode_video(raw)
                     except Exception as e:
                         print(f"  Video decode error: {e}")
                         errors += 1
@@ -631,7 +613,6 @@ def bench_lance(
     shuffle: bool,
     decode_images: bool,
     decode_video: bool = False,
-    num_frames: int = 8,
     lance_threads: int = 2,
     seed: int = 42,
 ) -> BenchResult:
@@ -684,7 +665,7 @@ def bench_lance(
         rng.shuffle(indices)
     indices = indices[:num_samples]
 
-    ds = _LanceMapDataset(LANCE_PATH, indices, scalar_cols, blob_cols, decode_images, decode_video, num_frames)
+    ds = _LanceMapDataset(LANCE_PATH, indices, scalar_cols, blob_cols, decode_images, decode_video)
 
     # Fork is safe: parent never opened lance.  No spawn overhead.
     loader = torch.utils.data.DataLoader(
@@ -785,7 +766,6 @@ def run_all(args):
                     shuffle_buffer=buf,
                     decode_images=args.decode,
                     decode_video=args.decode_video,
-                    num_frames=args.lerobot_num_frames,
                     seed=args.seed,
                 )
                 results.append(r)
@@ -806,7 +786,6 @@ def run_all(args):
                         shuffle=shuf,
                         decode_images=args.decode,
                         decode_video=args.decode_video,
-                        num_frames=args.lerobot_num_frames,
                         lance_threads=lt,
                         seed=args.seed,
                     )

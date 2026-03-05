@@ -17,6 +17,9 @@ import subprocess
 import sys
 from copy import deepcopy
 
+# import multiprocess
+# multiprocess.set_start_method("spawn", force=True) 
+
 
 USAGE = (
     "-" * 70

@@ -1593,6 +1593,37 @@
       "messages": "messages",
       "images": "image_blob"
     }
+  },
+      "fsd_lance": {
+    "_comment": "",
+    "lance_files": "/e/scratch/m3/pretrain_data/lance/fsd.lance",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "image_blob"
+    },
+            "tags": {
+            "role_tag": "role",
+            "content_tag": "content",
+            "user_tag": "user",
+            "assistant_tag": "assistant"
+        }
+  },
+    "sav_lance": {
+    "_comment": "",
+    "lance_files": "/e/scratch/m3/pretrain_data/lance/sav.lance",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "image_blob",
+      "videos": "video_blob"
+    },
+            "tags": {
+            "role_tag": "role",
+            "content_tag": "content",
+            "user_tag": "user",
+            "assistant_tag": "assistant"
+        }
   }
 }
 

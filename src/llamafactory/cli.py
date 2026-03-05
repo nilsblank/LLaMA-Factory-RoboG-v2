@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# import multiprocess
+# multiprocess.set_start_method("spawn", force=True)
+
 
 def main():
     from .extras.misc import is_env_enabled

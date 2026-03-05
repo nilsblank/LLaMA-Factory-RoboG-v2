@@ -38,9 +38,67 @@ from transformers.models.mllama.processing_mllama import (
 )
 from typing_extensions import NotRequired, override
 
+
+
 from ..extras.constants import AUDIO_PLACEHOLDER, IGNORE_INDEX, IMAGE_PLACEHOLDER, VIDEO_PLACEHOLDER
 from ..extras.packages import is_pillow_available, is_pyav_available, is_transformers_version_greater_than
 
+
+
+import decord
+
+
+def decode_video_decord(input: Union[str, BinaryIO, bytes], n_frames = 8) -> list[np.ndarray]:
+    """Decode video using decord."""
+    if isinstance(input, bytes):
+        input = BytesIO(input)
+
+    vr = decord.VideoReader(input, num_threads=0)
+    if n_frames is not None:
+        idx = np.linspace(0, len(vr) - 1, n_frames).astype(int)
+        return vr.get_batch(idx).asnumpy().tolist()
+    else:
+        frames = vr.get_batch(range(len(vr))).asnumpy().tolist()
+
+    return frames
+
+
+def get_video_metadata(input, num_frames: Optional[int] = None) -> VideoMetadata:
+    """Read video metadata without decoding frames, using PyAV."""
+    from io import BytesIO
+
+    if isinstance(input, bytes):
+        input = BytesIO(input)
+
+    with av.open(input) as container:
+        stream = container.streams.video[0]
+
+        fps = float(stream.average_rate)
+        
+        # Try to get duration from stream, fall back to container duration
+        if stream.duration is not None:
+            duration = float(stream.duration * stream.time_base)
+        else:
+            duration = float(container.duration / av.time_base)
+
+        # Get frame count without decoding
+        if stream.frames:
+            n_frames = stream.frames
+        else:
+            # Estimate from duration and fps if not stored in header
+            n_frames = int(duration * fps)
+
+        width = stream.width
+        height = stream.height
+
+    meta = VideoMetadata(
+        fps=fps,
+        duration=duration,
+        total_num_frames=n_frames,
+    )
+    meta.frames_indices = np.arange()
+
+    return meta, width, height
 
 if is_pillow_available():
     from PIL import Image
@@ -263,8 +321,8 @@ class MMPluginMixin:
         for image in images:
             if isinstance(image, str) and image.startswith("lance://"):
                 from .lance_utils import resolve_lance_uri
-
-                image = Image.open(BytesIO(resolve_lance_uri(image)))
+                im_bytes = resolve_lance_uri(image)
+                image = Image.open(BytesIO(im_bytes))
             elif isinstance(image, str) and image.startswith("lerobot://"):
                 from .lerobot_bridge import load_lerobot_frame
 
@@ -296,22 +354,27 @@ class MMPluginMixin:
         durations = []
         for video in videos:
             frames: list[ImageObject] = []
-            if isinstance(video, str) and video.startswith("lance://"):
+            if isinstance(video, str) and video.startswith("lance://"): 
                 from .lance_utils import resolve_lance_uri
 
-                raw = resolve_lance_uri(video)
-                container = av.open(BytesIO(raw), "r")
-                video_stream = next(stream for stream in container.streams if stream.type == "video")
-                sample_indices = self._get_video_sample_indices(video_stream, **kwargs)
-                container.seek(0)
-                for frame_idx, frame in enumerate(container.decode(video_stream)):
-                    if frame_idx in sample_indices:
-                        frames.append(frame.to_image())
+                n_frames = kwargs.get("video_maxlen", 8)
+                input = resolve_lance_uri(video)
+                if isinstance(input, bytes):
+                    input = BytesIO(input)
 
-                if video_stream.duration is None:
-                    durations.append(len(frames) / kwargs.get("video_fps", 2.0))
+                vr = decord.VideoReader(input, num_threads=0)
+                if n_frames is not None:
+                    idx = np.linspace(0, len(vr) - 1, n_frames).astype(int)
+                    frames =  vr.get_batch(idx).asnumpy()
                 else:
-                    durations.append(float(video_stream.duration * video_stream.time_base))
+                    frames = vr.get_batch(range(len(vr))).asnumpy()
+                frames = [Image.fromarray(frame) for frame in frames]
+                durations.append(len(frames) / vr.get_avg_fps())
+
+                # if video_stream.duration is None:
+                #     durations.append(len(frames) / kwargs.get("video_fps", 2.0))
+                # else:
+                #     durations.append(float(video_stream.duration * video_stream.time_base))
 
                 container.close()
             elif isinstance(video, str) and video.startswith("lerobot://"):
@@ -1686,7 +1749,26 @@ class Qwen2VLPlugin(BasePlugin):
         results, fps_per_video, durations = [], [], []
         for video in videos:
             frames: list[ImageObject] = []
-            if isinstance(video, str) and video.startswith("lerobot://"):
+            if isinstance(video, str) and video.startswith("lance://"):
+                from .lance_utils import resolve_lance_uri
+
+                n_frames = kwargs.get("video_maxlen", 8)
+                input = resolve_lance_uri(video)
+                if isinstance(input, bytes):
+                    input = BytesIO(input)
+
+                vr = decord.VideoReader(input, num_threads=0)
+                if n_frames is not None:
+                    idx = np.linspace(0, len(vr) - 1, n_frames).astype(int)
+                    frames =  vr.get_batch(idx).asnumpy()
+                else:
+                    frames = vr.get_batch(range(len(vr))).asnumpy()
+                #TODO check if this is needed downstream
+                frames = [Image.fromarray(frame) for frame in frames]
+
+                durations.append(len(frames) / vr.get_avg_fps())
+                
+            elif isinstance(video, str) and video.startswith("lerobot://"):
                 from .lerobot_bridge import load_lerobot_video_frames
 
                 video_maxlen = kwargs.get("video_maxlen", None)
@@ -2277,12 +2359,24 @@ class Qwen3VLPluginTimechat(Qwen2VLPlugin):
         if self.expand_mm_tokens:
             
             if len(images) > 0 and ("lance" in images[0]) or (len(videos) > 0 and "lance" in videos[0]):
-                # we need to call _get_mm_inputs to get the correct image/video grid thw and video metadata for lance input, since we can not get image dims from str alone.
-                mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
-                image_grid_thw = mm_inputs.get("image_grid_thw", [])
-                video_grid_thw = mm_inputs.get("video_grid_thw", [])
-                num_frames = video_grid_thw[0][0] if len(video_grid_thw) > 0 else 0  # hard code for now
-                video_metadata = mm_inputs.get("video_metadata", {})
+                from .lance_utils import resolve_lance_uri
+
+                image_grid_thw = [
+                    _compute_qwen2vl_image_grid_thw(*_get_image_size_no_decode(resolve_lance_uri(img)), image_processor, processor)
+                    for img in images
+                ]
+
+                video_fps = getattr(processor, "video_fps", 2.0)
+                video_maxlen = 8  # match _get_mm_inputs hardcode
+                video_metadata_list: list[VideoMetadata] = []
+                for vid in videos:
+                    n_frames, _, _h, _w = _get_video_info_no_decode(resolve_lance_uri(vid), video_fps, video_maxlen)
+                    meta = VideoMetadata(fps=video_fps, duration=n_frames / video_fps, total_num_frames=n_frames)
+                    meta.frames_indices = np.arange(n_frames)
+                    video_metadata_list.append(meta)
+                num_frames = video_metadata_list[0].total_num_frames if video_metadata_list else 0
+                video_metadata = video_metadata_list
+
             else:
                 # ── Images: cheap path — PIL header-only size read, no pixel decode ──
                 image_grid_thw = [

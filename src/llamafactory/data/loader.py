@@ -19,6 +19,7 @@ import os
 from typing import TYPE_CHECKING, Iterator, Literal, Optional, Union
 
 import numpy as np
+
 from datasets import Dataset, DatasetDict, IterableDataset, load_dataset, load_from_disk
 
 from ..extras import logging
@@ -308,22 +309,26 @@ def _load_lance_dataset(lance_path: str, data_args: "DataArguments") -> "Dataset
     text_cols: list[str] = [f.name for f in schema if f.name not in binary_col_set]
 
     # Read only the lightweight text / scalar columns.
+    # Also attach a synthetic _lance_row_idx column so we can track the original
+    # file-level row index through any downstream filtering.
     table: pa.Table = ds.to_table(columns=text_cols) if text_cols else pa.table({"_dummy": [None] * n_rows})
+    table = table.append_column("_lance_row_idx", pa.array(range(n_rows), type=pa.int64()))
 
-    
-    #filter table where we have multiple images for nwop 
+    #filter table where we have multiple images for nwop
     counts = pa.compute.count_substring_regex(table["messages"], "<image>")
     mask = pa.compute.less(counts, 2)
     table = table.filter(mask)
     n_rows = table.num_rows
 
-
-    
     # For each binary column, create a lance:// URI reference column.
+    # IMPORTANT: use the *original* Lance file row indices (stored in _lance_row_idx),
+    # NOT range(n_rows), because the filter above may have removed rows, making the
+    # filtered table positions 0..M-1 diverge from the file positions.
+    orig_indices: list[int] = table["_lance_row_idx"].to_pylist()
     for col in binary_cols:
-        # could be multiple images per sample, so we need to create a list of URIs for each row
-        uris = [f"lance://{lance_path}#{col}#{i}" for i in range(n_rows)]
+        uris = [f"lance://{lance_path}#{col}#{orig_idx}" for orig_idx in orig_indices]
         table = table.append_column(col, pa.array(uris, type=pa.utf8()))
+    table = table.drop(["_lance_row_idx"])
 
     # Drop the dummy column if we had to create one (no text columns).
     if "_dummy" in table.column_names:
@@ -689,6 +694,77 @@ def _get_preprocessed_dataset(
             desc="Running tokenizer on dataset",
         )
 
+    # Close any open Lance dataset handles in the main process before map() forks
+    # worker subprocesses.  Lance's C++ objects are not fork-safe: a handle alive
+    # at fork time is shared between parent and child, which can cause crashes
+    # (SIGSEGV/SIGABRT) in the workers.  Workers open their own fresh handles.
+    if kwargs.get("num_proc", 1) != 1:
+        try:
+            from .lance_utils import clear_lance_handles
+            clear_lance_handles()
+        except ImportError:
+            pass
+
+
+    effective_num_workers = data_args.preprocessing_num_workers
+    if isinstance(dataset, Dataset) and len(dataset) > 0:
+        _sample_size = min(10, len(dataset))
+        #check if lance in _image or _video column
+        has_lance_uris = False
+        for i in range(_sample_size):
+            sample = dataset[i]
+            im_row = sample.get("_images", None)
+            vid_row = sample.get("_videos", None)
+            for row in [im_row, vid_row]:
+                if row is not None and isinstance(row, list):
+                    for item in row:
+                        if isinstance(item, str) and item.startswith("lance://"):
+                            has_lance_uris = True
+                            break
+                    if has_lance_uris:
+                        break
+            if has_lance_uris:
+                break
+        if has_lance_uris and effective_num_workers is not None:
+            # import multiprocess
+            # multiprocess.set_start_method("spawn", force=True)
+            logger.warning_rank0(
+                "Detected lance URIs in the dataset. Using 'spawn' start method for multiprocessing safety "
+                "(lance's Tokio/C++ runtime is not fork-safe)."
+            )
+    kwargs["num_proc"] = effective_num_workers
+    
+    #check if multigpu
+    _world_size = training_args.world_size
+    if _world_size <= 1:
+        # training_args.world_size may not be set yet at dataset-load time;
+        # fall back to torch distributed (if initialized) or visible GPU count.
+        try:
+            import torch.distributed as dist
+            if dist.is_available() and dist.is_initialized():
+                _world_size = dist.get_world_size()
+            else:
+                import torch
+                _world_size = max(torch.cuda.device_count(), 1)
+        except Exception:
+            _world_size = 1
+
+    _num_workers = data_args.preprocessing_num_workers or 1
+    if _num_workers > 1 or _world_size > 1:
+        logger.info_rank0(
+            f"Preprocessing with num_proc={_num_workers} and world_size={_world_size} (effective_num_workers={effective_num_workers})."
+        )
+        try:
+            from llamafactory.data.lance_utils import _LANCE_HANDLES
+            if _LANCE_HANDLES:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Clearing %d open lance handle(s) before forking preprocessing workers "
+                    "(lance is not fork-safe).", len(_LANCE_HANDLES)
+                )
+                _LANCE_HANDLES.clear()
+        except ImportError:
+            pass
 
     dataset = dataset.map(
         dataset_processor.preprocess_dataset,
