@@ -153,6 +153,74 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
         return super()._get_train_sampler(*args, **kwargs)
 
     @override
+    def get_train_dataloader(self) -> "torch.utils.data.DataLoader":
+        """Override HF Trainer's DataLoader creation to use spawn and inject lerobot init.
+
+        HF Trainer passes multiprocessing_context=None, which PyTorch resolves to the
+        process-level module (torch.multiprocessing) and uses OS default (fork on Linux),
+        ignoring multiprocessing.set_start_method('spawn').  Only an explicit context
+        object (from get_context('spawn')) forces spawn.
+
+        Also chains lerobot_worker_init_fn with seed_worker so spawned workers preload
+        LeRobot datasets before the first batch rather than triggering lazy thundering-herd
+        opens mid-training.
+        """
+        import os
+        from functools import partial
+
+        import torch.multiprocessing as _tmp
+        import torch.utils.data as _tud
+        import transformers.trainer as _tm
+        from torch.utils.data import DataLoader, IterableDataset
+
+        n_workers = self.args.dataloader_num_workers
+        if n_workers == 0:
+            return super().get_train_dataloader()
+
+        # Apply HF's column-removal logic to get the right dataset and collator.
+        dataset = self.train_dataset
+        data_collator = self.data_collator
+        try:
+            from datasets import Dataset as _HFDataset
+            if isinstance(dataset, _HFDataset):
+                dataset = self._remove_unused_columns(dataset, description="Training")
+            else:
+                data_collator = self._get_collator_with_removed_columns(data_collator, description="Training")
+        except Exception:
+            pass
+
+        spawn_ctx = _tmp.get_context("spawn")
+
+        params: dict = {
+            "batch_size": self._train_batch_size,
+            "collate_fn": data_collator,
+            "num_workers": n_workers,
+            "pin_memory": self.args.dataloader_pin_memory,
+            "persistent_workers": self.args.dataloader_persistent_workers,
+            "multiprocessing_context": spawn_ctx,
+        }
+
+        if not isinstance(dataset, IterableDataset):
+            params["sampler"] = self._get_train_sampler(dataset)
+            params["drop_last"] = self.args.dataloader_drop_last
+            params["prefetch_factor"] = self.args.dataloader_prefetch_factor
+
+            seed_worker = getattr(_tm, "seed_worker", None)
+            if seed_worker is not None:
+                _sw = partial(seed_worker, num_workers=n_workers, rank=self.args.process_index)
+                has_lerobot = bool(os.environ.get("LEROBOT_DATASETS") or os.environ.get("LEROBOT_DATASET"))
+                if has_lerobot:
+                    from ...data.lerobot_bridge import lerobot_worker_init_fn as _li
+                    def _worker_init(wid: int) -> None:
+                        _li(wid)
+                        _sw(wid)
+                    params["worker_init_fn"] = _worker_init
+                else:
+                    params["worker_init_fn"] = _sw
+
+        return self.accelerator.prepare(DataLoader(dataset, **params))
+
+    @override
     def compute_loss(self, model, inputs, *args, **kwargs):
         if self.finetuning_args.use_asft_loss:
             with torch.no_grad():
