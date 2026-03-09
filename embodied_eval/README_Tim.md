@@ -19,13 +19,13 @@ uv pip install -r embodied_eval/requirements.txt
 # If you require specific features, check the requirements folder for more dependencies
 
 # Install project
-uv pip install vllm==0.13  # LLAMA Factory installs 0.10.0, which causes problems with Qwen 3 VL
+uv pip install vllm==0.17  # LLAMA Factory installs 0.10.0, which causes problems with Qwen 3 VL
 uv pip install hatchling editables  # Missing build packages
-uv pip install -e --no-build-isolation
+uv pip install -e . --no-build-isolation
 uv pip install -r requirements/metrics.txt
 
 # Dependency fixes
-uv pip install hydra-core tensorflow-datasets qwen-vl-utils==0.0.14 torchmetrics pycocotools sentence-transformers tf-keras
+uv pip install hydra-core tensorflow-datasets qwen-vl-utils==0.0.14 torchmetrics pycocotools scikit-learn # sentence-transformers tf-keras
 ```
 
 ## Benchmarks
@@ -174,8 +174,31 @@ uv pip install google-genai
 **Installation**:
 
 - Automatically downloads from HF
+- As long as VLLM does not support transformers > `5.0` (see [Issue](https://github.com/vllm-project/vllm/pull/30566)), it is necessary to adjust the file `LLaMA-Factory-RoboG-v2/src/llamafactory/custom_models/qwen_3_vl_query_timechat.py` by removing the import for `maybe_autocast` and adding this after the imports (Make sure transformers is version `4.57.6` and vllm is `0.17.0`): 
+	```
+	def maybe_autocast(
+	    device_type: str,
+	    dtype: Optional["_dtype"] = None,
+	    enabled: bool = True,
+	    cache_enabled: bool | None = None,
+	):
+	    """
+	    Context manager that only autocasts if:
+	
+	    - `autocast` is already enabled in this context
+	    - Or this call to `maybe_autocast` has `enabled=True`
+	
+	    This prevents `autocast` being added to the graph when it is effectively a no-op.
+	    Which makes graph splitting in `torch.compile` more flexible as it removes the
+	    requirement that partition IDs be monotonically increasing.
+	    """
+	    if torch.is_autocast_enabled(device_type) or enabled:
+	        return torch.autocast(device_type, dtype=dtype, enabled=enabled, cache_enabled=cache_enabled)
+	    else:
+	        return nullcontext()
+	```
 
 **Run model**:
 
-1. Set model in config file to `rynnbrain`
+1. Set model in config file to `rynnbrain_vllm` for fast evaluation, the config `rynnbrain` uses the HF model directly and is very slow
 2. Run benchmark
