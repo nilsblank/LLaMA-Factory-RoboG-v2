@@ -25,7 +25,7 @@ uv pip install -e . --no-build-isolation
 uv pip install -r requirements/metrics.txt
 
 # Dependency fixes
-uv pip install hydra-core tensorflow-datasets qwen-vl-utils==0.0.14 torchmetrics pycocotools scikit-learn # sentence-transformers tf-keras
+uv pip install hydra-core tensorflow-datasets qwen-vl-utils==0.0.14 torchmetrics pycocotools scikit-learn decord # sentence-transformers tf-keras
 ```
 
 ## Benchmarks
