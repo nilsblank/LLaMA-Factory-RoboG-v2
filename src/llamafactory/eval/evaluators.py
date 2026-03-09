@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 try:
     from sentence_transformers import SentenceTransformer, util
     use_sentence_transformers = True
-except ImportError:
+except (ImportError, RuntimeError):
     use_sentence_transformers = False
     print("Warning: sentence-transformers not installed, falling back to simple string similarity for LabelEvaluator. Install with `pip install sentence-transformers` for better results.")
     
@@ -136,7 +136,8 @@ class BoundingBoxEvaluator(BaseEvaluator):
         self, 
         ground_truth_file: Optional[str] = None, 
         ground_truths: Optional[List[Dict[str, Any]]] = None,
-        name: Optional[str] = None
+        name: Optional[str] = None,
+        bbox_denormalizer: Optional[callable] = None
     ):
         """
         Initialize the bounding box evaluator.
@@ -145,10 +146,12 @@ class BoundingBoxEvaluator(BaseEvaluator):
             ground_truth_file: Path to ground truth file (one JSON per line)
             ground_truths: Ground truth data (alternative to file)
             name: Name for this evaluator
+            bbox_denormalizer: Optional function to denormalize bounding boxes
         """
         super().__init__(name=name or "BoundingBoxMAP")
         self.ground_truth_file = ground_truth_file
         self.ground_truths = ground_truths
+        self.bbox_denormalizer = bbox_denormalizer
         
         self.load_data()
 
@@ -281,6 +284,7 @@ class BoundingBoxEvaluator(BaseEvaluator):
             
             # Parse predicted boxes
             box_list = self.parse_bbox_from_text(pred_text) if isinstance(pred_text, str) else []
+            box_list = [self.bbox_denormalizer(box, (1000, 1000)) for box in box_list] if self.bbox_denormalizer and box_list else box_list  # GT uses coordinates normalized to 1000x1000, so denormalize if function provided
             boxes = torch.tensor(box_list) if box_list else torch.empty((0, 4))
             # Process ground truth
             if boxes.numel() == 0 or not self.is_valid_box(boxes[0]):
@@ -497,8 +501,6 @@ class LabelEvaluator(BaseEvaluator):
         for item in data:
             if "label" in item:
                 label = item["label"]
-                label = LabelEvaluator.process_label(label)
-
                 label = self.process_label(label)
                 labels.append(label)
  
@@ -790,6 +792,9 @@ class TaskInstructionEvaluator(BaseEvaluator):
         Parse task instruction from text.
         May be enclosed in <task>...</task> tags or last line after newline.
         """
+
+        # Remove <reasoning>...</reasoning> blocks (robust to missing newlines)
+        text = re.sub(r'<reasoning>.*?</reasoning>', '', text, flags=re.DOTALL).strip()
 
         # Check for <task>...</task> tags
         pattern = r'<task>(.*?)</task>'

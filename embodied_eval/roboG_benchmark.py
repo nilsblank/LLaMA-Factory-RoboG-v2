@@ -25,18 +25,99 @@ from typing import Any, Dict, List, Optional, Union
 
 from llamafactory.eval.evaluators import BoundingBoxEvaluator,LabelEvaluator, TaskInstructionEvaluator,TemporalAccuracyEvaluator
 
-
-
 import numpy as np
 import os
-
-
 
 from sacrebleu.metrics import BLEU
 from rouge_score import rouge_scorer
 
 from base import BaseBenchmark, BaseModel, Sample
-#import BaseBenchmark, BaseModel, Sample
+
+
+TASK_OUTPUT_FORMATS = {
+    # Tasks expect bbox and parse these formats:
+    # 1. r'```json\s*([\s\S]*?)```' where "bbox_2d" is a list or list of lists of a bbox 
+    # 2. r'bbox_2d"\s*:\s*\[(.*?)\]' contains the bbox
+    # 3. r'<box>(.*?)</box>' contains the bbox
+    # With a bbox being in the form [x1, y1, x2, y2]
+    "object_detection": """Provide the output strictly as a JSON code block containing a list of bounding boxes under the key 'bbox_2d'. The boxes must be in the format [x1, y1, x2, y2], representing the top-left and bottom-right corners.
+
+**Format Example:**
+```json
+[
+  {
+    "bbox_2d": [x1, y1, x2, y2]
+  }
+]
+```""",
+    "target_location": """Provide the output strictly as a JSON code block containing a list of bounding boxes under the key 'bbox_2d'. The boxes must be in the format [x1, y1, x2, y2], representing the top-left and bottom-right corners.
+
+**Format Example:**
+```json
+[
+  {
+    "bbox_2d": [x1, y1, x2, y2]
+  }
+]
+```""",
+
+    # Task expects a bbox in the same format as above and an object label in these formats:
+    # 1. r'```json\s*([\s\S]*?)```' with an object or a list of objects where "label" contains the label
+    # 2. r'label"\s*:\s*"(.*?)"' contains the label
+    # 3. r'<object>(.*?)</object>' contains the label
+    "poc_grounding_only_video": """Provide the output strictly as a JSON code block containing a list of objects. Each object must include the key 'bbox_2d' for the bounding box in the format [x1, y1, x2, y2] (top-left and bottom-right corners) and the key 'label' for the object's name.
+    
+**Format Example:**
+```json
+[
+  {
+    "bbox_2d": [x1, y1, x2, y2],
+    "label": "object name"
+  }
+]
+```""",
+
+    # Task expects no specific output format, just text description in one of these forms:
+    # 1. r'<task>(.*?)</task>'
+    # 2. r'task: (.*)'
+    # 3. Just take last line
+    "task_detection": "",
+    "roboG_reasoning": "",  # Does not evaluate reasoning steps, just final prediction
+
+    # Task expects a bbox, object label, and interaction phases in these formats:
+    # 1. r'```json\s*([\s\S]*?)```' with the keys "object", "bbox", and "interaction_phases"
+    # 2. r'\{[\s\S]*\}' with the keys "object", "bbox", and "interaction_phases"
+    # 3. Fallback: r'<object>(.*?)</object>' and r'<box>(.*?)</box>' to at add object label and bbox
+    # Where "interaction_phases" can be a dict with time ranges as keys and interaction phase labels as values or a list of dicts with "phase", "start_time", and "end_time" keys.
+    "action_localization": """Provide the output strictly as a JSON code block containing the keys 'object', 'bbox', and 'interaction_phases'. The 'bbox' must be in the format [x1, y1, x2, y2], representing the top-left and bottom-right corners. The 'interaction_phases' must be a dictionary where each key is a time range string (e.g., 'start - end') and the value is the interaction phase label. The phase labels must be strictly limited to the following: 'grasp', 'interact', or 'release'.
+
+**Format Example:**
+```json
+    {
+  "object": "object name",
+  "bbox": [x1, y1, x2, y2],
+  "interaction_phases": {
+    "0.0 - 0.4": "grasp",
+    "0.4 - 3.3": "interact",
+    "3.3 - 4.0": "release"
+  }
+}
+```""",
+    "action_localization_normalized": """Provide the output strictly as a JSON code block containing the keys 'object', 'bbox', and 'interaction_phases'. The 'bbox' must be in the format [x1, y1, x2, y2], representing the top-left and bottom-right corners. The 'interaction_phases' must be a dictionary where each key is a time range string (e.g., 'start - end') and the value is the interaction phase label. All timestamps in the time range must be normalized between 0.0 (start of sequence) and 1.0 (end of sequence). The phase labels must be strictly limited to the following: 'grasp', 'interact', or 'release'.
+
+**Format Example:**
+```json
+    {
+  "object": "object name",
+  "bbox": [x1, y1, x2, y2],
+  "interaction_phases": {
+    "0.0 - 0.25": "grasp",
+    "0.25 - 0.8": "interact",
+    "0.8 - 1.0": "release"
+  }
+}
+```""",
+}
 
 
 class RoboGBenchmark(BaseBenchmark):
@@ -159,10 +240,15 @@ class RoboGBenchmark(BaseBenchmark):
         conversation = []
         user_message = sample.question
         
-        if "qwen3vl" not in model.config.name.lower():
+        if "qwen3vl" not in model.config.name.lower() and "rynnbrain" not in model.config.name.lower():
             #remove all <digit.digit seconds> tags
             user_message = re.sub(r"<\d+\.\d+ seconds?>", "", user_message)
         
+        if self.config.get("provide_output_format_in_prompt", False):
+            task_type = sample.metadata.get("task_type", "unknown")
+            output_format_prompt = TASK_OUTPUT_FORMATS.get(task_type, "")
+            if len(output_format_prompt) > 0:
+                conversation.append({"role": "system", "content": output_format_prompt})
                 
         conversation.append({"role": "user", "content": user_message})
         conversation.append({"role": "assistant", "content": sample.answer})
@@ -174,7 +260,8 @@ class RoboGBenchmark(BaseBenchmark):
         self,
         predictions: List[Any],
         ground_truths: List[Any],
-        metadata: Optional[List[Dict[str, Any]]] = None
+        metadata: Optional[List[Dict[str, Any]]] = None,
+        bbox_denormalizer: Optional[callable] = None
     ) -> Dict[str, Any]:
         """
         Evaluate RoboVQA predictions using BLEU and ROUGE-L.
@@ -183,6 +270,7 @@ class RoboGBenchmark(BaseBenchmark):
             predictions: List of model predictions (strings)
             ground_truths: List of ground truth answers (strings)
             metadata: List of metadata dicts (with 'task_type' key)
+            bbox_denormalizer: Optional function to denormalize bounding boxes
             
         Returns:
             Dict of evaluation metrics
@@ -225,19 +313,16 @@ class RoboGBenchmark(BaseBenchmark):
             if "poc_grounding_only_video" in task_type:
                 #two types: label and object name
                 label_evaluator = LabelEvaluator(ground_truths=data['ground_truths'])
-                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'], bbox_denormalizer=bbox_denormalizer)
                 label_results = label_evaluator.evaluate(data['predictions'])
                 bbox_results = bbox_evaluator.evaluate(data['predictions'])
                 
                 results["Initial Location"] = bbox_results
                 results["Interacted Object"] = label_results
             elif "object_detection" in task_type:
-                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'], bbox_denormalizer=bbox_denormalizer)
                 bbox_results = bbox_evaluator.evaluate(data['predictions'])
                 results[task_type] = bbox_results
-
-
-                
 
                 # #plot boxes on image
                 # plt_idx = 81
@@ -266,19 +351,15 @@ class RoboGBenchmark(BaseBenchmark):
                 # img.save("z.png")
 
             elif "target_location" in task_type:
-                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'])
+                bbox_evaluator = BoundingBoxEvaluator(ground_truths=data['ground_truths'], bbox_denormalizer=bbox_denormalizer)
                 bbox_results = bbox_evaluator.evaluate(data['predictions'])
                 results[task_type] = bbox_results
             elif "roboG_reasoning" in task_type or "task_detection" in task_type:
-                
-                if "task_detection" in task_type:
-                    pass
                 #format: <task>Put the yellow object on the bottom left burner.</task>. extract task
                 instruction_evaluator = TaskInstructionEvaluator(ground_truths=data['ground_truths'])
                 #parse tasks from predictions
                 instruction_results = instruction_evaluator.evaluate(data['predictions'])
                 results[task_type] = instruction_results
-            
             
             elif "action_localization" in task_type:
                 action_evaluator = TemporalAccuracyEvaluator(ground_truths=data['ground_truths'])
@@ -288,7 +369,6 @@ class RoboGBenchmark(BaseBenchmark):
             else:
                 logging.warning(f"Unknown task type: {task_type}")
                 results[task_type] = {"error": "Unknown task type"}
-
             
             results[task_type]['num_samples'] = len(data['predictions'])
 

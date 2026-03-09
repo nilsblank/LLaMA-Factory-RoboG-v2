@@ -3,8 +3,8 @@
 name: openai_model
 _target_: models.OpenAIModel
 
-# Model name (e.g., gpt-4o, gpt-5-mini)
-model_name_or_path: gpt-4o
+# Model name (e.g., gpt-4o, gpt-5-mini, gpt-5.2)
+model_name_or_path: gpt-5.2
 
 # API configuration
 api_key: ${oc.env:OPENAI_API_KEY}  # Read from environment variable
@@ -14,9 +14,9 @@ base_url: https://api.openai.com/v1  # Optional: for custom endpoints
 number_video_frames: 16  # Number of video frames to sample and encode
 use_vllm: false
 max_attempts: 3  # Number of retry attempts for API calls
-# generation_kwargs:  # Use this for GPT-5-mini
-#   max_completion_tokens: 512
-generation_kwargs:  # Use this for GPT-4o
-  temperature: 0.7
-  max_tokens: 512
-  top_p: 0.9
+generation_kwargs:  # Use this for GPT-5-mini and GPT-5.2
+  max_completion_tokens: 512
+# generation_kwargs:  # Use this for GPT-4o
+#   temperature: 0.7
+#   max_tokens: 512
+#   top_p: 0.9

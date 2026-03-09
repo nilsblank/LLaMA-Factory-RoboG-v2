@@ -745,6 +745,7 @@ class OpenAIModel(BaseModel):
         messages_with_media = []
         image_idx = 0
         video_idx = 0
+        system_prompt_appended = False
         
         for msg in messages:
             if msg["role"] != "user" and msg["role"] != "system":
@@ -805,11 +806,21 @@ class OpenAIModel(BaseModel):
                         })
 
             # Append the model's own system prompt to clarify bbox coordinates
-            if msg["role"] == "system":
+            if msg["role"] == "system" and not system_prompt_appended:
                 content.append({
                     "type": "text",
                     "text": self.system_prompt
                 })
+                system_prompt_appended = True
+            elif msg["role"] == "user" and not system_prompt_appended:  # If there is no system prompt in the beginning, insert one
+                messages_with_media.append({
+                    "role": "system",
+                    "content": {
+                        "type": "text",
+                        "text": self.system_prompt
+                    }
+                })
+                system_prompt_appended = True
 
             messages_with_media.append({
                 "role": msg.get("role", "user"),
@@ -1214,6 +1225,7 @@ class RoboAnnotatorX(BaseModel):
         media_token = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN if self.model.config.mm_use_im_start_end else DEFAULT_IMAGE_TOKEN
         seps = [" ", "</s>"]
         sep_idx = 0
+        system_prompt_appended = False
 
         for msg in messages:
             role = msg["role"]
@@ -1251,12 +1263,18 @@ class RoboAnnotatorX(BaseModel):
                     if part.strip():
                         content += f"{part}\n"
 
-            if role == "system":
+            if role == "system" and not system_prompt_appended:
                 # Append the model's own system prompt
                 content += self.system_prompt
+                system_prompt_appended = True
                 # Add message to processed prompt
                 processed_prompt += content.strip() + seps[0]
             else: 
+                if role == "user" and not system_prompt_appended:
+                    # If there is no system prompt in the beginning, insert model's own system prompt
+                    processed_prompt += self.system_prompt.strip() + seps[0]
+                    system_prompt_appended = True
+
                 # Add message to processed prompt
                 sep = seps[sep_idx % 2]
                 processed_prompt += role.upper() + ": " + content.strip() + sep
@@ -1427,6 +1445,7 @@ class RynnBrain(BaseModel):
         messages_with_media = []
         image_idx = 0
         video_idx = 0
+        system_prompt_appended = False
 
         for msg in messages:
             role = msg["role"]
@@ -1480,11 +1499,21 @@ class RynnBrain(BaseModel):
                         })
 
             # Append the model's own system prompt to clarify bbox coordinates
-            if msg["role"] == "system":
+            if msg["role"] == "system" and not system_prompt_appended:
                 content.append({
                     "type": "text",
                     "text": self.system_prompt
                 })
+                system_prompt_appended = True
+            elif msg["role"] == "user" and not system_prompt_appended:  # If there is no system prompt in the beginning, insert one
+                messages_with_media.append({
+                    "role": "system",
+                    "content": {
+                        "type": "text",
+                        "text": self.system_prompt
+                    }
+                })
+                system_prompt_appended = True
 
             messages_with_media.append({
                 "role": msg.get("role", "user"),

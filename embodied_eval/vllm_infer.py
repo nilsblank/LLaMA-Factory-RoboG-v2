@@ -314,7 +314,10 @@ def vllm_infer(
             if verbose:
                 print(f"   Loaded {len(all_predictions)} existing predictions.")
             # Skip to evaluation
-            results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata)
+            if benchmark.name == "roboG" and model_instance is not None:  # This is a workaround to allow bbox denormalization without rewriting the roboG benchmark. For other benchmarks, parsing and denomalization happens in postprocess().
+                results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata, lambda bbox, original_size: model_instance.denormalize_bbox(bbox, original_size))
+            else:
+                results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata)
             if save_results:
                 results_file = Path(output_dir) / bench_save_name.replace("_predictions.jsonl", "_results.json")
                 benchmark.save_results(results_file)
@@ -413,7 +416,10 @@ def vllm_infer(
                 print(f"   Saved predictions to: {pred_file}")
         
         # Evaluate
-        results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata)
+        if benchmark.name == "roboG" and model_instance is not None:  # This is a workaround to allow bbox denormalization without rewriting the roboG benchmark. For other benchmarks, parsing and denomalization happens in postprocess().
+            results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata, lambda bbox, original_size: model_instance.denormalize_bbox(bbox, original_size))
+        else:
+            results = benchmark.evaluate(all_predictions, all_ground_truths, all_metadata)
         
         # Save results
         if save_results:
