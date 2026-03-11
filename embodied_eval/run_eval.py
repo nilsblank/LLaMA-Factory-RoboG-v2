@@ -264,7 +264,7 @@ def run_single_evaluation(
         print("Computing metrics...")
     
     if benchmark.name == "roboG":  # This is a workaround to allow bbox denormalization without rewriting the roboG benchmark. For other benchmarks, parsing and denomalization happens in postprocess().
-        results = benchmark.evaluate(predictions, ground_truths, metadata_list, lambda bbox, original_size: model.denormalize_bbox(bbox, original_size))
+        results = benchmark.evaluate(predictions, ground_truths, metadata_list, lambda bbox, original_size: model.denormalize_bbox(bbox, original_size), model.config.name)
     else:
         results = benchmark.evaluate(predictions, ground_truths, metadata_list)
     

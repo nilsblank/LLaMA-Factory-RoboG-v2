@@ -7,3 +7,4 @@ annotation_files:
   - /home/hk-project-sustainebot/bm3844/datasets/datasets/robogrounder/qwen3-vl/oxe_robo_set/grc_validated/roboG_stageroboG_eval_eval.jsonl
 
 provide_output_format_in_prompt: true  # Whether to include the expected output format in the prompt for each task
+normalize_time: true  # Whether to use normalized time for action localization tasks, don't use this for Qwen 3 VL

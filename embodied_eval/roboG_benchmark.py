@@ -175,6 +175,15 @@ class RoboGBenchmark(BaseBenchmark):
             videos = annotation.get("videos", [])
             if "roboG_reasoning" in task_type:
                 s = 1
+            # Exract video length if available
+            timestamp_pattern = r"<(\d+\.\d+) seconds?>"
+            matches = re.findall(timestamp_pattern, question)
+            if not matches:
+                video_length = None
+            else:
+                video_length = float(matches[-1])
+            frame_count = question.count("<image>")
+            
             sample = Sample(
                 question=question,
                 answer=answer,
@@ -182,7 +191,9 @@ class RoboGBenchmark(BaseBenchmark):
                 videos=videos,
                 metadata={'task_type': task_type,
                 "image_paths": [str(img_path) for img_path in annotation.get("images", [])],
-                "video_paths": [str(vid_path) for vid_path in annotation.get("videos", [])]
+                "video_paths": [str(vid_path) for vid_path in annotation.get("videos", [])],
+                "video_length": video_length,
+                "frame_count": frame_count,
                 }
             )
             
@@ -240,13 +251,29 @@ class RoboGBenchmark(BaseBenchmark):
         conversation = []
         user_message = sample.question
         
-        if "qwen3vl" not in model.config.name.lower() and "rynnbrain" not in model.config.name.lower():
+        if "rynnbrain" in model.config.name.lower():
+            frame_counter = 0
+
+            def replacement_logic(match):
+                nonlocal frame_counter
+                # Format the replacement string as requested
+                result = f"<frame {frame_counter}>: "
+                frame_counter += 1
+                return result
+
+            # Matches tags like <1.23 seconds> or <45.6 seconds>
+            timestamp_pattern = r"<\d+\.\d+ seconds?>"
+            user_message = re.sub(timestamp_pattern, replacement_logic, user_message)
+        elif "qwen3vl" not in model.config.name.lower():
             #remove all <digit.digit seconds> tags
             user_message = re.sub(r"<\d+\.\d+ seconds?>", "", user_message)
         
         if self.config.get("provide_output_format_in_prompt", False):
             task_type = sample.metadata.get("task_type", "unknown")
-            output_format_prompt = TASK_OUTPUT_FORMATS.get(task_type, "")
+            if task_type == "action_localization" and self.config.get("normalize_time", False) and "rynnbrain" not in model.config.name.lower():
+                output_format_prompt = TASK_OUTPUT_FORMATS.get("action_localization_normalized", "")
+            else:
+                output_format_prompt = TASK_OUTPUT_FORMATS.get(task_type, "")
             if len(output_format_prompt) > 0:
                 conversation.append({"role": "system", "content": output_format_prompt})
                 
@@ -261,7 +288,8 @@ class RoboGBenchmark(BaseBenchmark):
         predictions: List[Any],
         ground_truths: List[Any],
         metadata: Optional[List[Dict[str, Any]]] = None,
-        bbox_denormalizer: Optional[callable] = None
+        bbox_denormalizer: Optional[callable] = None,
+        model_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Evaluate RoboVQA predictions using BLEU and ROUGE-L.
@@ -362,7 +390,13 @@ class RoboGBenchmark(BaseBenchmark):
                 results[task_type] = instruction_results
             
             elif "action_localization" in task_type:
-                action_evaluator = TemporalAccuracyEvaluator(ground_truths=data['ground_truths'])
+                time_style = None
+                if self.config.get("normalize_time", False):
+                    if "rynnbrain" in model_name.lower():
+                        time_style = "frames"
+                    else:
+                        time_style = "normalized"
+                action_evaluator = TemporalAccuracyEvaluator(ground_truths=data['ground_truths'], metadata=data['metadata'], time_denormalization_style=time_style)
                 action_results = action_evaluator.evaluate(data['predictions'])
                 results[task_type] = action_results
 

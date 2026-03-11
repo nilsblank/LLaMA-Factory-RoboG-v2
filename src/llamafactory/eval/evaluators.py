@@ -1018,10 +1018,12 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
         self, 
         ground_truth_file: Optional[str] = None, 
         ground_truths: Optional[List[Dict[str, Any]]] = None,
+        metadata: Optional[List[Dict[str, Any]]] = None,
         name: Optional[str] = None,
         time_tolerance: float = 0.5,
         iou_threshold: float = 0.5,
-        phase_names: Optional[List[str]] = None
+        phase_names: Optional[List[str]] = None,
+        time_denormalization_style: Optional[str] = None,
     ):
         """
         Initialize the temporal accuracy evaluator.
@@ -1037,9 +1039,11 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
         super().__init__(name=name or "TemporalAccuracy")
         self.ground_truth_file = ground_truth_file
         self.ground_truths = ground_truths
+        self.metadata = metadata
         self.time_tolerance = time_tolerance
         self.iou_threshold = iou_threshold
         self.phase_names = phase_names or ['grasp', 'interact', 'release']
+        self.time_denormalization_style = time_denormalization_style
         
         self.load_data()
     
@@ -1057,7 +1061,7 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
         self.ground_truths = parsed
     
     @staticmethod
-    def parse_interaction_phases(text: str) -> Dict[str, Any]:
+    def parse_interaction_phases(text: str, time_style: Optional[str] = None, video_length: Optional[float] = None, frame_count: Optional[int] = None) -> Dict[str, Any]:
         """
         Parse interaction phases from text prediction or ground truth.
         
@@ -1134,6 +1138,19 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
                         parsed_phase = TemporalAccuracyEvaluator._parse_single_phase(phase)
                         if parsed_phase:
                             phases["interaction_phases"].append(parsed_phase)
+
+                # Denormalize timestamps
+                if time_style:
+                    if time_style == "normalized" and video_length:
+                        for phase in phases["interaction_phases"]:
+                            phase["start_time"] *= video_length
+                            phase["end_time"] *= video_length
+                    # Disable code below since RynnBrain outputs time in seconds by default, although it only gets frame numbers
+                    # elif time_style == "frames" and frame_count and video_length:
+                    #     fps = frame_count / video_length
+                    #     for phase in phases["interaction_phases"]:
+                    #         phase["start_time"] /= fps
+                    #         phase["end_time"] /= fps
         
         except Exception as e:
             logging.warning(f"Error parsing interaction phases: {e}")
@@ -1426,12 +1443,12 @@ class TemporalAccuracyEvaluator(BaseEvaluator):
         correctly_matched = 0
         
         # Evaluate each prediction-ground truth pair
-        for idx, (pred, gt) in enumerate(zip(predictions, self.ground_truths)):
+        for idx, (pred, gt, meta) in enumerate(zip(predictions, self.ground_truths, self.metadata)):
             # Extract text from prediction
             pred_text = self.extract_text(pred)
             
             # Parse phases
-            pred_data = self.parse_interaction_phases(pred_text)
+            pred_data = self.parse_interaction_phases(pred_text, self.time_denormalization_style, meta.get("video_length", None), meta.get("frame_count", None))
             pred_phases = pred_data["interaction_phases"]
             
             gt_phases = gt["interaction_phases"] if isinstance(gt, dict) else gt

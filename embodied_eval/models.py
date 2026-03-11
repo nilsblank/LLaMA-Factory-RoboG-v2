@@ -815,10 +815,7 @@ class OpenAIModel(BaseModel):
             elif msg["role"] == "user" and not system_prompt_appended:  # If there is no system prompt in the beginning, insert one
                 messages_with_media.append({
                     "role": "system",
-                    "content": {
-                        "type": "text",
-                        "text": self.system_prompt
-                    }
+                    "content": self.system_prompt
                 })
                 system_prompt_appended = True
 
@@ -1508,10 +1505,7 @@ class RynnBrain(BaseModel):
             elif msg["role"] == "user" and not system_prompt_appended:  # If there is no system prompt in the beginning, insert one
                 messages_with_media.append({
                     "role": "system",
-                    "content": {
-                        "type": "text",
-                        "text": self.system_prompt
-                    }
+                    "content": self.system_prompt
                 })
                 system_prompt_appended = True
 
